@@ -36,7 +36,7 @@ jobs:
 
     - name: 发布
       run : |
-        dotnet ./blogpublishtool/DotHass.Blog.PublishTool.dll -f $GITHUB_WORKSPACE/main -m 1 --uri "http://www.godgodgame.com" --pwd ${{ secrets.BLOG_PWD }} --id Www_App --count 10 --img "https://cdn.jsdelivr.net/gh/zhemima/igiven.github.io@gh-pages"
+        dotnet ./blogpublishtool/DotHass.Blog.PublishTool.dll -f $GITHUB_WORKSPACE/main -m 1 --uri "http://www.godgodgame.com" --pwd ${{ secrets.BLOG_PWD }} --id Www_App --count 1000 --img "https://cdn.jsdelivr.net/gh/zhemima/igiven.github.io@gh-pages"
   
 
       
