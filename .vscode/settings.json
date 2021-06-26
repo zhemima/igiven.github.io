@@ -1,0 +1,10 @@
+{
+    "markdown.showToolbar": false,
+    "markdownShortcuts.icons.citations": true,
+    "markdownShortcuts.icons.image": true,
+    "markdownShortcuts.icons.link": true,
+    "markdownShortcuts.bullets.marker": "-",
+    "MarkdownPaste.silence": true,
+    "MarkdownPaste.path": "../../assets/images/${fileBasenameNoExtension}/"
+    
+}
