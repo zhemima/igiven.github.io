@@ -2637,19 +2637,77 @@
 <li>如果你使用的是 Mac，Git 还有一种 “osxkeychain” 模式，它会将凭证缓存到你系统用户的钥匙串中。 这种方式将凭证存放在磁盘中，并且永不过期，但是是被加密的，这种加密方式与存放 HTTPS 凭证以及 Safari 的自动填写是相同的。</li>
 <li>如果你使用的是 Windows，你可以安装一个叫做 “winstore” 的辅助工具。 这和上面说的 “osxkeychain” 十分类似，但是是使用 Windows Credential Store 来控制敏感信息。 可以在 <a href="https://gitcredentialstore.codeplex.com/" target="_blank" rel="noopener">https://gitcredentialstore.codeplex.com</a> 下载。</li>
 </ul>
+<h2 id="推荐使用凭证存储模式-“manager”"><a href="#推荐使用凭证存储模式-“manager”" class="headerlink" title="推荐使用凭证存储模式 “manager”"></a>推荐使用凭证存储模式 “manager”</h2><ul>
+<li><p>在这里对比 “wincred” 和 “manager”的区别</p>
+</li>
+<li><ul>
+<li><p><strong>相同点：</strong></p>
+</li>
+<li><ul>
+<li>都会将用户信息存储到Windows凭据管理器中</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><ul>
+<li><p><strong>不同点：</strong></p>
+</li>
+<li><ul>
+<li>Windows凭据管理器中<strong>用户信息是否加密</strong></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li><ul>
+<li><ul>
+<li>“wincred” 模式下的用户信息展示如下</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Internet 地址或网络地址：git:https:&#x2F;&#x2F;用户名@github.com； </span><br><span class="line">用户名：真实用户名</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><ul>
+<li><ul>
+<li>“manager” 模式下的用户信息展示如下</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Internet 地址或网络地址：git:https:&#x2F;&#x2F;github.com； </span><br><span class="line">用户名：PersonalAccessToken</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>很明显，在<strong>用户信息暴露</strong>的情况下，其他人很容易通过 https://用户名@<a href="https://link.zhihu.com/?target=http%3A//github.com">http://github.com</a> 访问到路径对应的项目，为了避免这种<strong>风险</strong>的存在，我们可以安装 “Git Credential Manager for Windows” 的辅助工具。</li>
+</ul>
 <h3 id="store的使用"><a href="#store的使用" class="headerlink" title="store的使用"></a>store的使用</h3><p><code>git config --global credential.helper store</code></p>
 <p>“store” 模式可以接受一个 <code>--file &lt;path&gt;</code> 参数，可以自定义存放密码的文件路径（默认是 <code>~/.git-credentials</code> ）</p>
 <h3 id="微软特有的Git-Credential-Manager"><a href="#微软特有的Git-Credential-Manager" class="headerlink" title="微软特有的Git Credential Manager"></a>微软特有的Git Credential Manager</h3><p>WINDOS部分版本的GIT会提示</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git: &#39;credential-cache&#39; is not a git command. See &#39;get --help&#39;.</span><br></pre></td></tr></table></figure>
 
 <p>实际上是缺少微软的 Git Credential Manager</p>
-<p>安裝 Git Credential Manager for Windows即可解决该问题</p>
-<p>最新的下载地址为：</p>
+<h4 id="安裝-Git-Credential-Manager-for-Windows解决"><a href="#安裝-Git-Credential-Manager-for-Windows解决" class="headerlink" title="安裝 Git Credential Manager for Windows解决"></a>安裝 Git Credential Manager for Windows解决</h4><p>最新的下载地址为：</p>
 <p><a href="https://github.com/Microsoft/Git-Credential-Manager-for-Windows/releases/latest" target="_blank" rel="noopener">https://github.com/Microsoft/Git-Credential-Manager-for-Windows/releases/latest</a></p>
 <p>下载安装完后可以通过命令进行查看是否生效</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git config --global credential.helper manager</span><br></pre></td></tr></table></figure>
 
-<p>控制面板\用户帐户\凭据管理器可以查看</p>
+<h4 id="安裝-Git-Credential-Manager-Core解决"><a href="#安裝-Git-Credential-Manager-Core解决" class="headerlink" title="安裝 Git-Credential-Manager-Core解决"></a>安裝 Git-Credential-Manager-Core解决</h4><p>最新的下载地址为：</p>
+<p><a href="https://github.com/microsoft/Git-Credential-Manager-Core" target="_blank" rel="noopener">https://github.com/microsoft/Git-Credential-Manager-Core</a></p>
+<p>下载安装完后可以通过命令进行查看是否生效</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git config --global credential.helper manager-core</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="检查验证工具是否在path中"><a href="#检查验证工具是否在path中" class="headerlink" title="检查验证工具是否在path中"></a>检查验证工具是否在path中</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git config --system --list</span><br><span class="line"></span><br><span class="line">core.symlinks&#x3D;false</span><br><span class="line">core.autocrlf&#x3D;true</span><br><span class="line">core.fscache&#x3D;true</span><br><span class="line">color.diff&#x3D;auto</span><br><span class="line">color.status&#x3D;auto</span><br><span class="line">color.branch&#x3D;auto</span><br><span class="line">color.interactive&#x3D;true</span><br><span class="line">help.format&#x3D;html</span><br><span class="line">diff.astextplain.textconv&#x3D;astextplain</span><br><span class="line">rebase.autosquash&#x3D;true</span><br><span class="line">filter.lfs.clean&#x3D;git-lfs clean -- %f</span><br><span class="line">filter.lfs.smudge&#x3D;git-lfs smudge -- %f</span><br><span class="line">filter.lfs.process&#x3D;git-lfs filter-process</span><br><span class="line">filter.lfs.required&#x3D;true</span><br><span class="line">credential.helper&#x3D;!&quot;D:&#x2F;Application&#x2F;Scoop&#x2F;apps&#x2F;git&#x2F;2.32.0.windows.1&#x2F;mingw64&#x2F;libexec&#x2F;git-core&#x2F;git-credential-manager-core.exe&quot;</span><br></pre></td></tr></table></figure>
+
+<p>如果提交的时候仍有问题,提示xxxxcommad不可用.查看下你现在使用的credential.helper是否在path中.如果不在则进行手动添加</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">D:\Application\Scoop\apps\git\2.32.0.windows.1\mingw64\libexec\git-core</span><br></pre></td></tr></table></figure>
+
+<p>如果使用的是sourcetree 还得查看,他默认使用的git是不是全局的</p>
 <h1 id="SourceTree删除GIT密码"><a href="#SourceTree删除GIT密码" class="headerlink" title="SourceTree删除GIT密码"></a>SourceTree删除GIT密码</h1><h2 id="store"><a href="#store" class="headerlink" title="store"></a>store</h2><p>删除~/.git-credentials</p>
 <h2 id="manager"><a href="#manager" class="headerlink" title="manager"></a>manager</h2><p>windows存储的初始密码账号不对，导致每次请求远程url都会报错，我们要到控制面板\用户帐户\凭据管理器中手动更改我们的credential凭证;如下，是我的凭证配置；只需要编辑下即可，当然你也可以删除你要请求的远程的凭证,我没试过，当你git pull，GIT会让你输入一次用户明和密码，以后每次请求，GIT会从windows凭证中查找；<img src="../../assets/images/2019-08-07-sourcetree-git-password/20190404111514753.png" alt="在这里插入图片描述"></p>
 <h2 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h2><p>当GIT服务器修改密码后，sourcetree本地记住的密码，会导致提交代码失败。<br>本地删除当前用户目录下保存密码的文件，文件路径：<br>C:\Users\wuxiaoyuan\AppData\Local\Atlassian\SourceTree\passwd<br>清空文件内容即可</p>
@@ -2670,6 +2728,7 @@
         <tag>windows</tag>
         <tag>C</tag>
         <tag>GitHub</tag>
+        <tag>scoop</tag>
       </tags>
   </entry>
   <entry>
@@ -7188,29 +7247,6 @@
       </tags>
   </entry>
   <entry>
-    <title>unity 移动平台打包丢失shader的问题</title>
-    <url>/unity-2020-02-20-shader-lost/</url>
-    <content><![CDATA[<p>自己写了个shader，并且是从代码里面来进行加载，编辑器中并没有引用。在编辑器中运行项目没有问题，但是当我发布到iso和android平台之后发现游戏中并不能找到我自己的shader，猜想是unity在打包过程中进行了一些优化，没有用到的shader不会被打到游戏包内。</p>
-<p>我找到了2个解决办法</p>
-<p>1.随意创建一个物体并添加使用了此shader的材质。并不推荐此方法，正确的方法应该是第二种。</p>
-<p>2.在GraphicsSettings中添加上此shader：</p>
-<p>选择Edit-&gt;ProjectSettings-&gt;Graphics （不同的unity版本可能有所不同，我的版本是5.6）</p>
-<p>将shader拖入到Always Included Shaders数组中：</p>
-<p><img src="../../assets/images/2020-02-20-shader-lost/20180309110801448.png" alt="img"></p>
-<p><img src="../../assets/images/2020-02-20-shader-lost/20180309110915442.png" alt="img"></p>
-<p>这样我们重新打包之后，就可以正常找到shader了。</p>
-]]></content>
-      <categories>
-        <category>unity</category>
-      </categories>
-      <tags>
-        <tag>C</tag>
-        <tag>游戏</tag>
-        <tag>Unity</tag>
-        <tag>UNITY</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>理解自动内存管理</title>
     <url>/unity-2020-02-19-UnderstandingAutomaticMemoryManagement/</url>
     <content><![CDATA[<p>当创建对象、字符串或数组时，存储它所需的内存将从称为堆的中央池中分配。当项目不再使用时，它曾经占用的内存可以被回收并用于别的东西。在过去，通常由程序员通过适当的函数调用明确地分配和释放这些堆内存块。如今，像Unity的Mono引擎这样的运行时系统会自动为您管理内存。自动内存管理需要比显式分配/释放更少的编码工作，并大大降低内存泄漏（内存被分配但从未随后释放的情况）的可能性。</p>
@@ -7260,6 +7296,29 @@
         <tag>Unity</tag>
         <tag>UNITY</tag>
         <tag>JS</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>unity 移动平台打包丢失shader的问题</title>
+    <url>/unity-2020-02-20-shader-lost/</url>
+    <content><![CDATA[<p>自己写了个shader，并且是从代码里面来进行加载，编辑器中并没有引用。在编辑器中运行项目没有问题，但是当我发布到iso和android平台之后发现游戏中并不能找到我自己的shader，猜想是unity在打包过程中进行了一些优化，没有用到的shader不会被打到游戏包内。</p>
+<p>我找到了2个解决办法</p>
+<p>1.随意创建一个物体并添加使用了此shader的材质。并不推荐此方法，正确的方法应该是第二种。</p>
+<p>2.在GraphicsSettings中添加上此shader：</p>
+<p>选择Edit-&gt;ProjectSettings-&gt;Graphics （不同的unity版本可能有所不同，我的版本是5.6）</p>
+<p>将shader拖入到Always Included Shaders数组中：</p>
+<p><img src="../../assets/images/2020-02-20-shader-lost/20180309110801448.png" alt="img"></p>
+<p><img src="../../assets/images/2020-02-20-shader-lost/20180309110915442.png" alt="img"></p>
+<p>这样我们重新打包之后，就可以正常找到shader了。</p>
+]]></content>
+      <categories>
+        <category>unity</category>
+      </categories>
+      <tags>
+        <tag>C</tag>
+        <tag>游戏</tag>
+        <tag>Unity</tag>
+        <tag>UNITY</tag>
       </tags>
   </entry>
   <entry>
@@ -10286,6 +10345,31 @@
       </tags>
   </entry>
   <entry>
+    <title>commandbuff的一些问题</title>
+    <url>/unity-2021-05-20-ecs-commandbuff-question/</url>
+    <content><![CDATA[<p>component</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public struct State:IComponentData</span><br><span class="line">&#123;</span><br><span class="line">	public int a;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>a系统</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"> var PostUpdateCommands &#x3D; World.GetExistingSystem&lt;AbilityUpdateCommandBufferSystem&gt;().CreateCommandBuffer();</span><br><span class="line">Entities</span><br><span class="line">    .ForEach((Entity entity) &#x3D;&gt;</span><br><span class="line">    &#123;</span><br><span class="line">    	var state &#x3D; EntityManager.GetComponent&lt;State&gt;(entity);</span><br><span class="line">    	state.a &#x3D; 1111;</span><br><span class="line">    	PostUpdateCommands.SetComponent(entity,state);</span><br><span class="line">    &#125;)</span><br><span class="line">    .WithoutBurst()</span><br><span class="line">    .Run();</span><br></pre></td></tr></table></figure>
+
+<p>b系统</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Entities</span><br><span class="line">    .ForEach((Entity entity) &#x3D;&gt;</span><br><span class="line">    &#123;</span><br><span class="line">    	var state &#x3D; EntityManager.GetComponent&lt;State&gt;(entity);</span><br><span class="line">    	state.a &#x3D; 2222;</span><br><span class="line">    	EntityManager.SetComponentData(entity,state);</span><br><span class="line">    &#125;)</span><br><span class="line">     .WithStructuralChanges()</span><br><span class="line">    .Run();</span><br></pre></td></tr></table></figure>
+
+<p>执行顺序</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">A--&gt;B--&gt;AbilityUpdateCommandBufferSystem</span><br></pre></td></tr></table></figure>
+
+<p>这里的结果,我们以为是2222.其实是1111.</p>
+<p>所以要么全是使用commandbuff.否则容易造成数据错误</p>
+]]></content>
+      <categories>
+        <category>unity</category>
+      </categories>
+      <tags>
+        <tag>C</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Edgar源代码解读</title>
     <url>/unity-2021-06-12-edgar-code-read/</url>
     <content><![CDATA[<h3 id="生成类"><a href="#生成类" class="headerlink" title="生成类"></a>生成类</h3><ul>
@@ -10437,31 +10521,6 @@
         <tag>Unity</tag>
         <tag>UNITY</tag>
         <tag>mesh</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>commandbuff的一些问题</title>
-    <url>/unity-2021-05-20-ecs-commandbuff-question/</url>
-    <content><![CDATA[<p>component</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public struct State:IComponentData</span><br><span class="line">&#123;</span><br><span class="line">	public int a;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>a系统</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"> var PostUpdateCommands &#x3D; World.GetExistingSystem&lt;AbilityUpdateCommandBufferSystem&gt;().CreateCommandBuffer();</span><br><span class="line">Entities</span><br><span class="line">    .ForEach((Entity entity) &#x3D;&gt;</span><br><span class="line">    &#123;</span><br><span class="line">    	var state &#x3D; EntityManager.GetComponent&lt;State&gt;(entity);</span><br><span class="line">    	state.a &#x3D; 1111;</span><br><span class="line">    	PostUpdateCommands.SetComponent(entity,state);</span><br><span class="line">    &#125;)</span><br><span class="line">    .WithoutBurst()</span><br><span class="line">    .Run();</span><br></pre></td></tr></table></figure>
-
-<p>b系统</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Entities</span><br><span class="line">    .ForEach((Entity entity) &#x3D;&gt;</span><br><span class="line">    &#123;</span><br><span class="line">    	var state &#x3D; EntityManager.GetComponent&lt;State&gt;(entity);</span><br><span class="line">    	state.a &#x3D; 2222;</span><br><span class="line">    	EntityManager.SetComponentData(entity,state);</span><br><span class="line">    &#125;)</span><br><span class="line">     .WithStructuralChanges()</span><br><span class="line">    .Run();</span><br></pre></td></tr></table></figure>
-
-<p>执行顺序</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">A--&gt;B--&gt;AbilityUpdateCommandBufferSystem</span><br></pre></td></tr></table></figure>
-
-<p>这里的结果,我们以为是2222.其实是1111.</p>
-<p>所以要么全是使用commandbuff.否则容易造成数据错误</p>
-]]></content>
-      <categories>
-        <category>unity</category>
-      </categories>
-      <tags>
-        <tag>C</tag>
       </tags>
   </entry>
   <entry>
