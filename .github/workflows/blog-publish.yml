@@ -30,7 +30,7 @@ jobs:
     
     - name: 下载发布工具
       run : |
-        wget -c https://github.com/zhepama/ABPHass/releases/download/v1.1.5/blog-publishtool.tar.gz
+        wget -c https://github.com/zhemima/ABPHass/releases/download/v1.1.5/blog-publishtool.tar.gz
         tar -zxvf blog-publishtool.tar.gz
         ls -al
 
