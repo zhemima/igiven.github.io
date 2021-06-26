@@ -12,6 +12,38 @@ title:  "scourcetree  总是需要输入密码"
 - 如果你使用的是 Mac，Git 还有一种 “osxkeychain” 模式，它会将凭证缓存到你系统用户的钥匙串中。 这种方式将凭证存放在磁盘中，并且永不过期，但是是被加密的，这种加密方式与存放 HTTPS 凭证以及 Safari 的自动填写是相同的。
 - 如果你使用的是 Windows，你可以安装一个叫做 “winstore” 的辅助工具。 这和上面说的 “osxkeychain” 十分类似，但是是使用 Windows Credential Store 来控制敏感信息。 可以在 [https://gitcredentialstore.codeplex.com](https://gitcredentialstore.codeplex.com/) 下载。
 
+
+
+## 推荐使用凭证存储模式 "manager"
+
+- 在这里对比 "wincred" 和 "manager"的区别
+
+- - **相同点：**
+
+  - - 都会将用户信息存储到Windows凭据管理器中
+
+- - **不同点：**
+
+  - - Windows凭据管理器中**用户信息是否加密**
+
+
+
+- - - "wincred" 模式下的用户信息展示如下
+
+```text
+Internet 地址或网络地址：git:https://用户名@github.com； 
+用户名：真实用户名 
+```
+
+- - - "manager" 模式下的用户信息展示如下
+
+```text
+Internet 地址或网络地址：git:https://github.com； 
+用户名：PersonalAccessToken
+```
+
+- 很明显，在**用户信息暴露**的情况下，其他人很容易通过 https://用户名@[http://github.com](https://link.zhihu.com/?target=http%3A//github.com) 访问到路径对应的项目，为了避免这种**风险**的存在，我们可以安装 “Git Credential Manager for Windows” 的辅助工具。
+
 ### store的使用
 
 `git config --global credential.helper store `
@@ -30,7 +62,7 @@ git: 'credential-cache' is not a git command. See 'get --help'.
 
 实际上是缺少微软的 Git Credential Manager
 
-安裝 Git Credential Manager for Windows即可解决该问题
+#### 安裝 Git Credential Manager for Windows解决
 
 最新的下载地址为：
 
@@ -42,7 +74,50 @@ https://github.com/Microsoft/Git-Credential-Manager-for-Windows/releases/latest
 git config --global credential.helper manager
 ```
 
-控制面板\用户帐户\凭据管理器可以查看
+#### 安裝 Git-Credential-Manager-Core解决
+
+最新的下载地址为：
+
+https://github.com/microsoft/Git-Credential-Manager-Core
+
+下载安装完后可以通过命令进行查看是否生效
+
+```
+git config --global credential.helper manager-core
+```
+
+
+
+#### 检查验证工具是否在path中
+
+```
+git config --system --list
+
+core.symlinks=false
+core.autocrlf=true
+core.fscache=true
+color.diff=auto
+color.status=auto
+color.branch=auto
+color.interactive=true
+help.format=html
+diff.astextplain.textconv=astextplain
+rebase.autosquash=true
+filter.lfs.clean=git-lfs clean -- %f
+filter.lfs.smudge=git-lfs smudge -- %f
+filter.lfs.process=git-lfs filter-process
+filter.lfs.required=true
+credential.helper=!"D:/Application/Scoop/apps/git/2.32.0.windows.1/mingw64/libexec/git-core/git-credential-manager-core.exe"
+
+```
+
+如果提交的时候仍有问题,提示xxxxcommad不可用.查看下你现在使用的credential.helper是否在path中.如果不在则进行手动添加
+
+```
+D:\Application\Scoop\apps\git\2.32.0.windows.1\mingw64\libexec\git-core
+```
+
+如果使用的是sourcetree 还得查看,他默认使用的git是不是全局的
 
 
 
