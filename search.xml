@@ -7188,6 +7188,29 @@
       </tags>
   </entry>
   <entry>
+    <title>unity 移动平台打包丢失shader的问题</title>
+    <url>/unity-2020-02-20-shader-lost/</url>
+    <content><![CDATA[<p>自己写了个shader，并且是从代码里面来进行加载，编辑器中并没有引用。在编辑器中运行项目没有问题，但是当我发布到iso和android平台之后发现游戏中并不能找到我自己的shader，猜想是unity在打包过程中进行了一些优化，没有用到的shader不会被打到游戏包内。</p>
+<p>我找到了2个解决办法</p>
+<p>1.随意创建一个物体并添加使用了此shader的材质。并不推荐此方法，正确的方法应该是第二种。</p>
+<p>2.在GraphicsSettings中添加上此shader：</p>
+<p>选择Edit-&gt;ProjectSettings-&gt;Graphics （不同的unity版本可能有所不同，我的版本是5.6）</p>
+<p>将shader拖入到Always Included Shaders数组中：</p>
+<p><img src="../../assets/images/2020-02-20-shader-lost/20180309110801448.png" alt="img"></p>
+<p><img src="../../assets/images/2020-02-20-shader-lost/20180309110915442.png" alt="img"></p>
+<p>这样我们重新打包之后，就可以正常找到shader了。</p>
+]]></content>
+      <categories>
+        <category>unity</category>
+      </categories>
+      <tags>
+        <tag>C</tag>
+        <tag>游戏</tag>
+        <tag>Unity</tag>
+        <tag>UNITY</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>理解自动内存管理</title>
     <url>/unity-2020-02-19-UnderstandingAutomaticMemoryManagement/</url>
     <content><![CDATA[<p>当创建对象、字符串或数组时，存储它所需的内存将从称为堆的中央池中分配。当项目不再使用时，它曾经占用的内存可以被回收并用于别的东西。在过去，通常由程序员通过适当的函数调用明确地分配和释放这些堆内存块。如今，像Unity的Mono引擎这样的运行时系统会自动为您管理内存。自动内存管理需要比显式分配/释放更少的编码工作，并大大降低内存泄漏（内存被分配但从未随后释放的情况）的可能性。</p>
@@ -7237,29 +7260,6 @@
         <tag>Unity</tag>
         <tag>UNITY</tag>
         <tag>JS</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>unity 移动平台打包丢失shader的问题</title>
-    <url>/unity-2020-02-20-shader-lost/</url>
-    <content><![CDATA[<p>自己写了个shader，并且是从代码里面来进行加载，编辑器中并没有引用。在编辑器中运行项目没有问题，但是当我发布到iso和android平台之后发现游戏中并不能找到我自己的shader，猜想是unity在打包过程中进行了一些优化，没有用到的shader不会被打到游戏包内。</p>
-<p>我找到了2个解决办法</p>
-<p>1.随意创建一个物体并添加使用了此shader的材质。并不推荐此方法，正确的方法应该是第二种。</p>
-<p>2.在GraphicsSettings中添加上此shader：</p>
-<p>选择Edit-&gt;ProjectSettings-&gt;Graphics （不同的unity版本可能有所不同，我的版本是5.6）</p>
-<p>将shader拖入到Always Included Shaders数组中：</p>
-<p><img src="../../assets/images/2020-02-20-shader-lost/20180309110801448.png" alt="img"></p>
-<p><img src="../../assets/images/2020-02-20-shader-lost/20180309110915442.png" alt="img"></p>
-<p>这样我们重新打包之后，就可以正常找到shader了。</p>
-]]></content>
-      <categories>
-        <category>unity</category>
-      </categories>
-      <tags>
-        <tag>C</tag>
-        <tag>游戏</tag>
-        <tag>Unity</tag>
-        <tag>UNITY</tag>
       </tags>
   </entry>
   <entry>
@@ -10286,31 +10286,6 @@
       </tags>
   </entry>
   <entry>
-    <title>commandbuff的一些问题</title>
-    <url>/unity-2021-05-20-ecs-commandbuff-question/</url>
-    <content><![CDATA[<p>component</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public struct State:IComponentData</span><br><span class="line">&#123;</span><br><span class="line">	public int a;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>a系统</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"> var PostUpdateCommands &#x3D; World.GetExistingSystem&lt;AbilityUpdateCommandBufferSystem&gt;().CreateCommandBuffer();</span><br><span class="line">Entities</span><br><span class="line">    .ForEach((Entity entity) &#x3D;&gt;</span><br><span class="line">    &#123;</span><br><span class="line">    	var state &#x3D; EntityManager.GetComponent&lt;State&gt;(entity);</span><br><span class="line">    	state.a &#x3D; 1111;</span><br><span class="line">    	PostUpdateCommands.SetComponent(entity,state);</span><br><span class="line">    &#125;)</span><br><span class="line">    .WithoutBurst()</span><br><span class="line">    .Run();</span><br></pre></td></tr></table></figure>
-
-<p>b系统</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Entities</span><br><span class="line">    .ForEach((Entity entity) &#x3D;&gt;</span><br><span class="line">    &#123;</span><br><span class="line">    	var state &#x3D; EntityManager.GetComponent&lt;State&gt;(entity);</span><br><span class="line">    	state.a &#x3D; 2222;</span><br><span class="line">    	EntityManager.SetComponentData(entity,state);</span><br><span class="line">    &#125;)</span><br><span class="line">     .WithStructuralChanges()</span><br><span class="line">    .Run();</span><br></pre></td></tr></table></figure>
-
-<p>执行顺序</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">A--&gt;B--&gt;AbilityUpdateCommandBufferSystem</span><br></pre></td></tr></table></figure>
-
-<p>这里的结果,我们以为是2222.其实是1111.</p>
-<p>所以要么全是使用commandbuff.否则容易造成数据错误</p>
-]]></content>
-      <categories>
-        <category>unity</category>
-      </categories>
-      <tags>
-        <tag>C</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Edgar源代码解读</title>
     <url>/unity-2021-06-12-edgar-code-read/</url>
     <content><![CDATA[<h3 id="生成类"><a href="#生成类" class="headerlink" title="生成类"></a>生成类</h3><ul>
@@ -10462,6 +10437,31 @@
         <tag>Unity</tag>
         <tag>UNITY</tag>
         <tag>mesh</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>commandbuff的一些问题</title>
+    <url>/unity-2021-05-20-ecs-commandbuff-question/</url>
+    <content><![CDATA[<p>component</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public struct State:IComponentData</span><br><span class="line">&#123;</span><br><span class="line">	public int a;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>a系统</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"> var PostUpdateCommands &#x3D; World.GetExistingSystem&lt;AbilityUpdateCommandBufferSystem&gt;().CreateCommandBuffer();</span><br><span class="line">Entities</span><br><span class="line">    .ForEach((Entity entity) &#x3D;&gt;</span><br><span class="line">    &#123;</span><br><span class="line">    	var state &#x3D; EntityManager.GetComponent&lt;State&gt;(entity);</span><br><span class="line">    	state.a &#x3D; 1111;</span><br><span class="line">    	PostUpdateCommands.SetComponent(entity,state);</span><br><span class="line">    &#125;)</span><br><span class="line">    .WithoutBurst()</span><br><span class="line">    .Run();</span><br></pre></td></tr></table></figure>
+
+<p>b系统</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Entities</span><br><span class="line">    .ForEach((Entity entity) &#x3D;&gt;</span><br><span class="line">    &#123;</span><br><span class="line">    	var state &#x3D; EntityManager.GetComponent&lt;State&gt;(entity);</span><br><span class="line">    	state.a &#x3D; 2222;</span><br><span class="line">    	EntityManager.SetComponentData(entity,state);</span><br><span class="line">    &#125;)</span><br><span class="line">     .WithStructuralChanges()</span><br><span class="line">    .Run();</span><br></pre></td></tr></table></figure>
+
+<p>执行顺序</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">A--&gt;B--&gt;AbilityUpdateCommandBufferSystem</span><br></pre></td></tr></table></figure>
+
+<p>这里的结果,我们以为是2222.其实是1111.</p>
+<p>所以要么全是使用commandbuff.否则容易造成数据错误</p>
+]]></content>
+      <categories>
+        <category>unity</category>
+      </categories>
+      <tags>
+        <tag>C</tag>
       </tags>
   </entry>
   <entry>
