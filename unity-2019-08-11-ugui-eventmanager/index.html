@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.igiven.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="OnMouse事件我们先来看看eventmanager之前unity处理事件的方法,首当其冲的就是MonoBehavior上的事件回调，可以参看MonoBehaviour文档。这是一系列的OnMouse开头的回调函数。 123456OnMouseDownOnMouseDragOnMouseEnterOnMouseExitOnMouseOverOnMouseUp">
+<meta property="og:type" content="article">
+<meta property="og:title" content="一次精通 eventmanager">
+<meta property="og:url" content="http://www.igiven.com/unity-2019-08-11-ugui-eventmanager/index.html">
+<meta property="og:site_name" content="IGiven">
+<meta property="og:description" content="OnMouse事件我们先来看看eventmanager之前unity处理事件的方法,首当其冲的就是MonoBehavior上的事件回调，可以参看MonoBehaviour文档。这是一系列的OnMouse开头的回调函数。 123456OnMouseDownOnMouseDragOnMouseEnterOnMouseExitOnMouseOverOnMouseUp">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-11-ugui-eventmanager/20171106145111819.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-11-ugui-eventmanager/unity_event_system_raycaster.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-11-ugui-eventmanager/unity_event_trigger_2.jpeg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-11-ugui-eventmanager/image-20200727011714966.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-11-ugui-eventmanager/image-20200727010842873.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-11-ugui-eventmanager/v2-733f4cd159b935aeb26518e97b902a7d_hd.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-11-ugui-eventmanager/v2-3c1713c6226906982501aa7c4dd8252d_hd.jpg">
+<meta property="article:published_time" content="2019-08-11T00:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-26T08:36:17.946Z">
+<meta property="article:author" content="zhepama">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="C#">
+<meta property="article:tag" content="GitHub">
+<meta property="article:tag" content="Unity">
+<meta property="article:tag" content="UNITY">
+<meta property="article:tag" content="ugui">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.igiven.com/assets/images/2019-08-11-ugui-eventmanager/20171106145111819.png">
+
+<link rel="canonical" href="http://www.igiven.com/unity-2019-08-11-ugui-eventmanager/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>一次精通 eventmanager | IGiven</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="IGiven" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="IGiven" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">IGiven</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">李九仙的博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">139</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">32</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-留言">
+
+    <a href="/guestbook/" rel="section"><i class="fa fa-sticky-note fa-fw"></i>留言</a>
+
+  </li>
+        <li class="menu-item menu-item-rss">
+
+    <a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/unity-2019-08-11-ugui-eventmanager/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+      <meta itemprop="name" content="zhepama">
+      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="IGiven">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          一次精通 eventmanager<a href="https://github.com/zhepama/igiven.github.io/edit/master/source/_posts/unity/2019-08-11-ugui-eventmanager.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil-alt"></i></a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-08-11 08:00:00" itemprop="dateCreated datePublished" datetime="2019-08-11T08:00:00+08:00">2019-08-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 16:36:17" itemprop="dateModified" datetime="2021-06-26T16:36:17+08:00">2021-06-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/unity/" itemprop="url" rel="index"><span itemprop="name">unity</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="OnMouse事件"><a href="#OnMouse事件" class="headerlink" title="OnMouse事件"></a>OnMouse事件</h1><p>我们先来看看eventmanager之前unity处理事件的方法,首当其冲的就是MonoBehavior上的事件回调，可以参看<a href="https://link.zhihu.com/?target=https%3A//docs.unity3d.com/ScriptReference/MonoBehaviour.html">MonoBehaviour</a>文档。这是一系列的OnMouse开头的回调函数。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">OnMouseDown</span><br><span class="line">OnMouseDrag</span><br><span class="line">OnMouseEnter</span><br><span class="line">OnMouseExit</span><br><span class="line">OnMouseOver</span><br><span class="line">OnMouseUp</span><br></pre></td></tr></table></figure>
+
+<p>这个处理方式有以下几个特点：</p>
+<ul>
+<li>MonoBehavior所在的GameObject需要有Collider碰撞组件，并且Physics.queriesHitTriggers设置为True，这个在Edit -&gt; Physics Settings -&gt; Physics or Physics2D中设置。</li>
+<li>或者MonoBehavior所在的GameObject存在GUIElement。</li>
+<li>OnMouse处理函数可以是协程。</li>
+<li>GameObject所有MonoBehavior实现OnMouse的函数都会调用。</li>
+<li>Collider或GUIElement的层级顺序，会遮挡事件的传递。</li>
+</ul>
+<p>按照官方的解释，这是GUI事件的一部分，参看<a href="https://link.zhihu.com/?target=https%3A//docs.unity3d.com/Manual/EventFunctions.html">EventFunctions</a>。设计的初衷也是为了GUI服务的。参看<a href="https://link.zhihu.com/?target=https%3A//docs.unity3d.com/Manual/ExecutionOrder.html">ExecutionOrder</a>最后的unity执行流程图，会发现OnMouse事件是一个独立的Input Event。</p>
+<p><img src="../../assets/images/2019-08-11-ugui-eventmanager/20171106145111819.png" alt="img"></p>
+<p>可以看到，OnMouse事件在，Physics事件之后，Update之前，记住这个顺序，后面会用到。并且，这是引擎本身回调的，就引擎使用而言可以看成是，消息驱动。至于引擎的实现，可是轮询也可以是消息驱动。</p>
+<h4 id="在Update中輪詢Input物件"><a href="#在Update中輪詢Input物件" class="headerlink" title="在Update中輪詢Input物件"></a>在Update中輪詢Input物件</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">public class ExampleClass : MonoBehaviour</span><br><span class="line">&#123; </span><br><span class="line">    public void Update() </span><br><span class="line">    &#123; </span><br><span class="line">       if (Input.GetButtonDown(&quot;Fire1&quot;)) </span><br><span class="line">       &#123; </span><br><span class="line">            Debug.Log(Input.mousePosition); </span><br><span class="line">       &#125; </span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这是官方的例子，Input拥有各种输入设备的数据信息。每一帧不断的检测，查看有没有需要处理的输入信息，利用GameObject本身的层级顺序来控制Update的调用顺序，从而控制了Input的处理顺序。</p>
+<p>Input的信息由引擎自己设置的，明显Unity需要实现不同平台的事件处理，然后对Input进行设置。另外有一个InputManager面板用来配置Input相关属性的，在Edit -&gt; Physics Settings -&gt; Input中。</p>
+<p>由前面的执行流程图可知，OnMouse事件会在Update之前调用，当然我们也可以在OnMouse中使用Input，这样就变成了消息驱动，而不是轮询了。但这样的缺点是，事件必须由touch或pointer碰撞触发，比如键盘或控制器按钮的事件就没有办法捕获了。</p>
+<h1 id="EventSystem"><a href="#EventSystem" class="headerlink" title="EventSystem"></a>EventSystem</h1><p>EventSystem组件主要负责处理输入、射线投射以及发送事件。一个场景中只能有一个EventSystem组件，并且需要BaseInputModule类型组件的协助才能工作。EventSystem在一开始的时候会把自己所属对象下的BaseInputModule类型组件加到一个内部列表，并且在每个Update周期通过接口UpdateModules接口调用这些基本输入模块的UpdateModule接口，然后BaseInputModule会在UpdateModule接口中将自己的状态修改成’Updated’，之后BaseInputModule的Process接口才会被调用。</p>
+<p>BaseInputModule是一个基类模块，负责发送输入事件（点击、拖拽、选中等）到具体对象。EventSystem下的所有输入模块都必须继承自BaseInputModule组件。StandaloneInputModule和TouchInputModule组件是系统提供的标准输入模块和触摸输入模块，我们可以通过继承BaseInputModule实现自己的输入模块。</p>
+<p>BaseRaycaster也是一个基类，前面说的输入模块要检测到鼠标事件必须有射线投射组件才能确定目标对象。系统实现的射线投射类组件有PhysicsRaycaster, Physics2DRaycaster, GraphicRaycaster。这个模块也是可以自己继承BaseRaycaster实现个性化定制。</p>
+<p> <strong>总的来说，EventSystem负责管理，BaseInputModule负责输入，BaseRaycaster负责确定目标对象，目标对象负责接收事件并处理，然后一个完整的事件系统就有了。</strong></p>
+<h1 id="EventSystem與OnMouse的區別"><a href="#EventSystem與OnMouse的區別" class="headerlink" title="EventSystem與OnMouse的區別"></a>EventSystem與OnMouse的區別</h1><ul>
+<li><p>OnMouse 会先于 EventSystem 触发。因为EventSystem的源码显示，其在Update中去轮询检测处理Input的输入。而OnMouse事件先于Update调用。</p>
+</li>
+<li><p>OnMouse脚本需要在同一个GameObject上挂载Collider才能检测。EventSystem的脚本会根据子节点的Collider来触发(平行节点不行)。</p>
+</li>
+<li><p>Rigidbody有个特点，会把子节点所有的Collider统一检测和处理。也就是说，OnMouse脚本与RigidBody在一起就可以检测所有的子节点Collider，而不再需要同级的Collider。而EventSystem的脚本则不依赖于Rigidbody，都可以检测子节点的Collider。</p>
+</li>
+<li><p>OnMouse依赖于Tag为MainCamera相机的Culling Mask来过滤射线。EventSystem则是依赖挂载Physics Raycaster的相机。</p>
+</li>
+</ul>
+<p>另外，当在有Collider的子节点都挂载OnMouse或EventSystem事件的时候，只会触发一次事件。但在同一个GameObject上挂载多个脚本，就会触发多次。</p>
+<h1 id="Unity-Raycasters-和事件处理"><a href="#Unity-Raycasters-和事件处理" class="headerlink" title="Unity Raycasters 和事件处理"></a>Unity Raycasters 和事件处理</h1><p>Raycasters 用来检测当前事件发送给哪个对象，检测原理就是 Raycast。当给定一个屏幕坐标系中的位置，Raycasters 就会利用射线检测寻找潜在的对象，并返回一个离当前屏幕最近的对象。</p>
+<p>在 Unity Raycasters 中有三种类型的 Raycasters:</p>
+<ul>
+<li>Graphic Raycaster - 存在于 Canvas 下，用于检测 Canvas 中所有的物体</li>
+<li>Physics 2D Raycaster - 用于检测 2D 物体</li>
+<li>Physics Raycaster - 用于检测 3D 物体</li>
+</ul>
+<p>接下来，就来分析一下各个类型 Raycaster 的源码来看看其的工作流程。</p>
+<p>Raycast 在 Event System 流程中所处的位置大致如下图:</p>
+<p><img src="../../assets/images/2019-08-11-ugui-eventmanager/unity_event_system_raycaster.png" alt="unity_event_system_raycaster.png"></p>
+<h3 id="unity的事件处理"><a href="#unity的事件处理" class="headerlink" title="unity的事件处理"></a>unity的事件处理</h3><p>当 Event System 处理输入事件并找到合适的接收者，将该接收者作为参数执行 ExecuteEvents 类中的 <code>Execute</code> 或 <code>ExecuteHierarchy</code> 方法；如果此时该接收对象 GameObject 绑定了 EventTrigger 组件，由于 EventTrigger 类实现了所有常用的 UI 事件接口(即实现了 <code>IEventSystemHandler</code> 接口)，因此会执行 EventTrigger 类中相应事件接口对应的方法，转而执行 EventTrigger 类的 <code>Execute</code> 方法，最终回调在编辑器中设定的方法。</p>
+<p>所以如果当一个点击事件被触发,首先会拿到射线检测返回的gameobject，然后搜索当前的<strong>gameobejct以及其父节点</strong>上面是否有实现了IPointerDownHandler的接口的控件，如果有实现了的就把newPressed赋值为这个控件的gameobject，如果没有，就去搜索实现了IPointerClickHandler这个接口的控件，如果没有在自身上找到的话，会依次地向父节点层层搜索，直到找到为止，然后依然是把newPressed赋值为这个控件的gameobject。接着会按照类似的方式去搜索自身以及父节点上是否有实现了IDragHandler的组件，如果有的话紧接着便会去触发OnPointerDown和OnDrag方法。</p>
+<p>当鼠标按下并抬起的时候，首先会触发IPointerUpHandler接口中的函数OnPointerUp()，然后会再次搜索当前gameobject以及其父节点上是否有实现了IPointerClickHandler接口的控件，如果有的的话，会和之前存下来的newPressd进行比较，看两者是否为同一个gameobject。如果两者为同一个gameobject的话就会触发Click事件。</p>
+<p>因此我们需要注意，如果一个物体没有父节点的话，那么只实现IPointerClickHandler接口便是可以接收到点击事件的。如果他有父节点，父节点挂载的脚本也是只实现IPointerClickHandler接口的话，点击事件也是可以接收到的。但是如果父节点实现了IPointerDownHandler和IPointerClickHandler接口，子节点只实现IPointerClickHandler接口的话，两者便会都接收不到点击事件，需要子节点也实现IPointerDownHandler这个接口才行。</p>
+<p><img src="../../assets/images/2019-08-11-ugui-eventmanager/unity_event_trigger_2.jpeg" alt="unity_event_trigger_2.jpeg"></p>
+<p><strong>事件透传</strong></p>
+<p>如果事件被接收后,就不会再被父节点的监听处理,如果需要,则得使用message手动触发</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line">using UnityEngine;</span><br><span class="line">using System.Collections;</span><br><span class="line">using UnityEngine.EventSystems;</span><br><span class="line">using UnityEngine.UI;</span><br><span class="line">using System.Collections.Generic;</span><br><span class="line"> </span><br><span class="line">public class Test : MonoBehaviour,IPointerClickHandler ,IPointerDownHandler,IPointerUpHandler</span><br><span class="line">&#123; </span><br><span class="line"> </span><br><span class="line">    &#x2F;&#x2F;监听按下</span><br><span class="line">    public void OnPointerDown(PointerEventData eventData)</span><br><span class="line">    &#123;</span><br><span class="line">        PassEvent(eventData,ExecuteEvents.pointerDownHandler);</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    &#x2F;&#x2F;监听抬起</span><br><span class="line">    public void OnPointerUp(PointerEventData eventData)</span><br><span class="line">    &#123;</span><br><span class="line">        PassEvent(eventData,ExecuteEvents.pointerUpHandler);</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    &#x2F;&#x2F;监听点击</span><br><span class="line">    public void OnPointerClick(PointerEventData eventData)</span><br><span class="line">    &#123;</span><br><span class="line">        PassEvent(eventData,ExecuteEvents.submitHandler);</span><br><span class="line">        PassEvent(eventData,ExecuteEvents.pointerClickHandler);</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line"> </span><br><span class="line">    &#x2F;&#x2F;把事件透下去</span><br><span class="line">    public void  PassEvent&lt;T&gt;(PointerEventData data,ExecuteEvents.EventFunction&lt;T&gt; function)</span><br><span class="line">        where T : IEventSystemHandler</span><br><span class="line">    &#123;</span><br><span class="line">        List&lt;RaycastResult&gt; results &#x3D; new List&lt;RaycastResult&gt;();</span><br><span class="line">        EventSystem.current.RaycastAll(data, results); </span><br><span class="line">        GameObject current &#x3D; data.pointerCurrentRaycast.gameObject ;</span><br><span class="line">        for(int i &#x3D;0; i&lt; results.Count;i++)</span><br><span class="line">        &#123;</span><br><span class="line">            if(current!&#x3D; results[i].gameObject)</span><br><span class="line">            &#123;</span><br><span class="line">                ExecuteEvents.Execute(results[i].gameObject, data,function);</span><br><span class="line">                &#x2F;&#x2F;RaycastAll后ugui会自己排序，如果你只想响应透下去的最近的一个响应，这里ExecuteEvents.Execute后直接break就行。</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>事件忽略</strong></p>
+<p>如果需要当前节点及子节点都不响应UI事件</p>
+<ul>
+<li>勾选Raycast Targe </li>
+<li>在当前节点上添加一个组件CanvasGroup，然后取消其Interactable和Blocks Raycasts的勾选</li>
+<li>添加脚本</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">using UnityEngine;</span><br><span class="line">using System.Collections;</span><br><span class="line">public class TouchIgnore : MonoBehaviour, ICanvasRaycastFilter</span><br><span class="line">&#123;</span><br><span class="line">	public bool IsRaycastLocationValid(Vector2 screenPoint, Camera eventCamera)</span><br><span class="line">	&#123;</span><br><span class="line">		return false;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>事件阻止</strong></p>
+<p>父子之间阻止向父级传递事件,只要在该对象加上一个EventTrigger起就可以了,代表这个事件已经被处理了.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">this.GameObject.GetOrAddComponent&lt;EventTrigger&gt;()</span><br></pre></td></tr></table></figure>
+<p>比如一个案例,点击最顶级的遮罩(白色部分)窗口关闭,但是点击到窗口内部(红色部分)不做处理<br><img src="../../assets/images/2019-08-11-ugui-eventmanager/image-20200727011714966.png" alt="image-20200727011714966"></p>
+<p><strong>ugui事件和射线穿透的问题</strong></p>
+<p>eventsystem也是向场景发送射线,然后找到<strong>第一个</strong>触碰的有<strong>Raycast Target</strong>的game object.然后在向这个gameobject的父级去找.</p>
+<p>所有如果ui即使全屏了,但是没有设置Raycast Target,仍然会穿透ui.射线会检测到下面的立方体,如图:</p>
+<p><img src="../../assets/images/2019-08-11-ugui-eventmanager/image-20200727010842873.png" alt="image-20200727010842873"></p>
+<p><strong>事件和handler的连接触发方式</strong></p>
+<ol>
+<li><p>对于某些ui组件，可以直接设置其对自己产生的事件的handler，如button的onpointerclick</p>
+</li>
+<li><p>对于任何ui组件，都可以使用eventtrigger这个component，这个trigger放置在产生事件的UI组件上，里面包含了一个事件的类型，以及这个类型关联的处理函数，处理函数可以使用两种函数参数，一种是使用int string简单类型，一种是使用BaseEventData类型，因为当event发生时，会跟随者把这个事件包装成一个PointerEventData类型的参数送进来，里面包含ui事件的详细信息，包括鼠标在哪，而对于前一种简单类型，在编辑器上可以填写当事件发生时传什么参数，这就好比qt的signal和slot连接。</p>
+</li>
+<li><p>强制让某个事件发生在某个handler上（也就是强制某个handler执行）：调用ExecuteEvents.Execute&lt;<strong>ICustomMessageTarget</strong>&gt;(target, null, (x,y)=&gt;x.Message1());</p>
+<p>这个调用将执行target身上所有继承 了ICustomMessageTarget接口的mono的Message1函数，个人认为这个和给target发送Message1 的sendmessage没什么区别，可能是我还没有立即好这个接口。</p>
+</li>
+</ol>
+<p><strong>自定义事件处理</strong></p>
+<p>建立一個 Script，繼承 Event Interfaces，這裡是IPointerDownHandler(點下事件)，<a href="http://docs.unity3d.com/Manual/SupportedEvents.html" target="_blank" rel="noopener">看更多 Event 請點我</a></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">using UnityEngine;</span><br><span class="line">using UnityEngine.EventSystems;</span><br><span class="line"> </span><br><span class="line">public class EventTest : MonoBehaviour, IPointerDownHandler</span><br><span class="line">&#123;</span><br><span class="line">    public void OnPointerDown(PointerEventData eventData)</span><br><span class="line">    &#123;</span><br><span class="line">        print(gameObject.name);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h2 id="阻止手动发送射线穿透ugui问题"><a href="#阻止手动发送射线穿透ugui问题" class="headerlink" title="阻止手动发送射线穿透ugui问题"></a>阻止手动发送射线穿透ugui问题</h2><p>UGUI 提供了一个检测是否点击在UI上的方法<br>EventSystem.current.IsPointerOverGameObject();<br>在EventSystem的标准输入Standalone Input Model下是正常的，</p>
+<p>但是在Touch Input Module输入模式下不正常</p>
+<p>参考网络资料，解决办法(直接上<a href="http://blog.csdn.net/andyhebear/article/details/51433748" target="_blank" rel="noopener">源码</a>):</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br></pre></td><td class="code"><pre><span class="line"> <span class="keyword">using</span> System.Collections;</span><br><span class="line"><span class="keyword">using</span> System.Collections.Generic;</span><br><span class="line"><span class="keyword">using</span> UnityEngine;</span><br><span class="line"><span class="keyword">using</span> UnityEngine.UI;</span><br><span class="line"><span class="keyword">using</span> UnityEngine.EventSystems;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">PointerCheck</span> : <span class="title">MonoBehaviour</span></span><br><span class="line">&#123;</span><br><span class="line"> <span class="comment">//UGUI 提供了一个检测是否点击在UI上的方法</span></span><br><span class="line">    <span class="comment">//EventSystem.current.IsPointerOverGameObject();</span></span><br><span class="line">    <span class="comment">//但是该方法在PC上检测正常，结果拿到Android真机测试上，永远检测不到。</span></span><br><span class="line">    <span class="comment">//方法一， 使用该方法的另一个重载方法，使用时给该方法传递一个整形参数</span></span><br><span class="line">    <span class="comment">// 该参数即使触摸手势的 id</span></span><br><span class="line">    <span class="comment">// int id = Input.GetTouch(0).fingerId;</span></span><br><span class="line">    <span class="comment">//public static bool IsPointerOverGameObject(int fingerID) &#123;</span></span><br><span class="line">    <span class="comment">//    return UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject(fingerID);//移动输入模式下一样不行</span></span><br><span class="line"> </span><br><span class="line">    <span class="comment">//&#125;</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">bool</span> <span class="title">IsPointerOverGameObject</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">        <span class="comment">//if (Input.touchCount &gt; 0) &#123;</span></span><br><span class="line">                        </span><br><span class="line">        <span class="comment">//    int id = Input.GetTouch(0).fingerId;</span></span><br><span class="line">        <span class="comment">//    return UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject(id);//安卓机上不行</span></span><br><span class="line">        <span class="comment">//&#125;</span></span><br><span class="line">        <span class="comment">//else &#123;</span></span><br><span class="line">            <span class="comment">//return UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();</span></span><br><span class="line">            PointerEventData eventData = <span class="keyword">new</span> PointerEventData(UnityEngine.EventSystems.EventSystem.current);</span><br><span class="line">            eventData.pressPosition = Input.mousePosition;</span><br><span class="line">            eventData.position = Input.mousePosition;</span><br><span class="line"> </span><br><span class="line">            List&lt;RaycastResult&gt; list = <span class="keyword">new</span> List&lt;RaycastResult&gt;();</span><br><span class="line">            UnityEngine.EventSystems.EventSystem.current.RaycastAll(eventData, list);</span><br><span class="line">            <span class="comment">//Debug.Log(list.Count);</span></span><br><span class="line">            <span class="keyword">return</span> list.Count &gt; <span class="number">0</span>;</span><br><span class="line">       <span class="comment">// &#125;</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//方法二 通过UI事件发射射线</span></span><br><span class="line">    <span class="comment">//是 2D UI 的位置，非 3D 位置</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">bool</span> <span class="title">IsPointerOverGameObject</span>(<span class="params">Vector2 screenPosition</span>)</span> &#123;</span><br><span class="line">        <span class="comment">//实例化点击事件</span></span><br><span class="line">        PointerEventData eventDataCurrentPosition = <span class="keyword">new</span> PointerEventData(UnityEngine.EventSystems.EventSystem.current);</span><br><span class="line">        <span class="comment">//将点击位置的屏幕坐标赋值给点击事件</span></span><br><span class="line">        eventDataCurrentPosition.position = <span class="keyword">new</span> Vector2(screenPosition.x, screenPosition.y);</span><br><span class="line"> </span><br><span class="line">        List&lt;RaycastResult&gt; results = <span class="keyword">new</span> List&lt;RaycastResult&gt;();</span><br><span class="line">        <span class="comment">//向点击处发射射线</span></span><br><span class="line">        EventSystem.current.RaycastAll(eventDataCurrentPosition, results);</span><br><span class="line"> </span><br><span class="line">        <span class="keyword">return</span> results.Count &gt; <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//方法三 通过画布上的 GraphicRaycaster 组件发射射线</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">bool</span> <span class="title">IsPointerOverGameObject</span>(<span class="params">Canvas canvas, Vector2 screenPosition</span>)</span> &#123;</span><br><span class="line">        <span class="comment">//实例化点击事件</span></span><br><span class="line">        PointerEventData eventDataCurrentPosition = <span class="keyword">new</span> PointerEventData(EventSystem.current);</span><br><span class="line">        <span class="comment">//将点击位置的屏幕坐标赋值给点击事件</span></span><br><span class="line">        eventDataCurrentPosition.position = screenPosition;</span><br><span class="line">        <span class="comment">//获取画布上的 GraphicRaycaster 组件</span></span><br><span class="line">        GraphicRaycaster uiRaycaster = canvas.gameObject.GetComponent&lt;GraphicRaycaster&gt;();</span><br><span class="line"> </span><br><span class="line">        List&lt;RaycastResult&gt; results = <span class="keyword">new</span> List&lt;RaycastResult&gt;();</span><br><span class="line">        <span class="comment">// GraphicRaycaster 发射射线</span></span><br><span class="line">        uiRaycaster.Raycast(eventDataCurrentPosition, results);</span><br><span class="line"> </span><br><span class="line">        <span class="keyword">return</span> results.Count &gt; <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line"><span class="comment">// For Details =&gt; https://blog.csdn.net/andyhebear/article/details/51433748</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>网友解决办法：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"> &#x2F;&#x2F;&#x2F; &lt;summary&gt;</span><br><span class="line">&#x2F;&#x2F;&#x2F; Cast a ray to test if Input.mousePosition is over any UI object in EventSystem.current. This is a replacement</span><br><span class="line">&#x2F;&#x2F;&#x2F; for IsPointerOverGameObject() which does not work on Android in 4.6.0f3</span><br><span class="line">&#x2F;&#x2F;&#x2F; &lt;&#x2F;summary&gt;</span><br><span class="line">private static bool IsPointerOverUIObject()</span><br><span class="line">&#123;</span><br><span class="line">    if (EventSystem.current &#x3D;&#x3D; null)</span><br><span class="line">        return false;</span><br><span class="line"> </span><br><span class="line">    &#x2F;&#x2F; Referencing this code for GraphicRaycaster https:&#x2F;&#x2F;gist.github.com&#x2F;stramit&#x2F;ead7ca1f432f3c0f181f</span><br><span class="line">    &#x2F;&#x2F; the ray cast appears to require only eventData.position.</span><br><span class="line">    PointerEventData eventDataCurrentPosition &#x3D; new PointerEventData(EventSystem.current);</span><br><span class="line">    eventDataCurrentPosition.position &#x3D; new Vector2(Input.mousePosition.x, Input.mousePosition.y);</span><br><span class="line"> </span><br><span class="line">    List&lt;RaycastResult&gt; results &#x3D; new List&lt;RaycastResult&gt;();</span><br><span class="line">    EventSystem.current.RaycastAll(eventDataCurrentPosition, results);</span><br><span class="line"> </span><br><span class="line">    return results.Count &gt; 0;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">&#x2F;&#x2F;&#x2F; &lt;summary&gt;</span><br><span class="line">&#x2F;&#x2F;&#x2F; Cast a ray to test if screenPosition is over any UI object in canvas. This is a replacement</span><br><span class="line">&#x2F;&#x2F;&#x2F; for IsPointerOverGameObject() which does not work on Android in 4.6.0f3</span><br><span class="line">&#x2F;&#x2F;&#x2F; &lt;&#x2F;summary&gt;</span><br><span class="line">private bool IsPointerOverUIObject(Canvas canvas, Vector2 screenPosition)</span><br><span class="line">&#123;</span><br><span class="line">    if (EventSystem.current &#x3D;&#x3D; null)</span><br><span class="line">        return false;</span><br><span class="line"> </span><br><span class="line">    &#x2F;&#x2F; Referencing this code for GraphicRaycaster https:&#x2F;&#x2F;gist.github.com&#x2F;stramit&#x2F;ead7ca1f432f3c0f181f</span><br><span class="line">    &#x2F;&#x2F; the ray cast appears to require only eventData.position.</span><br><span class="line">    PointerEventData eventDataCurrentPosition &#x3D; new PointerEventData(EventSystem.current);</span><br><span class="line">    eventDataCurrentPosition.position &#x3D; screenPosition;</span><br><span class="line"> </span><br><span class="line">    GraphicRaycaster uiRaycaster &#x3D; canvas.gameObject.GetComponent&lt;GraphicRaycaster&gt;();</span><br><span class="line">    List&lt;RaycastResult&gt; results &#x3D; new List&lt;RaycastResult&gt;();</span><br><span class="line">    uiRaycaster.Raycast(eventDataCurrentPosition, results);</span><br><span class="line">    return results.Count &gt; 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h1 id="Message-System（改进的消息系统）"><a href="#Message-System（改进的消息系统）" class="headerlink" title="Message System（改进的消息系统）"></a>Message System（改进的消息系统）</h1><h3 id="传统方式进行-Message-通信"><a href="#传统方式进行-Message-通信" class="headerlink" title="传统方式进行 Message 通信"></a>传统方式进行 Message 通信</h3><p>传统消息通信，通常我们会使用 GameObject 类中的 <code>SendMessage</code>、<code>SendMessageUpwards</code> 和 <code>BroadcastMessage</code> 方法</p>
+<table>
+<thead>
+<tr>
+<th align="center"></th>
+<th align="center">SendMessage</th>
+<th align="center">SendMessageUpwards</th>
+<th align="center">BroadcastMessage</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">自身节点</td>
+<td align="center">√</td>
+<td align="center">√</td>
+<td align="center">√</td>
+</tr>
+<tr>
+<td align="center">兄弟节点</td>
+<td align="center">×</td>
+<td align="center">×</td>
+<td align="center">×</td>
+</tr>
+<tr>
+<td align="center">父/祖先节点</td>
+<td align="center">×</td>
+<td align="center">√</td>
+<td align="center">×</td>
+</tr>
+<tr>
+<td align="center">子/孙节点</td>
+<td align="center">×</td>
+<td align="center">×</td>
+<td align="center">√</td>
+</tr>
+</tbody></table>
+<h3 id="Messaging-System"><a href="#Messaging-System" class="headerlink" title="Messaging System"></a>Messaging System</h3><p>在 UGUI 的 Event System 中，所有的事件通信都是用了 Messaging System 来实现，它也解决了传统方式进行 Message 通信中可能会遇到的一些问题。下面就来让我们好好看看这套 Messaging System。</p>
+<p>首先，要想让 Component 能够从 Messaging System 接收消息，Component 要实现 <code>IEventSystemHandler</code> 这个接口。<code>IPointerDownHandler</code>等都继承了<code>IEventSystemHandler</code> 接口</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">public interface ICustomMessageTarget : IEventSystemHandler</span><br><span class="line">&#123;</span><br><span class="line">    &#x2F;&#x2F; functions that can be called via the messaging system</span><br><span class="line">    void Message1();</span><br><span class="line">    void Message2();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>实现这个接口 , 把这个脚本挂在某个物体上，这里假设为物体AAA</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">public class CustomMessageTarget : MonoBehaviour, ICustomMessageTarget</span><br><span class="line">&#123;</span><br><span class="line">    public void Message1()</span><br><span class="line">    &#123;</span><br><span class="line">        Debug.Log (&quot;Message 1 received&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void Message2()</span><br><span class="line">    &#123;</span><br><span class="line">        Debug.Log (&quot;Message 2 received&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在任何脚本中使用ExecuteEvents静态类发送Message，来执行接口中定义的方法</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ExecuteEvents.Execute&lt;ICustomMessageTarget&gt;(target, null, (x,y)&#x3D;&gt;x.Message1());</span><br></pre></td></tr></table></figure>
+
+<p>Excute泛型方法，有3个参数，第一个参数是发送message的gameobject对象，只有当对象上有<code>IEventSystemHandler</code>实现类的时候才可以，这个例子中自然就是AAA物体。</p>
+<p>ExecuteEvents静态类还有其他方法：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">EventSystems.ExecuteEvents.CanHandleEvent    判断给定的gameobejct是否能处理这个事件</span><br><span class="line">EventSystems.ExecuteEvents.Execute     执行事件</span><br><span class="line">EventSystems.ExecuteEvents.ExecuteHierarchy  是递归寻找适合的gameobject，并执行事件 </span><br><span class="line">EventSystems.ExecuteEvents.GetEventHandler   </span><br><span class="line">EventSystems.ExecuteEvents.ValidateEventData</span><br></pre></td></tr></table></figure>
+
+<h1 id="eventsystem-处理Physics"><a href="#eventsystem-处理Physics" class="headerlink" title="eventsystem 处理Physics"></a>eventsystem 处理Physics</h1><p>首先，我们看一个官方文档的说明 <a href="https://link.zhihu.com/?target=https%3A//docs.unity3d.com/Manual/Raycasters.html">Raycasters</a>。</p>
+<blockquote>
+<p>If multiple Raycasters are used then they will all have casting happen against them and the results will be sorted based on distance to the elements.</p>
+</blockquote>
+<p>当多个Raycaster被使用的时候，结果会按照元素之间的距离排序，然后事件就会按照这个顺序被传递。</p>
+<h2 id="第一步"><a href="#第一步" class="headerlink" title="第一步"></a><strong>第一步</strong></h2><p><img src="../../assets/images/2019-08-11-ugui-eventmanager/v2-733f4cd159b935aeb26518e97b902a7d_hd.jpg" alt="img"></p>
+<p>在相机上添加Physics2DRaycaster，我这里只需要对Physics2D检测，如果是3D就用Physics3DRaycaster。Physics Raycaster 依赖一个相机，如果没有会自动添加。我挂载在相机上，射线检测就会依赖这个相机。</p>
+<p>这里我用在GameCamera上面，当然也可以放在UICamera上面，Physics Raycaster挂载在哪个相机上面，射线就依赖这个相机的Culling Mask。</p>
+<p>另外需要注意的是，Physics Raycaster所在的相机层级，也就是Depth，会影响到事件传递的顺序。比如，UI Camera层级高于Game Camera，就会永远先出发UI上的事件。同样，OnMouse事件会默认依赖Main Camera的层级。</p>
+<h2 id="第二步"><a href="#第二步" class="headerlink" title="第二步"></a><strong>第二步</strong></h2><p>给需要碰撞检测的GameObject，添加Collider和EventSystem的事件处理回调接口。注意GameObject的Layer也要与Camera和Raycaster一致，才能正确被检测到。</p>
+<p><img src="../../assets/images/2019-08-11-ugui-eventmanager/v2-3c1713c6226906982501aa7c4dd8252d_hd.jpg" alt="img"></p>
+<p>事件接口实现脚本(图中的Test)需要Collider，事件才能正确回调，并且GameObject和相机的距离决定了Collider的层级，也就是事件阻挡关系。</p>
+<h2 id="第三步"><a href="#第三步" class="headerlink" title="第三步"></a><strong>第三步</strong></h2><p>这样一来，EventSystem的SupportEvents的接口全部被应用到了Physics上面。也就不再需要自己手动去调用射线去检测Physics碰撞了。那么，还隐含着一个事情就是，EventSystem的IsPointerOverGameObject()就无法在判断对UI的点击了。因为现在点击到Physics也会让这个函数返回True。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C</a>
+              <a href="/tags/C/" rel="tag"># C#</a>
+              <a href="/tags/GitHub/" rel="tag"># GitHub</a>
+              <a href="/tags/Unity/" rel="tag"># Unity</a>
+              <a href="/tags/UNITY/" rel="tag"># UNITY</a>
+              <a href="/tags/ugui/" rel="tag"># ugui</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/tool-2019-08-10-powershell-command/" rel="prev" title="powershell 常用命令">
+      <i class="fa fa-chevron-left"></i> powershell 常用命令
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/unity-2019-08-12-ugui-eventsystem-sourcecode/" rel="next" title="ugui的eventsystem源码解读">
+      ugui的eventsystem源码解读 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  
+  <div class="comments">
+  <script src="https://utteranc.es/client.js" repo="zhepama/igiven.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async></script>
+  </div>
+  
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#OnMouse事件"><span class="nav-number">1.</span> <span class="nav-text">OnMouse事件</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#在Update中輪詢Input物件"><span class="nav-number">1.0.0.1.</span> <span class="nav-text">在Update中輪詢Input物件</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#EventSystem"><span class="nav-number">2.</span> <span class="nav-text">EventSystem</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#EventSystem與OnMouse的區別"><span class="nav-number">3.</span> <span class="nav-text">EventSystem與OnMouse的區別</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Unity-Raycasters-和事件处理"><span class="nav-number">4.</span> <span class="nav-text">Unity Raycasters 和事件处理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#unity的事件处理"><span class="nav-number">4.0.1.</span> <span class="nav-text">unity的事件处理</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#阻止手动发送射线穿透ugui问题"><span class="nav-number">4.1.</span> <span class="nav-text">阻止手动发送射线穿透ugui问题</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Message-System（改进的消息系统）"><span class="nav-number">5.</span> <span class="nav-text">Message System（改进的消息系统）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#传统方式进行-Message-通信"><span class="nav-number">5.0.1.</span> <span class="nav-text">传统方式进行 Message 通信</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Messaging-System"><span class="nav-number">5.0.2.</span> <span class="nav-text">Messaging System</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#eventsystem-处理Physics"><span class="nav-number">6.</span> <span class="nav-text">eventsystem 处理Physics</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#第一步"><span class="nav-number">6.1.</span> <span class="nav-text">第一步</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#第二步"><span class="nav-number">6.2.</span> <span class="nav-text">第二步</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#第三步"><span class="nav-number">6.3.</span> <span class="nav-text">第三步</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhepama"
+      src="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+  <p class="site-author-name" itemprop="name">zhepama</p>
+  <div class="site-description" itemprop="description">一个不专业的程序员,写着专业的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">139</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhepama" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhepama" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhepama@gmail.com" title="E-Mail → mailto:zhepama@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.godgodgame.com/" title="http:&#x2F;&#x2F;www.godgodgame.com" rel="noopener" target="_blank">GODGODGAME</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.igiven.com/" title="https:&#x2F;&#x2F;www.igiven.com">IGIVEN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhepama.github.io/C-Sharp-Playground/zh/" title="https:&#x2F;&#x2F;zhepama.github.io&#x2F;C-Sharp-Playground&#x2F;zh&#x2F;" rel="noopener" target="_blank">数据结构与算法</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhepama</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

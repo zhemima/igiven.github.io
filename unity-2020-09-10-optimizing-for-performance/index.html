@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.igiven.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="资源检查首先第一部分.我们要注意在平时工作中需要注意哪些地方养成一套流程规范.避免出现已经被总结出来的问题 代码">
+<meta property="og:type" content="article">
+<meta property="og:title" content="UNITY性能优化流程">
+<meta property="og:url" content="http://www.igiven.com/unity-2020-09-10-optimizing-for-performance/index.html">
+<meta property="og:site_name" content="IGiven">
+<meta property="og:description" content="资源检查首先第一部分.我们要注意在平时工作中需要注意哪些地方养成一套流程规范.避免出现已经被总结出来的问题 代码">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-09-10-optimizing-for-performance/UnderstandingPerformanceinUnity-AssetAuditingSection_image_1.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-09-10-optimizing-for-performance/20160721173928287">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-09-10-optimizing-for-performance/20180715180958140">
+<meta property="article:published_time" content="2020-09-10T00:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-26T08:36:17.946Z">
+<meta property="article:author" content="zhepama">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="C#">
+<meta property="article:tag" content="游戏">
+<meta property="article:tag" content="Unity">
+<meta property="article:tag" content="UNITY">
+<meta property="article:tag" content="ugui">
+<meta property="article:tag" content="mesh">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.igiven.com/assets/images/2020-09-10-optimizing-for-performance/UnderstandingPerformanceinUnity-AssetAuditingSection_image_1.png">
+
+<link rel="canonical" href="http://www.igiven.com/unity-2020-09-10-optimizing-for-performance/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>UNITY性能优化流程 | IGiven</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="IGiven" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="IGiven" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">IGiven</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">李九仙的博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">139</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">32</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-留言">
+
+    <a href="/guestbook/" rel="section"><i class="fa fa-sticky-note fa-fw"></i>留言</a>
+
+  </li>
+        <li class="menu-item menu-item-rss">
+
+    <a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/unity-2020-09-10-optimizing-for-performance/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+      <meta itemprop="name" content="zhepama">
+      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="IGiven">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          UNITY性能优化流程<a href="https://github.com/zhepama/igiven.github.io/edit/master/source/_posts/unity/2020-09-10-optimizing-for-performance.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil-alt"></i></a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-09-10 08:00:00" itemprop="dateCreated datePublished" datetime="2020-09-10T08:00:00+08:00">2020-09-10</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 16:36:17" itemprop="dateModified" datetime="2021-06-26T16:36:17+08:00">2021-06-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/unity/" itemprop="url" rel="index"><span itemprop="name">unity</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="资源检查"><a href="#资源检查" class="headerlink" title="资源检查"></a>资源检查</h1><p>首先第一部分.我们要注意在平时工作中需要注意哪些地方养成一套流程规范.避免出现已经被总结出来的问题</p>
+<h2 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h2><p>Unity 的垃圾收集（使用 <a href="https://en.wikipedia.org/wiki/Boehm_garbage_collector" target="_blank" rel="noopener">Boehm GC 算法</a>）是非分代的，也是非压缩的。“非分代”意味着 GC 在执行每遍收集时必须扫描整个堆，因此随着堆的扩展，其性能会下降。“非压缩”意味着不会为内存中的对象重新分配内存地址来消除对象之间的间隙。</p>
+<p><img src="../../assets/images/2020-09-10-optimizing-for-performance/UnderstandingPerformanceinUnity-AssetAuditingSection_image_1.png" alt="img"></p>
+<p>上图为内存碎片化示例。释放对象时，将释放其内存。但是，释放的空间<strong>不会</strong>整合成为整个“可用内存”池的一部分。位于释放的对象两侧的对象可能仍在使用中。因此，释放的空间成为其他内存段之间的“间隙”（该间隙由上图中的红色圆圈指示）。因此，新释放的空间仅可用于存储与释放相同大小或更小的对象的数据。</p>
+<p>分配对象时，请注意对象在内存空间中的分配地址必须始终为连续空间块。</p>
+<p>这导致了内存碎片化这个核心问题：虽然堆中的可用空间总量可能很大，但是可能其中的部分或全部的可分配空间对象之间存在小的“间隙”。这种情况下，即使可用空间总量高于要分配的空间量，托管堆可能也找不到足够大的连续内存块来满足该分配需求。</p>
+<h3 id="CPU"><a href="#CPU" class="headerlink" title="CPU"></a>CPU</h3><ol>
+<li><p>Unity 不使用字符串名称对 Animator、Material 和 Shader 属性进行内部寻址。为了加快速度，所有属性名称都经过哈希处理为属性 ID，实际上正是这些 ID 用于寻址属性。<a href="https://docs.unity3d.com/cn/2020.2/ScriptReference/Animator.StringToHash.html" target="_blank" rel="noopener">Animator.StringToHash</a> 是用于 Animator 属性名称的对应 API，<a href="https://docs.unity3d.com/cn/2020.2/ScriptReference/Shader.PropertyToID.html" target="_blank" rel="noopener">Shader.PropertyToID</a> 是用于 Material 和 Shader 属性名称的对应 API。</p>
+</li>
+<li><p>将 <a href="https://docs.unity3d.com/cn/2020.2/ScriptReference/Physics.RaycastAll.html" target="_blank" rel="noopener">RaycastAll</a> 调用替换为 <a href="https://docs.unity3d.com/cn/2020.2/ScriptReference/Physics.RaycastNonAlloc.html" target="_blank" rel="noopener">RaycastNonAlloc</a>，将 <a href="https://docs.unity3d.com/cn/2020.2/ScriptReference/Physics.SphereCastAll.html" target="_blank" rel="noopener">SphereCastAll</a> 调用替换为 <a href="https://docs.unity3d.com/cn/2020.2/ScriptReference/Physics.SphereCastNonAlloc.html" target="_blank" rel="noopener">SphereCastNonAlloc</a>，以此类推。对于 2D 应用程序，也存在所有 Physics2D 查询 API 的非分配版本。</p>
+</li>
+<li><p>请避免在紧凑循环中或每帧运行的代码中进行UnityEngine.Object 子类和 Null 比较。Il2cpp中此过程必须执行查找和验证以便将脚本引用转换为对原生代码的引用。</p>
+</li>
+<li><p>整数数学比浮点数学更快，而浮点数学比矢量、矩阵或四元数运算更快。每当交换或关联算术允许时，请尝试最小化单个数学运算的成本</p>
+</li>
+<li><p>最好完全避免在生产代码中使用 <code>Object.Find</code> 和 <code>Object.FindObjectOfType</code>。还有<code>Camera.main</code>也使用了<code>FindGameObjectsWithTag</code>,由于此类 API 要求 Unity 遍历内存中的所有游戏对象和组件，因此它们会随着项目规模的扩大而产生性能问题。(除了单例,因为有缓存)</p>
+</li>
+<li><p>在紧凑循环中尽量少用<code>属性(get,set)</code>和<code>方法</code>,调用的每个方法都必须在内存中找到该方法的地址，并将另一个帧推入栈。所有这些操作都是有成本的，但在大多数代码中，它们都小到可以忽略不计.但是，在紧凑循环中运行较小的方法时，因引入额外方法调用而增加的开销可能会变得非常显著，甚至占主导地位。.例如</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">int Accum &#123; get; set; &#125;</span><br><span class="line">Accum &#x3D; 0;</span><br><span class="line"></span><br><span class="line">for(int i &#x3D; 0;</span><br><span class="line">       i &lt; myList.Count;    &#x2F;&#x2F; myList.Count 调用 Count 属性上的 get 方法</span><br><span class="line">       i++) &#123;</span><br><span class="line">    Accum       &#x2F;&#x2F; 通过 set 将加法运算的结果分配给 Accum</span><br><span class="line">+&#x3D;      &#x2F;&#x2F; 通过 get 检索 Accum 的当前值，以便将其传递给加法运算</span><br><span class="line">myList[i];  &#x2F;&#x2F; [] 运算符调用列表的 get_Value 方法来检索列表特定索引位置的项值。</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>移除空的MonoBehaviour方法start update awake..理由同上</p>
+</li>
+<li><p>不要在运行时使用AddComponent将组件添加到GameObjects可能是一项非常昂贵的操作。因为他会先看组件有没有DisallowMultipleComponent的设置,然后又重复上述的检查一次最后还需要调用所有被加入的monobehaviour的awake方法,这些所有步骤都发生在堆内存上</p>
+</li>
+<li><p>不要使用Texture2D.SetPixels() ,使用Texture2D.SetPixels32() 或者 GetRawTextureData()/Apply() 代替</p>
+</li>
+<li><p>尽量避免调用Object.Instantiate再经常更新的代码。这里可以使用poolmanager代替</p>
+</li>
+</ol>
+<h3 id="GPU"><a href="#GPU" class="headerlink" title="GPU"></a>GPU</h3><ol>
+<li>meshreander-&gt;lighting -&gt; cast shadows关闭阴影投射</li>
+<li>尽可能少的light,然后只对特定曾有用</li>
+<li>过高的分辨率会造成手机发热..可以使用Screen.SetResolution(width,height,false)</li>
+<li>启用GPU实例化,<a href="https://docs.unity3d.com/cn/2020.2/Manual/GPUInstancing.html" target="_blank" rel="noopener">GPU 实例化 - Unity 手册 (unity3d.com)</a></li>
+</ol>
+<h3 id="UI"><a href="#UI" class="headerlink" title="UI"></a>UI</h3><ol>
+<li>将对象隐藏起来,而不是移动到屏幕外边..因为摄像机依然能看到这些对象,依然会被渲染</li>
+<li>如果UI元素改变数值或是位置,会影响批次处理,造成对Gpu发送更多drawcall,所以将更新频率不同的ui分再不同的画布上</li>
+<li>同张画布中的ui元素要有一样的z值</li>
+<li>ui元素必须拥有一样的材质和纹理</li>
+<li>对象拥有一样的clipping rect(矩形裁剪范围)</li>
+<li>去掉不需要的Graphic Raycaster,每次当用户点击触发事件时,系统就会遍历所有可能接收输入事件的ui元素,这会造成多次”点落再矩形中”检查,来判断对象是否该做出反应</li>
+<li>如果打开了全屏ui,把渲染3d场景的摄像机关掉</li>
+<li>如果打开了全屏ui,隐藏其他被遮蔽的ui,如果可以,建议你关闭canvas组件,而不是游戏对象本身,这样能减少画布再次出现的时间.禁用canvase组件会阻止画布向Gpu发起绘图调用,所以该画布不再可见,然后,此时该画布不会丢弃它的顶点缓冲区,它会保留所有网格和顶点,当重新启用时,不会触发重构过程,它只会重新绘制画布内容.此外禁用canvas组件不会触发canvas层级上性能消耗较大的ondisable/onenable回调,禁用子组件时要小心,注意它是否运行性能消耗较大的每帧代码.</li>
+<li>尽可能的降低帧率,如果有个静态的ui,就没有必要设置帧率到60</li>
+<li>如果texture是中心镂空且切图为九宫格时，可以去除fill center，以减少over draw。</li>
+<li>使用Empty4Raycast代替空的image</li>
+<li>不要使用ugui的outline和shadow,他时把原来的顶点copy多份进行实现的..可以使用shader进行实现</li>
+<li>mask会增加一个drawcall,并且mask里面的图片不会和外面的图片合批,</li>
+<li>Scroll Rect 组件对应的Content填加 Canvas 组件 ，因为对应的Mask 子元素依然参与全局的Depth排序，避免因拖动打乱原有的Depth排序，造成合批失败</li>
+<li>尽量不要使用layout,因为会从变动节点递归向上调用GetComponents</li>
+</ol>
+<h4 id="图集整理"><a href="#图集整理" class="headerlink" title="图集整理"></a>图集整理</h4><p>为什么使用图集?</p>
+<ol>
+<li><p>图片尺寸为2的次幂时，GPU处理起来会快很多，小图自己是做不到每张图都是2的次幂的，但打成一张大图就可以（浪费一点也无所谓）；</p>
+</li>
+<li><p>CPU在传送资源信息给GPU时，只需要传一张大图就可以了，因为GPU可以在这张图中的不同区域进行采样，然后拼出对应的界面。注意，这就是为什么需要用同一个Source Image图集的原因，是Batch的关键，因为一个Drawcall就把所有原材料传过去了，GPU你画去吧</p>
+</li>
+</ol>
+<p>但是显然把所有图片打成一张图集是不合理的，因为这张图可能非常大，所以就要按照一定规则将图片进行分类。在分类思路上，我们希望做到Drawcall尽可能少，同时资源量也尽可能少（多些重用），但这两者某种程度上是互斥的，所以折衷一下，可以遵循以下思路：</p>
+<ul>
+<li>设计UI时要考虑重用性，如一些边框、按钮等，这些作为共享资源，放在1~3张大图集中，称为<strong>重用图集</strong>；</li>
+<li>其它非重用UI按照功能模块进行划分，每个模块使用1~2张图集，为<strong>功能图集</strong>；</li>
+<li>对于一些UI，如果同时用到<strong>功能图集</strong>与<strong>重用图集</strong>，但是其<strong>功能图集</strong>剩下的“空位”较多，则可以考虑将用到的<strong>重用图集</strong>中的元素单独拎出来，合入<strong>功能图集</strong>中，从而做到让UI只依赖于<strong>功能图集</strong>。也就是通过一定的冗余，来达到性能的提升。</li>
+</ul>
+<h4 id="UGUI层级合并规则与批次生成规则"><a href="#UGUI层级合并规则与批次生成规则" class="headerlink" title="UGUI层级合并规则与批次生成规则"></a>UGUI层级合并规则与批次生成规则</h4><p>UGUI的层叠顺序是按照Hierarchy中的顺序从上往下进行的，也就是越靠上的组件，就会被画在越底部。</p>
+<p>所以UI就是这样一层一层地叠上去画出来的。当然这样一个一个地画效率肯定是不能接受的，所以要合并，要Batch，Unity自身就提供了一个算法去决定哪些层应该合并到一起，并以什么样的顺序进行绘制。<strong>所有相邻层的可Batch的UI元素将会在一个Drawcall完成</strong>。接下来就来讨论一下Unity的层级合并与计算算法。</p>
+<p>Unity的UI渲染顺序的确定有2个步骤，第一步计算每个UI元素的<strong>层级号</strong>；第二步合并相同<strong>层级号</strong>中可以Batch的元素作为一个<strong>批次</strong>，并对<strong>批次</strong>进行排序；</p>
+<p>先从直观的角度来解释<strong>计算层级号的算法</strong>：</p>
+<ul>
+<li>如果有一个UI元素，它所占的屏幕范围内（通常是矩形），</li>
+<li>如果没有任何UI在它的底下，那么它的<strong>层级号</strong>就是0（最底下）；</li>
+<li>如果有一个UI在其底下且该UI可以和它Batch，那它的<strong>层级号</strong>与底下的UI层级一样；</li>
+<li>如果有一个UI在其底下但是无法与它Batch，那它的<strong>层级号</strong>为底下的UI的层级+1；</li>
+<li>如果有多个UI都在其下面，那么按前两种方式遍历计算所有的<strong>层级号</strong>，其中最大的那个作为自己的<strong>层级号</strong>。</li>
+</ul>
+<p>这里也给一下伪代码，假设所有UI元素（抛弃层级关系）都按从上往下的顺序被装在一个list中，那么每个UI元素对应的<strong>层级号</strong>计算可以参考以下：</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">function <span class="title">CalLayer</span>(<span class="params">List UIEleLst</span>)</span></span><br><span class="line"><span class="function">  <span class="title">if</span>(<span class="params">UIEleLst.Count == <span class="number">0</span> </span>) return</span>;</span><br><span class="line">  <span class="comment">//Initial the first UI Element as layer 0</span></span><br><span class="line">  UIEleLst[<span class="number">0</span>].layer = <span class="number">0</span>;</span><br><span class="line">  <span class="keyword">for</span>(i = <span class="number">1</span> ~ UIEleLst.Count)&#123;</span><br><span class="line">    <span class="keyword">var</span> IsCollideWithElements = <span class="literal">false</span>; </span><br><span class="line">    <span class="comment">//Compare with all elements beneath</span></span><br><span class="line">    <span class="keyword">for</span>(j = i<span class="number">-1</span> ~ <span class="number">0</span>)&#123;</span><br><span class="line">      <span class="comment">//If Element-i collide with Element-j</span></span><br><span class="line">      <span class="keyword">if</span>(UIEleLst[i].Rect.CollideWith(UIEleLst[j].Rect))&#123;</span><br><span class="line">        IsCollideWithElements = <span class="literal">true</span>;</span><br><span class="line">        <span class="comment">//If Element-i can be batched with Element-j, same layer as Element-j</span></span><br><span class="line">        <span class="keyword">if</span>(UIEleLst[i].QualifyToBatchWith(UIEleLst[j]))&#123;</span><br><span class="line">          UIEleLst[i].layer = UIEleLst[j].layer;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span>&#123;</span><br><span class="line">          <span class="comment">//Or else the layer is larger </span></span><br><span class="line">          UIEleLst[i].layer = UIEleLst[j].layer + <span class="number">1</span>;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//If not collide with any elements beneath, set layer to 0</span></span><br><span class="line">    <span class="keyword">if</span>(!IsCollideWithElements)</span><br><span class="line">    &#123;</span><br><span class="line">      UIEleLst[i].layer = <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+
+<p>有了层级号之后，就要<strong>合并批次</strong>了，</p>
+<p>此时，Unity会将每一层的所有元素进行一个排序（按照材质、纹理等信息），合并掉可以Batch的元素成为一个<strong>批次</strong>，</p>
+<p><strong>目前已知的排序规则是，Text组件会排在Image组件之前渲染</strong>，而同一类组件的情况下排序规则未知（好像并没什么规则）。</p>
+<p><strong>经过以上排序，就可以得到一个有序的批次序列了</strong>。这时，<strong>Unity会再做一个优化，即如果相邻间的两个批次正好可以Batch的话就会进行Batch</strong>。</p>
+<p>举个栗子，一个层级为0的ImageA，一个层级为1的ImageB（2个Image可Batch）和一个层级为0的TextC，</p>
+<p>Unity排序后的批次为TextC-&gt;ImageA-&gt;ImageB，后两个批次可以合并，所以是2个Drawcall。</p>
+<p>再举个栗子，一个层级为0的TextD，一个层级为1的TextE（2个Text可Batch）和一个层级为0的ImageF，</p>
+<p>Unity排序后的批次为TextD-&gt;ImageF-&gt;TextE，这时就需要3个Drawcall了！（是不是有点晕，再回顾下黑体字）</p>
+<p>以下的伪代码有些偷懒，实在懒得写排序、合并之类的，一长串也不好读，几个步骤列一下，其它诸位看上面那段文字脑补下吧…</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">function <span class="title">MergeBatch</span>(<span class="params">List UIEleLst</span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="comment">//Order the UI Elements by their layers and batch-keys, </span></span><br><span class="line">  <span class="comment">//batch-key is a combination of its component type, </span></span><br><span class="line">  <span class="comment">//texture and material info</span></span><br><span class="line">  UIEleLst.OrderBy(</span><br><span class="line">   (uiElement)=&gt;&#123;<span class="keyword">return</span> <span class="keyword">this</span>.layer &gt; uiElement.layer</span><br><span class="line">   || <span class="keyword">this</span>.BatchKey() &gt; uiElement.BatchKey()&#125; </span><br><span class="line">  );</span><br><span class="line"></span><br><span class="line">  <span class="comment">//Merge the UI Elements with same layer and batch-key as a batch</span></span><br><span class="line">  <span class="keyword">var</span> BatchLst = UIEleLst.MergeSameElementsAsBatch();</span><br><span class="line"></span><br><span class="line">  <span class="comment">//Make adjacent batches with same batch-key merged</span></span><br><span class="line">  BatchLst.MergeAdjacentBatches();</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> BatchLst;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>根据以上规则，就可以得出一些“摆UI”的技巧：</p>
+<ul>
+<li>有相同材质和纹理的UI元素是可以Batch的，可以Batch的UI上下叠在一块不会影响性能，但是如果不能Batch的UI元素叠在一块，就会增加Drawcall开销。</li>
+<li>要注意UI元素间的层叠关系，建议用“T”工具查看其矩形大小，因为有些图片透明，但是却叠在其它UI上面了，然后又无法Batch的话，就会无故多许多Drawcall；</li>
+<li>UI中出现最多的就是Image与Text组件，当Text叠在Image上面（如Button)，然后Text上又叠了一个图片时，就会至少多2个Drawcall，可以考虑将字体直接印在下面的图片上；</li>
+<li>有些情况可以考虑人为增加层级从而减少Drawcall，比如一个Text的层级为0，另一个可Batch的Text叠在一个图片A上，层级为1，那此时2个Text因为层级不同会安排2个Drawcall，但如果在第一个Text下放一个透明的图片（与图片A可Batch），那两个Text的层级就一致了，Drawcall就可以减少一个。</li>
+</ul>
+<h4 id="UI优化参考"><a href="#UI优化参考" class="headerlink" title="UI优化参考"></a>UI优化参考</h4><ul>
+<li><p><a href="https://www.jianshu.com/p/061e67308e5f" target="_blank" rel="noopener">Unity GUI(uGUI)使用心得与性能总结 - 简书 (jianshu.com)</a></p>
+</li>
+<li><p><a href="https://unity3d.com/how-to/unity-ui-optimization-tips?_ga=2.147783095.1436155110.1558584716-746267689.1557026511" target="_blank" rel="noopener">Some of the best optimization tips for Unity UI - Unity (unity3d.com)</a></p>
+</li>
+</ul>
+<h3 id="内存"><a href="#内存" class="headerlink" title="内存"></a>内存</h3><ol>
+<li><p>不要再update中重复实例化对象,使用了ecs同样注意,因为他也是执行在update中</p>
+</li>
+<li><p>不要使用闭包和匿名方法,因为闭包和匿名方法都会都是引用类型(c#将生成一个匿名类)会在堆上进行分配</p>
+</li>
+<li><p>避免装箱..虽然 Unity 的分配器实际会使用不同的内存池进行小型和大型分配，但 Unity 的垃圾回收器“不是”分代的，因此无法有效清除由装箱生成的小型、频繁的临时分配。</p>
+</li>
+<li><p>不要用foreach, Unity 的 C# 编译器生成的 IL 会构造一个通用值类型的枚举器来遍历值集合,而且通过枚举器遍历集合的方法调用成本更高，通常比通过 <code>for</code> 或 <code>while</code> 循环进行的手动迭代慢得多。</p>
+</li>
+<li><p>unityapi.. mesh.vertices和 Input.touches,每次访问 <code>.touches</code> 这些属性时都会发生分配。所以不要在循环和update中使用</p>
+</li>
+<li><p>避免使用<code>GetComponentsInChildren()</code>,<code>GetComponentsInParent()</code>,而是使用GetComponentsInChildren<T>(bool includeInactive, List<T> result);前者会分配托管内存,后者可以传入一个你保存的数组避免重新分配</p>
+</li>
+<li><p>不要使用linq因为会分配大量的托管内存</p>
+</li>
+<li><p>不要使用Texture2D.GetPixels() ,使用<code>Texture2D.GetRawTextureData()</code>代替此方法返回像素数据的NativeArray,前者会有大量的托管内存</p>
+</li>
+</ol>
+<p> 参考 : </p>
+<ul>
+<li><a href="https://docs.unity3d.com/cn/2020.2/Manual/BestPracticeUnderstandingPerformanceInUnity4-1.html" target="_blank" rel="noopener">了解托管堆 - Unity 手册 (unity3d.com)</a></li>
+<li><a href="https://docs.unity3d.com/cn/2020.2/Manual/UnderstandingAutomaticMemoryManagement.html" target="_blank" rel="noopener">了解自动内存管理 - Unity 手册 (unity3d.com)</a></li>
+<li><a href="https://docs.unity3d.com/cn/2020.2/Manual/BestPracticeUnderstandingPerformanceInUnity7.html" target="_blank" rel="noopener">一般优化 - Unity 手册 (unity3d.com)</a></li>
+<li><a href="https://www.bilibili.com/video/BV1Tt4y1X7f6" target="_blank" rel="noopener">Unite Now - （中文字幕）性能优化技巧（上）_哔哩哔哩 (゜-゜)つロ 干杯~-bilibili</a></li>
+</ul>
+<h2 id="资源"><a href="#资源" class="headerlink" title="资源"></a>资源</h2><h3 id="Animation"><a href="#Animation" class="headerlink" title="Animation"></a>Animation</h3><ol>
+<li><p>动画曲线精度过高会增加动画占用内存; 此规则仅面向以文本格式序列化的*.anim文件中的浮点精度Custom Parameters: precision : 5</p>
+<p> 用文本编辑器打开.anim动画文件，修改m_EditorCurves::curve::m_Curve下的float值的精度。建议用脚本直接将此文件中所有float精度都调小。</p>
+</li>
+<li><p>场景中Animator组件的cullingMode是AlwaysAnimate会增加CPU使用率。</p>
+</li>
+</ol>
+<h3 id="Audio"><a href="#Audio" class="headerlink" title="Audio"></a>Audio</h3><ul>
+<li>如果不需要立体声,将音频文件设置为 Force To Mono,这样能省下一半的磁盘和内存</li>
+<li>降低文件比特率</li>
+<li>ios下使用adpcm和mp3格式</li>
+<li>安卓下使用vorbis格式</li>
+<li>如果小型文件&lt;200kb,load type设置成Decompress on Load,</li>
+<li>如果中型文件&gt;=200kb,load type 设置成Compressed in Memory</li>
+<li>大型文件,如背景音乐,load type设置成streaming</li>
+<li>如果时静音模式则销毁audiosourceComponent组件,如果设置成0的话,其实还是会造成不必要的内存与cpu占用</li>
+</ul>
+<h3 id="EditorSetting"><a href="#EditorSetting" class="headerlink" title="EditorSetting"></a>EditorSetting</h3><ol>
+<li>禁用 Accelerometer Frequency 陀螺仪</li>
+<li>尝试开启graphicJobs并测试 检查Editor -&gt; Project Settings -&gt; PlayerSettings -&gt; Graphic Jobs(Experimental)*的设置</li>
+<li>如果在项目中启用了physics, 可以考虑开启Prebake Collision Meshes选项 检查Editor -&gt; Project Settings -&gt; PlayerSettings -&gt; PreBake Collision Meshes的设置,这项设置可以减少加载/初始化的时间, 虽然会增加一些构建时间和包体积</li>
+<li>在Physics设置中LayerCollisionMatrix中的格子不应该都勾选上,这会增加CPU的负担, 应该取消勾选那些没有必要的格子 检查Editor -&gt; Project Settings -&gt; Physics -&gt; Layer Collision Matrix的设置</li>
+<li>在Physics2D设置中LayerCollisionMatrix中的格子不应该都勾选上 同上</li>
+<li>检查Graphics中StandardShaderQuality设置,这会增加编译时间和包体积, 除非你想要支持很多性能跨度很大的设备,检查Editor -&gt; Project Settings -&gt; Graphics -&gt; Tiers -&gt; Standard Shader Quality的设置,StandardShaderQuality选项在所有Graphics Tier中应相同</li>
+<li>检查Android的ManagedStrippingLevel设置 检查Editor -&gt; Project Settings -&gt; PlayerSettings -&gt; Managed Stripping Level的设置,Android设置中的ManagedStrippingLevel选项应为Medium或者High</li>
+</ol>
+<h3 id="Mesh"><a href="#Mesh" class="headerlink" title="Mesh"></a>Mesh</h3><ul>
+<li>开启mesh compression,来减少磁盘容量</li>
+<li>尽量关闭read/write enabled 选项,如果开启unity会存储两份mesh</li>
+<li>如果没有使用动画,关闭Rigs,如石头或者房子</li>
+<li>如果没有用到Blendshapes,ye关闭</li>
+<li>Normals and Tangents..法向量和切线信息,如果材质没用到.也关闭</li>
+</ul>
+<h3 id="Prefab"><a href="#Prefab" class="headerlink" title="Prefab"></a>Prefab</h3><h3 id="Scene"><a href="#Scene" class="headerlink" title="Scene"></a>Scene</h3><h3 id="Texture"><a href="#Texture" class="headerlink" title="Texture"></a>Texture</h3><p>导入大小需要设置maxsize和compression,否则将导致文件过大.打包的时候会占体积</p>
+<ul>
+<li>max size 尽可能的设置到最小</li>
+<li>pot(大小为2的幂次方) or atlas</li>
+<li>移除背景纹理和其他不透明纹理的alpha通道</li>
+<li>关闭read/write,以减少内存使用</li>
+<li>如果16bit color足够用了就不要使用 32bit</li>
+<li>如果不需要使用mipmaps 则禁用,例如 ui和sprites,或者相对于z值不会又任何变化的元素</li>
+</ul>
+<h3 id="Resources文件夹"><a href="#Resources文件夹" class="headerlink" title="Resources文件夹"></a>Resources文件夹</h3><p>尽量不要使用resources文件夹.它会打包到包体中.且在启动时会全部加载..</p>
+<h2 id="AssetBundle"><a href="#AssetBundle" class="headerlink" title="AssetBundle"></a>AssetBundle</h2><p>资源包冗余检测</p>
+<h1 id="工具检测"><a href="#工具检测" class="headerlink" title="工具检测"></a>工具检测</h1><h2 id="DrawCall"><a href="#DrawCall" class="headerlink" title="DrawCall"></a>DrawCall</h2><p><strong>一、什么是DrawCall？</strong></p>
+<p>​    在unity中，每次CPU准备数据并通知GPU的过程就称之为一个DrawCall。</p>
+<p>​    具体过程就是：设置颜色–&gt;绘图方式–&gt;顶点坐标–&gt;绘制–&gt;结束，所以在绘制过程中，如果能在一次DrawCall完成所有绘制就会大大提高运行效率，进而达到优化的目的。</p>
+<p><strong>二、DrawCall为什么会影响游戏运行效率？</strong></p>
+<p>说道为什么会影响效率，就首先要了解一下他的工作原理：为了CPU和GPU可以进行并行工作，就需要一个命令缓冲区，就是由CPU向其中添加命令，然后又GPU从中读取命令，这样就实现了通过CPU准备数据，通知GPU进行渲染。</p>
+<p>在每次调用DrawCall之前，CPU需要向GPU发送很多内容，主要是包括数据，渲染状态（就是设置对象需要的材质纹理等），命令等。CPU进行的操作具体就是：</p>
+<ul>
+<li>准备渲染对象，然后将渲染对象从硬盘加载到内存，然后从内存加载到显存，进而方便GPU高速处理</li>
+<li>设置每个对象的渲染状态，也就是设置对象的材质、纹理、着色器等</li>
+<li>输出渲染图元，然后向GPU发送DrawCall命令，并将渲染图元传递给GPU</li>
+</ul>
+<p>所以如果DrawCall数量过多就会导致CPU进行大量计算，进而导致CPU的过载，影响游戏运行效率。</p>
+<p><strong>三、批处理</strong></p>
+<ol>
+<li><p>批处理的目的就是为了减少DrawCall。DrawCall即CPU命令GPU去绘制。</p>
+</li>
+<li><p>如果我们需要渲染一千个三角形，那么把它们按一千个单独的网格进行渲染所花费的时间要远大于直接渲染一个包含了一千个三角形的网格。</p>
+</li>
+<li><p>要想使用批处理，需要物体有相同的材质。这是因为，对于使用同一个材质的物体，它们的不同仅仅在于顶点数据的差别，我们可以把这些顶点数据合并在一起，再一起发送给GPU，就可以完成一次批处理。</p>
+</li>
+<li><p>在unity中，有两种批处理：一是动态批处理，二是静态批处理。</p>
+</li>
+</ol>
+<p>对于动态批处理，unity会自动完成，不需要我们进行操作，而且物体是可以移动的，但是动态批处理有许多限制条件。<br>对于静态批处理，物体不可移动，但是限制条件很少。</p>
+<p> <strong>四、动态批处理</strong></p>
+<p>原理：每一帧把可以进行批处理的模型网格进行合并，再把合并后模型数据传递给GPU，然后使用同一个材质对其渲染。</p>
+<p>限制：</p>
+<ol>
+<li><p>顶点属性要小于900。例如，如果shader中需要使用顶点位置、法线和纹理坐标这三个顶点属性，那么要想让模型能够被动态批处理，它的顶点数目不能超过300。因此，优化策略就是shader的优化，少使用顶点属性，或者模型顶点数要尽可能少。</p>
+</li>
+<li><p>多Pass的shader会中断批处理。</p>
+</li>
+<li><p>在unity5中，动态批处理对于模型缩放的限制已经不存在了。</p>
+</li>
+<li><p>使用光照纹理的物体需要小心处理。为了让这些物体可以被动态批处理，需要保证它们指向光照纹理中的同一位置。</p>
+</li>
+</ol>
+<p><strong>五、静态批处理</strong></p>
+<p>原理：只在运行开始阶段，把需要进行静态批处理的模型合并到一个新的网格中，这意味着这些模型数据不可以在运行时刻被移动。</p>
+<p>优点：因为它只需要进行一次合并操作，因此比动态批处理更加高效。</p>
+<p>缺点：需要占用更多的内存来存储合并后的几何结构。</p>
+<p>操作：将Inspector面板右上角的Static勾选(实际上只需要勾选Batching Static即可)</p>
+<p>参考链接:</p>
+<ul>
+<li><a href="https://connect.unity.com/p/dong-tai-he-pi-yuan-li-ji-ru-he-cheng-gong-he-pi?app=true" target="_blank" rel="noopener">动态合批原理及如何成功合批 - Unity Connect</a></li>
+</ul>
+<h2 id="渲染统计窗口"><a href="#渲染统计窗口" class="headerlink" title="渲染统计窗口"></a>渲染统计窗口</h2><p><img src="../../assets/images/2020-09-10-optimizing-for-performance/20160721173928287" alt="img"></p>
+<p>Batches：相当于DrawCall</p>
+<p>Saved by batching：通过批处理节省的DrawCall</p>
+<p>SetPass calls：跟Shader中Pass的数量有关，Pass越多这个越大…它大致代表的是摄像机照射范围内，所有GameObject所包含的Material种类数量。（不完全准确，但是这样说易于理解）。假如有30种material，那这个SetpassCall的数值也会离这个30比较接近。这个值越大，肯定会使draw call 越来越大。</p>
+<p>影响DrawCall的因素：</p>
+<ol>
+<li>Pass越多DrawCall越大。可以通过FrameDebugger来查看DrawCall，当然也可以用Profiler，但后者不能查看DrawCall的具体情况。</li>
+<li>不同材质的物体，无法通过静态批处理减少DC。但是静态批处理可以通过合并网格来提高性能。</li>
+</ol>
+<h2 id="Unity-Profiler"><a href="#Unity-Profiler" class="headerlink" title="Unity Profiler"></a><strong>Unity Profiler</strong></h2><p><img src="../../assets/images/2020-09-10-optimizing-for-performance/20180715180958140" alt="img"></p>
+<p>在面板的下半部分显示了我们选中的profilers当前帧的详细内容，我们可以通过选择列标题，通过这一列的信息值来排序。<br>在CPU usage profiler中的列表题分别为：<br>Total:当前任务的时间消耗占当前帧cpu消耗的时间比例。<br>Self:任务自身时间消耗占当前帧cpu消耗的时间比例。<br>Calls:当前任务在当前帧内被调用的次数。<br>GC Alloc:当前任务在当前帧内进行过内存回收和分配的次数。   <strong>注意每帧都具有20B以上内存分配的选项 。</strong><br>Time ms:当前任务在当前帧内的耗时总时间。   <strong>注意占用5ms以上的选项</strong><br>Self ms:当前任务自身(不包含内部的子任务)时间消耗。</p>
+<p>在 Unity 的 CPU 性能分析器中，Overview 表有一个“GC Alloc”列。此列显示了在特定帧中的托管堆上分配的字节数(4)（<strong>注意：</strong>这与给定帧期间临时分配的字节数不同。性能分析器会显示特定帧中分配的字节数，不考虑在后续帧中是否重用了部分/全部已分配的内存）。启用“Deep Profiling”选项后，可以跟踪执行这些分配的方法。</p>
+<p><strong>Unity Profiler 不会跟踪在主线程之外发生的分配。</strong>因此，“GC Alloc”列不能用于统计用户创建的线程中发生的托管分配。请将代码执行从单独线程切换到主线程以进行调试，或使用 <a href="https://docs.unity3d.com/cn/2020.2/ScriptReference/Profiling.Profiler.BeginThreadProfiling.html" target="_blank" rel="noopener">BeginThreadProfiling</a> API 在时间轴性能分析器 (Timeline Profiler) 中显示例程。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C</a>
+              <a href="/tags/C/" rel="tag"># C#</a>
+              <a href="/tags/%E6%B8%B8%E6%88%8F/" rel="tag"># 游戏</a>
+              <a href="/tags/Unity/" rel="tag"># Unity</a>
+              <a href="/tags/UNITY/" rel="tag"># UNITY</a>
+              <a href="/tags/ugui/" rel="tag"># ugui</a>
+              <a href="/tags/mesh/" rel="tag"># mesh</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/unity-2020-09-05-unity-vSyncCount/" rel="prev" title="UNITY的垂直同步和帧率">
+      <i class="fa fa-chevron-left"></i> UNITY的垂直同步和帧率
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/essay-2020-09-10-changge/" rel="next" title="关于我唱歌跑调的那些事">
+      关于我唱歌跑调的那些事 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  
+  <div class="comments">
+  <script src="https://utteranc.es/client.js" repo="zhepama/igiven.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async></script>
+  </div>
+  
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#资源检查"><span class="nav-number">1.</span> <span class="nav-text">资源检查</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#代码"><span class="nav-number">1.1.</span> <span class="nav-text">代码</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#CPU"><span class="nav-number">1.1.1.</span> <span class="nav-text">CPU</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#GPU"><span class="nav-number">1.1.2.</span> <span class="nav-text">GPU</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#UI"><span class="nav-number">1.1.3.</span> <span class="nav-text">UI</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#图集整理"><span class="nav-number">1.1.3.1.</span> <span class="nav-text">图集整理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#UGUI层级合并规则与批次生成规则"><span class="nav-number">1.1.3.2.</span> <span class="nav-text">UGUI层级合并规则与批次生成规则</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#UI优化参考"><span class="nav-number">1.1.3.3.</span> <span class="nav-text">UI优化参考</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#内存"><span class="nav-number">1.1.4.</span> <span class="nav-text">内存</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#资源"><span class="nav-number">1.2.</span> <span class="nav-text">资源</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Animation"><span class="nav-number">1.2.1.</span> <span class="nav-text">Animation</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Audio"><span class="nav-number">1.2.2.</span> <span class="nav-text">Audio</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#EditorSetting"><span class="nav-number">1.2.3.</span> <span class="nav-text">EditorSetting</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Mesh"><span class="nav-number">1.2.4.</span> <span class="nav-text">Mesh</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Prefab"><span class="nav-number">1.2.5.</span> <span class="nav-text">Prefab</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Scene"><span class="nav-number">1.2.6.</span> <span class="nav-text">Scene</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Texture"><span class="nav-number">1.2.7.</span> <span class="nav-text">Texture</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Resources文件夹"><span class="nav-number">1.2.8.</span> <span class="nav-text">Resources文件夹</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AssetBundle"><span class="nav-number">1.3.</span> <span class="nav-text">AssetBundle</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#工具检测"><span class="nav-number">2.</span> <span class="nav-text">工具检测</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#DrawCall"><span class="nav-number">2.1.</span> <span class="nav-text">DrawCall</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#渲染统计窗口"><span class="nav-number">2.2.</span> <span class="nav-text">渲染统计窗口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Unity-Profiler"><span class="nav-number">2.3.</span> <span class="nav-text">Unity Profiler</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhepama"
+      src="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+  <p class="site-author-name" itemprop="name">zhepama</p>
+  <div class="site-description" itemprop="description">一个不专业的程序员,写着专业的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">139</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhepama" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhepama" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhepama@gmail.com" title="E-Mail → mailto:zhepama@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.godgodgame.com/" title="http:&#x2F;&#x2F;www.godgodgame.com" rel="noopener" target="_blank">GODGODGAME</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.igiven.com/" title="https:&#x2F;&#x2F;www.igiven.com">IGIVEN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhepama.github.io/C-Sharp-Playground/zh/" title="https:&#x2F;&#x2F;zhepama.github.io&#x2F;C-Sharp-Playground&#x2F;zh&#x2F;" rel="noopener" target="_blank">数据结构与算法</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhepama</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

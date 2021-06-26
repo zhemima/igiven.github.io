@@ -1,0 +1,638 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>IGiven</title>
+  <icon>http://www.igiven.com/icon.png</icon>
+  <subtitle>李九仙的博客</subtitle>
+  <link href="/atom.xml" rel="self"/>
+  
+  <link href="http://www.igiven.com/"/>
+  <updated>2021-06-26T08:36:17.950Z</updated>
+  <id>http://www.igiven.com/</id>
+  
+  <author>
+    <name>zhepama</name>
+    
+  </author>
+  
+  <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>UNITY的渲染顺序</title>
+    <link href="http://www.igiven.com/unity-2021-06-14-unity-render-order/"/>
+    <id>http://www.igiven.com/unity-2021-06-14-unity-render-order/</id>
+    <published>2021-06-14T00:00:00.000Z</published>
+    <updated>2021-06-26T08:36:17.950Z</updated>
+    
+    <summary type="html">
+    
+      &lt;p&gt;工欲善其事，必先利其器。为了搞清楚 Unity 的渲染顺序，首先我们要准备一个能方便修改 SortingLayer 以及 RenderQueue 的工具，下面这个编辑器脚本可以满足这个需求：&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;https://gist.github.com/qxsoftware/499135b6482ca57727c69e11b91a12bf&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;MeshRendererInspector.cs&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;效果如下：&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="unity" scheme="http://www.igiven.com/categories/unity/"/>
+    
+    
+      <category term="C" scheme="http://www.igiven.com/tags/C/"/>
+    
+      <category term="GitHub" scheme="http://www.igiven.com/tags/GitHub/"/>
+    
+      <category term="Unity" scheme="http://www.igiven.com/tags/Unity/"/>
+    
+      <category term="UNITY" scheme="http://www.igiven.com/tags/UNITY/"/>
+    
+      <category term="mesh" scheme="http://www.igiven.com/tags/mesh/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>How to Make One Way Platform in unity</title>
+    <link href="http://www.igiven.com/unity-2021-06-13-How-to-Make-One-Way-Platform/"/>
+    <id>http://www.igiven.com/unity-2021-06-13-How-to-Make-One-Way-Platform/</id>
+    <published>2021-06-13T00:00:00.000Z</published>
+    <updated>2021-06-26T08:36:17.950Z</updated>
+    
+    <summary type="html">
+    
+      &lt;p&gt;Hello Readers, I’ll Show you how to make simple one way platform. It is simple, useful and efficient technique to achieve this result. Here is the procedure –&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Make a Simple platform using Box collider.&lt;/li&gt;
+&lt;li&gt;Make a new game object children of the platform and add a box collider just below the original platform as shown in image and tick its ‘is trigger’ checkbox so that we can check player’s collision in it.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;img src=&quot;../../assets/images/2021-06-13-How-to-Make-One-Way-Platform/111-1623584452229.jpg&quot; alt=&quot;111&quot;&gt;&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="unity" scheme="http://www.igiven.com/categories/unity/"/>
+    
+    
+      <category term="Win" scheme="http://www.igiven.com/tags/Win/"/>
+    
+      <category term="C" scheme="http://www.igiven.com/tags/C/"/>
+    
+      <category term="C#" scheme="http://www.igiven.com/tags/C/"/>
+    
+      <category term="Unity" scheme="http://www.igiven.com/tags/Unity/"/>
+    
+      <category term="UNITY" scheme="http://www.igiven.com/tags/UNITY/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Edgar源代码解读</title>
+    <link href="http://www.igiven.com/unity-2021-06-12-edgar-code-read/"/>
+    <id>http://www.igiven.com/unity-2021-06-12-edgar-code-read/</id>
+    <published>2021-06-12T00:00:00.000Z</published>
+    <updated>2021-06-26T08:36:17.950Z</updated>
+    
+    <summary type="html">
+    
+      &lt;h3 id=&quot;生成类&quot;&gt;&lt;a href=&quot;#生成类&quot; class=&quot;headerlink&quot; title=&quot;生成类&quot;&gt;&lt;/a&gt;生成类&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;LevelGeneratorBase&lt;/code&gt;  最基本的生成方法类包括&lt;code&gt;Generate&lt;/code&gt;和&lt;code&gt;GenerateCoroutine&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;DungeonGeneratorBase&lt;/code&gt; 一般都会继承于该类&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&quot;Generate流程&quot;&gt;&lt;a href=&quot;#Generate流程&quot; class=&quot;headerlink&quot; title=&quot;Generate流程&quot;&gt;&lt;/a&gt;&lt;code&gt;Generate&lt;/code&gt;流程&lt;/h4&gt;
+    
+    </summary>
+    
+    
+      <category term="unity" scheme="http://www.igiven.com/categories/unity/"/>
+    
+    
+      <category term="C" scheme="http://www.igiven.com/tags/C/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>commandbuff的一些问题</title>
+    <link href="http://www.igiven.com/unity-2021-05-20-ecs-commandbuff-question/"/>
+    <id>http://www.igiven.com/unity-2021-05-20-ecs-commandbuff-question/</id>
+    <published>2021-05-20T00:00:00.000Z</published>
+    <updated>2021-06-26T08:36:17.950Z</updated>
+    
+    <summary type="html">
+    
+      &lt;p&gt;component&lt;/p&gt;
+&lt;figure class=&quot;highlight plain&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;4&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;public struct State:IComponentData&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;#123;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;	public int a;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;#125;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+
+&lt;p&gt;a系统&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="unity" scheme="http://www.igiven.com/categories/unity/"/>
+    
+    
+      <category term="C" scheme="http://www.igiven.com/tags/C/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>一些常用的dns服务器</title>
+    <link href="http://www.igiven.com/tool-2021-05-06-dns/"/>
+    <id>http://www.igiven.com/tool-2021-05-06-dns/</id>
+    <published>2021-05-06T00:00:00.000Z</published>
+    <updated>2021-06-26T08:36:17.942Z</updated>
+    
+    <summary type="html">
+    
+      &lt;h3 id=&quot;微软DNS服务器——可以长期信赖的稳定服务器。&quot;&gt;&lt;a href=&quot;#微软DNS服务器——可以长期信赖的稳定服务器。&quot; class=&quot;headerlink&quot; title=&quot;微软DNS服务器——可以长期信赖的稳定服务器。&quot;&gt;&lt;/a&gt;微软DNS服务器——可以长期信赖的稳定服务器。&lt;/h3&gt;&lt;p&gt;主用：4.2.2.1&lt;/p&gt;
+&lt;p&gt;备用：4.2.2.2&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="tool" scheme="http://www.igiven.com/categories/tool/"/>
+    
+    
+      <category term="Win" scheme="http://www.igiven.com/tags/Win/"/>
+    
+      <category term="C" scheme="http://www.igiven.com/tags/C/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Converting between Structs and Byte Arrays</title>
+    <link href="http://www.igiven.com/dotnet-2021-05-01-Converting-between-Structs-and-Byte-Arrays/"/>
+    <id>http://www.igiven.com/dotnet-2021-05-01-Converting-between-Structs-and-Byte-Arrays/</id>
+    <published>2021-05-01T00:00:00.000Z</published>
+    <updated>2021-06-26T08:36:17.942Z</updated>
+    
+    <summary type="html">
+    
+      &lt;p&gt;In object-oriented code bases, we tend to express most of not all of our data in highly semantic and contextual ways – that is, we use classes that contain both data and behaviour, and often even more information through inheritance, attributes, and more.&lt;/p&gt;
+&lt;p&gt;However, sometimes we need to extract the data contained in these types – for example for sending network messages, or saving to disk. In this post we will look into converting between structs and byte arrays, to make exactly this possible.&lt;/p&gt;
+&lt;p&gt;We will compare different ways of doing so, and analyse them for performance and easy of use.&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="dotnet" scheme="http://www.igiven.com/categories/dotnet/"/>
+    
+    
+      <category term="Win" scheme="http://www.igiven.com/tags/Win/"/>
+    
+      <category term="C" scheme="http://www.igiven.com/tags/C/"/>
+    
+      <category term="C#" scheme="http://www.igiven.com/tags/C/"/>
+    
+      <category term="GitHub" scheme="http://www.igiven.com/tags/GitHub/"/>
+    
+      <category term="JS" scheme="http://www.igiven.com/tags/JS/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Unity RenderTexture的应用</title>
+    <link href="http://www.igiven.com/unity-2021-04-11-render-texture/"/>
+    <id>http://www.igiven.com/unity-2021-04-11-render-texture/</id>
+    <published>2021-04-11T00:00:00.000Z</published>
+    <updated>2021-06-26T08:36:17.950Z</updated>
+    
+    <summary type="html">
+    
+      &lt;h4 id=&quot;1-UGUI上显示模型&quot;&gt;&lt;a href=&quot;#1-UGUI上显示模型&quot; class=&quot;headerlink&quot; title=&quot;1. UGUI上显示模型&quot;&gt;&lt;/a&gt;1. UGUI上显示模型&lt;/h4&gt;&lt;p&gt;&lt;img src=&quot;../../assets/images/2021-04-11-render-texture/4276633-05b67353425f7248.png&quot; alt=&quot;img&quot;&gt;&lt;/p&gt;
+&lt;p&gt;UGUI上显示模型.png&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="unity" scheme="http://www.igiven.com/categories/unity/"/>
+    
+    
+      <category term="C" scheme="http://www.igiven.com/tags/C/"/>
+    
+      <category term="Unity" scheme="http://www.igiven.com/tags/Unity/"/>
+    
+      <category term="UNITY" scheme="http://www.igiven.com/tags/UNITY/"/>
+    
+      <category term="地图" scheme="http://www.igiven.com/tags/%E5%9C%B0%E5%9B%BE/"/>
+    
+      <category term="ugui" scheme="http://www.igiven.com/tags/ugui/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>unity-2021-01-25-tilemap</title>
+    <link href="http://www.igiven.com/unity-2021-01-25-tilemap/"/>
+    <id>http://www.igiven.com/unity-2021-01-25-tilemap/</id>
+    <published>2021-01-25T00:00:00.000Z</published>
+    <updated>2021-06-26T08:36:17.950Z</updated>
+    
+    <summary type="html">
+    
+      &lt;h3 id=&quot;B站圈毛君翻译教程：&quot;&gt;&lt;a href=&quot;#B站圈毛君翻译教程：&quot; class=&quot;headerlink&quot; title=&quot;B站圈毛君翻译教程：&quot;&gt;&lt;/a&gt;B站圈毛君翻译教程：&lt;/h3&gt;&lt;h3 id=&quot;The-Basic：https-www-bilibili-com-video-av48965588&quot;&gt;&lt;a href=&quot;#The-Basic：https-www-bilibili-com-video-av48965588&quot; class=&quot;headerlink&quot; title=&quot;The Basic：https://www.bilibili.com/video/av48965588/&quot;&gt;&lt;/a&gt;The Basic：&lt;a href=&quot;https://www.bilibili.com/video/av48965588/&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;https://www.bilibili.com/video/av48965588/&lt;/a&gt;&lt;/h3&gt;&lt;h3 id=&quot;Rule-Tile：https-www-bilibili-com-video-av49083381&quot;&gt;&lt;a href=&quot;#Rule-Tile：https-www-bilibili-com-video-av49083381&quot; class=&quot;headerlink&quot; title=&quot;Rule Tile：https://www.bilibili.com/video/av49083381/&quot;&gt;&lt;/a&gt;Rule Tile：&lt;a href=&quot;https://www.bilibili.com/video/av49083381/&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;https://www.bilibili.com/video/av49083381/&lt;/a&gt;&lt;/h3&gt;
+    
+    </summary>
+    
+    
+      <category term="unity" scheme="http://www.igiven.com/categories/unity/"/>
+    
+    
+      <category term="C" scheme="http://www.igiven.com/tags/C/"/>
+    
+      <category term="地图" scheme="http://www.igiven.com/tags/%E5%9C%B0%E5%9B%BE/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>解决Unity鼠标坐标点转成世界坐标系坐标点</title>
+    <link href="http://www.igiven.com/unity-2021-01-24-screentoworld/"/>
+    <id>http://www.igiven.com/unity-2021-01-24-screentoworld/</id>
+    <published>2021-01-24T00:00:00.000Z</published>
+    <updated>2021-06-26T08:36:17.950Z</updated>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;使用射线&quot;&gt;&lt;a href=&quot;#使用射线&quot; class=&quot;headerlink&quot; title=&quot;使用射线&quot;&gt;&lt;/a&gt;使用射线&lt;/h2&gt;&lt;p&gt;这是一种发射线，获取当前点击的物体（具有碰撞器）的坐标点（也就是碰撞器范围的坐标点）&lt;/p&gt;
+&lt;figure class=&quot;highlight plain&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;4&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;5&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;6&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;7&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;8&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;9&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;10&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;11&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;12&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;13&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;if (Input.GetMouseButtonDown(0))&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;#123;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    RaycastHit hitt &amp;#x3D; new RaycastHit();&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    Ray ray &amp;#x3D;Camera.main.ScreenPointToRay(Input.mousePosition);&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    Physics.Raycast(ray, out hitt);&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    Debug.Log(hitt.point);&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &amp;#x2F;&amp;#x2F;Debug.Log(Camera.main.ScreenToWorldPoint(Input.mousePosition));&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;#125;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+    
+    </summary>
+    
+    
+      <category term="unity" scheme="http://www.igiven.com/categories/unity/"/>
+    
+    
+      <category term="C" scheme="http://www.igiven.com/tags/C/"/>
+    
+      <category term="游戏" scheme="http://www.igiven.com/tags/%E6%B8%B8%E6%88%8F/"/>
+    
+      <category term="Unity" scheme="http://www.igiven.com/tags/Unity/"/>
+    
+      <category term="UNITY" scheme="http://www.igiven.com/tags/UNITY/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Spelunky关卡生成</title>
+    <link href="http://www.igiven.com/unity-2021-01-23-Spelunky-map/"/>
+    <id>http://www.igiven.com/unity-2021-01-23-Spelunky-map/</id>
+    <published>2021-01-23T00:00:00.000Z</published>
+    <updated>2021-06-26T08:36:17.950Z</updated>
+    
+    <summary type="html">
+    
+      &lt;h1 id=&quot;Part1-创建Solution-path-关卡通路&quot;&gt;&lt;a href=&quot;#Part1-创建Solution-path-关卡通路&quot; class=&quot;headerlink&quot; title=&quot;Part1. 创建Solution path - 关卡通路&quot;&gt;&lt;/a&gt;Part1. 创建Solution path - 关卡通路&lt;/h1&gt;&lt;p&gt;关卡生成算法的第一部分：生成关卡的critical path（关卡通路），我们先不考虑那些障碍物、陷阱、敌人和宝箱什么的。&lt;/p&gt;
+&lt;p&gt;算法的第一部分是生成关卡的 Critical Path（通路），关卡由 16 个房间按照 4x4 的网格组成。方法是先在第一排随机找到一个起始房间，然后随机使相邻的房间成为通路的一部分，一直到最后一排，生成出口。找到通路之后，连接这些房间，然后再随机补充上非通路部分的房间，打通这些房间。如图顺序所示：&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="unity" scheme="http://www.igiven.com/categories/unity/"/>
+    
+    
+      <category term="C" scheme="http://www.igiven.com/tags/C/"/>
+    
+      <category term="游戏" scheme="http://www.igiven.com/tags/%E6%B8%B8%E6%88%8F/"/>
+    
+      <category term="地图" scheme="http://www.igiven.com/tags/%E5%9C%B0%E5%9B%BE/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>roguelike地牢生成算法</title>
+    <link href="http://www.igiven.com/unity-2021-01-23-roguelike-map/"/>
+    <id>http://www.igiven.com/unity-2021-01-23-roguelike-map/</id>
+    <published>2021-01-23T00:00:00.000Z</published>
+    <updated>2021-06-26T08:36:17.950Z</updated>
+    
+    <summary type="html">
+    
+      &lt;h4 id=&quot;引言&quot;&gt;&lt;a href=&quot;#引言&quot; class=&quot;headerlink&quot; title=&quot;引言&quot;&gt;&lt;/a&gt;引言&lt;/h4&gt;&lt;p&gt;文章作者：&lt;a href=&quot;http://www.roguebasin.com/index.php?title=Mike_Anderson&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;Mike Anderson&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;随机生成的地图是 &lt;a href=&quot;https://indienova.com/tag/roguelike/&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;Roguelike&lt;/a&gt; 类游戏最独特的一点，它让游戏变得很有乐趣，因为玩家永远要面对新的挑战。&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="unity" scheme="http://www.igiven.com/categories/unity/"/>
+    
+    
+      <category term="C" scheme="http://www.igiven.com/tags/C/"/>
+    
+      <category term="C#" scheme="http://www.igiven.com/tags/C/"/>
+    
+      <category term="游戏" scheme="http://www.igiven.com/tags/%E6%B8%B8%E6%88%8F/"/>
+    
+      <category term="地图" scheme="http://www.igiven.com/tags/%E5%9C%B0%E5%9B%BE/"/>
+    
+      <category term="Java" scheme="http://www.igiven.com/tags/Java/"/>
+    
+      <category term="PHP" scheme="http://www.igiven.com/tags/PHP/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>文明6地图生成算法</title>
+    <link href="http://www.igiven.com/unity-2021-01-22-civ-map/"/>
+    <id>http://www.igiven.com/unity-2021-01-22-civ-map/</id>
+    <published>2021-01-22T00:00:00.000Z</published>
+    <updated>2021-06-26T08:36:17.950Z</updated>
+    
+    <summary type="html">
+    
+      &lt;p&gt;作者：哈里叔叔&lt;br&gt;链接：&lt;a href=&quot;https://www.zhihu.com/question/52019284/answer/1476187895&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;https://www.zhihu.com/question/52019284/answer/1476187895&lt;/a&gt;&lt;br&gt;来源：知乎&lt;br&gt;著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。&lt;/p&gt;
+&lt;h3 id=&quot;对称性对抗游戏简介&quot;&gt;&lt;a href=&quot;#对称性对抗游戏简介&quot; class=&quot;headerlink&quot; title=&quot;对称性对抗游戏简介&quot;&gt;&lt;/a&gt;对称性对抗游戏简介&lt;/h3&gt;&lt;p&gt;对称性对抗游戏是指参与游戏的玩家所拥有的资源、交互方式、受制规则、最终目标是相同或相近的，是一种公平、对称的零和游戏。如《英雄无敌》《文明》《卡坦岛》等游戏。&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="unity" scheme="http://www.igiven.com/categories/unity/"/>
+    
+    
+      <category term="C" scheme="http://www.igiven.com/tags/C/"/>
+    
+      <category term="游戏" scheme="http://www.igiven.com/tags/%E6%B8%B8%E6%88%8F/"/>
+    
+      <category term="GitHub" scheme="http://www.igiven.com/tags/GitHub/"/>
+    
+      <category term="Unity" scheme="http://www.igiven.com/tags/Unity/"/>
+    
+      <category term="UNITY" scheme="http://www.igiven.com/tags/UNITY/"/>
+    
+      <category term="地图" scheme="http://www.igiven.com/tags/%E5%9C%B0%E5%9B%BE/"/>
+    
+      <category term="游戏开发" scheme="http://www.igiven.com/tags/%E6%B8%B8%E6%88%8F%E5%BC%80%E5%8F%91/"/>
+    
+      <category term="JS" scheme="http://www.igiven.com/tags/JS/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>波函数坍塌算法生成地图</title>
+    <link href="http://www.igiven.com/unity-2021-01-21-wave-collapse-function/"/>
+    <id>http://www.igiven.com/unity-2021-01-21-wave-collapse-function/</id>
+    <published>2021-01-21T00:00:00.000Z</published>
+    <updated>2021-06-26T08:36:17.950Z</updated>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;什么是“波函数坍塌”？&quot;&gt;&lt;a href=&quot;#什么是“波函数坍塌”？&quot; class=&quot;headerlink&quot; title=&quot;什么是“波函数坍塌”？&quot;&gt;&lt;/a&gt;什么是“波函数坍塌”？&lt;/h2&gt;&lt;p&gt;这个名字看起来是来自量子力学，意思应该是只有在真正观察时，粒子的状态才能被确定，要不然是不确定的，其实并不确定这个解释对不对，物理就够难了，更何况是量子力学。不过呢，很多事物都只是被赋予了高大上的名字，但是实际上根本没有看起来那么复杂。&lt;/p&gt;
+&lt;p&gt;这里所说的“波函数坍塌”实际上是一种贴图以及模型合成技术（texture synthesize or model synthesize），所谓贴图是指数字动画中被贴在物体表面的图片，模型则是这些物体的模型。在2d里，模型一般就是一个二维的封闭区域，3d则是一个有特定形状的物体。贴图模型合成技术的研究和应用已经有很多年的历史了，只是直到今天才有了一个比较霸气的名字而已。&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="unity" scheme="http://www.igiven.com/categories/unity/"/>
+    
+    
+      <category term="C" scheme="http://www.igiven.com/tags/C/"/>
+    
+      <category term="游戏" scheme="http://www.igiven.com/tags/%E6%B8%B8%E6%88%8F/"/>
+    
+      <category term="GitHub" scheme="http://www.igiven.com/tags/GitHub/"/>
+    
+      <category term="地图" scheme="http://www.igiven.com/tags/%E5%9C%B0%E5%9B%BE/"/>
+    
+      <category term="游戏开发" scheme="http://www.igiven.com/tags/%E6%B8%B8%E6%88%8F%E5%BC%80%E5%8F%91/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>使用柏林噪声算法生成地图</title>
+    <link href="http://www.igiven.com/unity-2021-01-20-Perlin-map/"/>
+    <id>http://www.igiven.com/unity-2021-01-20-Perlin-map/</id>
+    <published>2021-01-20T00:00:00.000Z</published>
+    <updated>2021-06-26T08:36:17.950Z</updated>
+    
+    <summary type="html">
+    
+      &lt;p&gt;柏林噪声是一个非常强大算法，经常用于程序生成随机内容，在游戏和其他像电影等多媒体领域广泛应用。算法发明者Ken Perlin也因此算法获得&lt;a href=&quot;http://mrl.nyu.edu/~perlin/doc/oscar.html&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;奥斯卡科技成果奖&lt;/a&gt;（靠算法拿奥斯卡也是没谁了666）。本文将剖析他于2002年发表的&lt;a href=&quot;http://mrl.nyu.edu/~perlin/noise/&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;改进版柏林噪声算法&lt;/a&gt;。在游戏开发领域，柏林噪声可以用于生成波形，起伏不平的材质或者纹理。例如，它能用于程序生成地形（例如使用柏林噪声来生成我的世界（Minecraft）里的地形），火焰燃烧特效，水和云等等。柏林噪声绝大部分应用在2维，3维层面上，但某种意义上也能拓展到4维。柏林噪声在1维层面上可用于卷轴地形、模拟手绘线条等。&lt;br&gt;如果将柏林噪声拓展到4维层面，以第4维，即w轴代表时间，就能利用柏林噪声做动画。例如，2D柏林噪声可以通过插值生成地形，而3D柏林噪声则可以模拟海平面上起伏的波浪。下面是柏林噪声在不同维度的图像以及在游戏中的应用场景。&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;https://images2015.cnblogs.com/blog/608996/201707/608996-20170721155322355-1352334868.png&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;&lt;img src=&quot;../../assets/images/2021-01-20-Perlin-map/608996-20170721155322355-1352334868.png&quot; alt=&quot;img&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;正如图所示，柏林噪声算法可以用来模拟许多自然中的噪声现象。接下来让我们从数理上分析算法的实现原理。&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="unity" scheme="http://www.igiven.com/categories/unity/"/>
+    
+    
+      <category term="C" scheme="http://www.igiven.com/tags/C/"/>
+    
+      <category term="C#" scheme="http://www.igiven.com/tags/C/"/>
+    
+      <category term="游戏" scheme="http://www.igiven.com/tags/%E6%B8%B8%E6%88%8F/"/>
+    
+      <category term="Unity" scheme="http://www.igiven.com/tags/Unity/"/>
+    
+      <category term="UNITY" scheme="http://www.igiven.com/tags/UNITY/"/>
+    
+      <category term="地图" scheme="http://www.igiven.com/tags/%E5%9C%B0%E5%9B%BE/"/>
+    
+      <category term="Java" scheme="http://www.igiven.com/tags/Java/"/>
+    
+      <category term="游戏开发" scheme="http://www.igiven.com/tags/%E6%B8%B8%E6%88%8F%E5%BC%80%E5%8F%91/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>A Native Collection has not been disposed, resulting in a memory leak. Allocated from:</title>
+    <link href="http://www.igiven.com/unity-2020-12-20-Collection-has-not-been-disposed/"/>
+    <id>http://www.igiven.com/unity-2020-12-20-Collection-has-not-been-disposed/</id>
+    <published>2020-12-20T00:00:00.000Z</published>
+    <updated>2021-06-26T08:36:17.950Z</updated>
+    
+    <summary type="html">
+    
+      &lt;p&gt;&lt;img src=&quot;../../assets/images/2020-12-20-unity-/20201110091446.png&quot; alt=&quot;f:id:sugar_affordance:20201110091446p:plain&quot;&gt;&lt;/p&gt;
+&lt;figure class=&quot;highlight plain&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;A Native Collection has not been disposed, resulting in a memory leak. Enable Full StackTraces to get more details.&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+
+&lt;h3 id=&quot;启用堆栈跟踪&quot;&gt;&lt;a href=&quot;#启用堆栈跟踪&quot; class=&quot;headerlink&quot; title=&quot;启用堆栈跟踪&quot;&gt;&lt;/a&gt;&lt;a href=&quot;http://d.hatena.ne.jp/keyword/%A5%B9%A5%BF%A5%C3%A5%AF%A5%C8%A5%EC%A1%BC%A5%B9&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;启用&lt;/a&gt;堆栈跟踪&lt;/h3&gt;
+    
+    </summary>
+    
+    
+      <category term="unity" scheme="http://www.igiven.com/categories/unity/"/>
+    
+    
+      <category term="C" scheme="http://www.igiven.com/tags/C/"/>
+    
+      <category term="C#" scheme="http://www.igiven.com/tags/C/"/>
+    
+      <category term="Unity" scheme="http://www.igiven.com/tags/Unity/"/>
+    
+      <category term="UNITY" scheme="http://www.igiven.com/tags/UNITY/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>谷歌浏览器下netcore登录失败问题</title>
+    <link href="http://www.igiven.com/dotnet-2020-12-11-chrome-login-fail/"/>
+    <id>http://www.igiven.com/dotnet-2020-12-11-chrome-login-fail/</id>
+    <published>2020-12-11T00:00:00.000Z</published>
+    <updated>2021-06-26T08:36:17.942Z</updated>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;Introduction&quot;&gt;&lt;a href=&quot;#Introduction&quot; class=&quot;headerlink&quot; title=&quot;Introduction&quot;&gt;&lt;/a&gt;Introduction&lt;/h2&gt;&lt;p&gt;When you use HTTP on your Identity Server 4 enabled website, users may not login because of the changes made by Chrome in the version 8x. This occurs when you use HTTP schema in your website. The issue is explained here &lt;a href=&quot;https://docs.microsoft.com/en-gb/dotnet/core/compatibility/3.0-3.1#http-browser-samesite-changes-impact-authentication&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;https://docs.microsoft.com/en-gb/dotnet/core/compatibility/3.0-3.1#http-browser-samesite-changes-impact-authentication&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&quot;How-to-solve-it&quot;&gt;&lt;a href=&quot;#How-to-solve-it&quot; class=&quot;headerlink&quot; title=&quot;How to solve it?&quot;&gt;&lt;/a&gt;How to solve it?&lt;/h2&gt;
+    
+    </summary>
+    
+    
+      <category term="dotnet" scheme="http://www.igiven.com/categories/dotnet/"/>
+    
+    
+      <category term="NETCORE" scheme="http://www.igiven.com/tags/NETCORE/"/>
+    
+      <category term="Win" scheme="http://www.igiven.com/tags/Win/"/>
+    
+      <category term="C" scheme="http://www.igiven.com/tags/C/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>pitch yaw roll是什么</title>
+    <link href="http://www.igiven.com/unity-2020-11-29-pitch-yaw-roll/"/>
+    <id>http://www.igiven.com/unity-2020-11-29-pitch-yaw-roll/</id>
+    <published>2020-11-29T00:00:00.000Z</published>
+    <updated>2021-06-26T08:36:17.950Z</updated>
+    
+    <summary type="html">
+    
+      &lt;p&gt;三维空间的右手笛卡尔坐标如图1所示。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;../../assets/images/2020-11-29-pitch-yaw-roll/20140401183456562&quot; alt=&quot;img&quot;&gt;&lt;/p&gt;
+&lt;p&gt;图1&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="unity" scheme="http://www.igiven.com/categories/unity/"/>
+    
+    
+      <category term="C" scheme="http://www.igiven.com/tags/C/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>C＃枚举中使用Flags特性</title>
+    <link href="http://www.igiven.com/dotnet-2020-11-24-flags/"/>
+    <id>http://www.igiven.com/dotnet-2020-11-24-flags/</id>
+    <published>2020-11-24T00:00:00.000Z</published>
+    <updated>2021-06-26T08:36:17.942Z</updated>
+    
+    <summary type="html">
+    
+      &lt;p&gt;假如有类型 Show 的定义如下&lt;/p&gt;
+&lt;figure class=&quot;highlight plain&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;4&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;5&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;6&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;7&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;8&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;9&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;10&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;11&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;12&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;13&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;14&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;15&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;16&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;17&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;18&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;19&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;20&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;21&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;22&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;23&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;24&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;25&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;26&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;27&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;28&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;29&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;30&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;31&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;32&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;33&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;34&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;35&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;36&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;37&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;38&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;39&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;40&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;41&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;42&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;43&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;44&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;45&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;46&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;47&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;48&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;49&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;50&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;51&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;十進位表示法&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;[Flags]&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;enum Days&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;#123;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    None      &amp;#x3D; 0,  &amp;#x2F;&amp;#x2F; 0000 0000&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    Sunday    &amp;#x3D; 1,  &amp;#x2F;&amp;#x2F; 0000 0001&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    Monday    &amp;#x3D; 2,  &amp;#x2F;&amp;#x2F; 0000 0010&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    Tuesday   &amp;#x3D; 4,  &amp;#x2F;&amp;#x2F; 0000 0100&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    Wednesday &amp;#x3D; 8,  &amp;#x2F;&amp;#x2F; 0000 1000&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    Thursday  &amp;#x3D; 16, &amp;#x2F;&amp;#x2F; 0001 0000&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    Friday    &amp;#x3D; 32, &amp;#x2F;&amp;#x2F; 0010 0000&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    Saturday  &amp;#x3D; 64  &amp;#x2F;&amp;#x2F; 0100 0000&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;#125;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;位元移位表示法&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;[Flags]&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;enum Days&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;#123;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    None      &amp;#x3D; 0,      &amp;#x2F;&amp;#x2F; 0000 0000&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    Sunday    &amp;#x3D; 1 &amp;lt;&amp;lt; 0, &amp;#x2F;&amp;#x2F; 0000 0001&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    Monday    &amp;#x3D; 1 &amp;lt;&amp;lt; 1, &amp;#x2F;&amp;#x2F; 0000 0010&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    Tuesday   &amp;#x3D; 1 &amp;lt;&amp;lt; 2, &amp;#x2F;&amp;#x2F; 0000 0100&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    Wednesday &amp;#x3D; 1 &amp;lt;&amp;lt; 3, &amp;#x2F;&amp;#x2F; 0000 1000&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    Thursday  &amp;#x3D; 1 &amp;lt;&amp;lt; 4, &amp;#x2F;&amp;#x2F; 0001 0000&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    Friday    &amp;#x3D; 1 &amp;lt;&amp;lt; 5, &amp;#x2F;&amp;#x2F; 0010 0000&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    Saturday  &amp;#x3D; 1 &amp;lt;&amp;lt; 6  &amp;#x2F;&amp;#x2F; 0100 0000&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;#125;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;二進位表示法 (C# 7.2新增)&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;[Flags]&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;enum Days&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;#123;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    None      &amp;#x3D; 0b_0000_0000, &amp;#x2F;&amp;#x2F; 0000 0000&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    Sunday    &amp;#x3D; 0b_0000_0001, &amp;#x2F;&amp;#x2F; 0000 0001&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    Monday    &amp;#x3D; 0b_0000_0010, &amp;#x2F;&amp;#x2F; 0000 0010&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    Tuesday   &amp;#x3D; 0b_0000_0100, &amp;#x2F;&amp;#x2F; 0000 0100&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    Wednesday &amp;#x3D; 0b_0000_1000, &amp;#x2F;&amp;#x2F; 0000 1000&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    Thursday  &amp;#x3D; 0b_0001_0000, &amp;#x2F;&amp;#x2F; 0001 0000&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    Friday    &amp;#x3D; 0b_0010_0000, &amp;#x2F;&amp;#x2F; 0010 0000&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    Saturday  &amp;#x3D; 0b_0100_0000  &amp;#x2F;&amp;#x2F; 0100 0000&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;#125;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt; &lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;十六進位表示法&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;[Flags]&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;enum RenderType&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;#123;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;   None &amp;#x3D; 0x0,&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;   DataUri &amp;#x3D; 0x1,&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;   GZip &amp;#x3D; 0x2,&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;   ContentPage &amp;#x3D; 0x4,&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;   ViewPage &amp;#x3D; 0x8,&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;   HomePage &amp;#x3D; 0x10 &amp;#x2F;&amp;#x2F; Next two values could be 0x20, 0x40&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;#125;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+
+
+
+&lt;ul&gt;
+&lt;li&gt;&amp;amp; 按位与&lt;/li&gt;
+&lt;li&gt;| 按位或&lt;/li&gt;
+&lt;li&gt;^ 按位异或&lt;/li&gt;
+&lt;li&gt;~取反&lt;/li&gt;
+&lt;/ul&gt;
+    
+    </summary>
+    
+    
+      <category term="dotnet" scheme="http://www.igiven.com/categories/dotnet/"/>
+    
+    
+      <category term="C" scheme="http://www.igiven.com/tags/C/"/>
+    
+      <category term="C#" scheme="http://www.igiven.com/tags/C/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>netcode源代码解读</title>
+    <link href="http://www.igiven.com/unity-2020-11-18-netcode-sourcecode/"/>
+    <id>http://www.igiven.com/unity-2020-11-18-netcode-sourcecode/</id>
+    <published>2020-11-18T00:00:00.000Z</published>
+    <updated>2021-06-26T08:36:17.950Z</updated>
+    
+    <summary type="html">
+    
+      &lt;h1 id=&quot;NetworkStreamReceiveSystem&quot;&gt;&lt;a href=&quot;#NetworkStreamReceiveSystem&quot; class=&quot;headerlink&quot; title=&quot;NetworkStreamReceiveSystem&quot;&gt;&lt;/a&gt;NetworkStreamReceiveSystem&lt;/h1&gt;&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;客户端连接服务端  ,服务端创建NetworkIdComponent&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;客户端添加NetworkStreamInGame组件,并通过rpc 发送GoInGameRequest请求&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;服务端接收到请求后,实例化player&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;为player添加GhostOwnerComponent&lt;/li&gt;
+&lt;li&gt;初始化player添加一些其他不需要同步的组件&lt;/li&gt;
+&lt;li&gt;为connection添加NetworkStreamInGame组件&lt;/li&gt;
+&lt;li&gt;为connection设置CommandTargetComponent&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;客户端根据player独有的组件特性,查找已经被ghost同步过来的实体&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;比对NetworkIdComponent和GhostOwnerComponent的id,判断是否是localPlayer&lt;/li&gt;
+&lt;li&gt;对localplayer进行初始化&lt;/li&gt;
+&lt;li&gt;为connection设置CommandTargetComponent为localplayer&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;客户端使用CommandTargetComponent的targetEntity进行command发送&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;客户端和服务端对传送的command同时使用PredictedGhostComponent进行预测????&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;预测不是发生在客户端的吗???貌似netcode服务端也做了预测&lt;/p&gt;
+&lt;p&gt;在服务器上，预测循环始终仅运行一次，并且不会更新TimeData结构，因为它已经正确。它仍然设置GhostPredictionSystemGroup.PredictingTick以确保可以在客户端和服务器上运行完全相同的代码。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;插值 是针对其他玩家的本地显示…预测是针对自己操作的角色,最后从服务器校正&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="unity" scheme="http://www.igiven.com/categories/unity/"/>
+    
+    
+      <category term="Win" scheme="http://www.igiven.com/tags/Win/"/>
+    
+      <category term="C" scheme="http://www.igiven.com/tags/C/"/>
+    
+      <category term="Unity" scheme="http://www.igiven.com/tags/Unity/"/>
+    
+      <category term="同步" scheme="http://www.igiven.com/tags/%E5%90%8C%E6%AD%A5/"/>
+    
+      <category term="UNITY" scheme="http://www.igiven.com/tags/UNITY/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>unity world time system</title>
+    <link href="http://www.igiven.com/unity-2020-11-17-unity-ecs-worldtime/"/>
+    <id>http://www.igiven.com/unity-2020-11-17-unity-ecs-worldtime/</id>
+    <published>2020-11-17T00:00:00.000Z</published>
+    <updated>2021-06-26T08:36:17.950Z</updated>
+    
+    <summary type="html">
+    
+      &lt;figure class=&quot;highlight plain&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;4&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;5&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;6&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;7&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;8&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;9&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;10&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;11&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;12&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;13&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;14&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;15&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;16&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;17&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;18&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;[Preserve]&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;  [UpdateInGroup(typeof(InitializationSystemGroup))]&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;  public class UpdateWorldTimeSystem : ComponentSystem&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;  &amp;#123;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;      private bool hasTickedOnce &amp;#x3D; false;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;      protected override void OnUpdate()&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;      &amp;#123;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;          var currentElapsedTime &amp;#x3D; Time.ElapsedTime;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;          var deltaTime &amp;#x3D; math.min(UnityEngine.Time.deltaTime, World.MaximumDeltaTime);&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;          World.SetTime(new TimeData(&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;              elapsedTime: hasTickedOnce ? (currentElapsedTime + deltaTime) : currentElapsedTime,&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;              deltaTime: deltaTime&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;          ));&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;          hasTickedOnce &amp;#x3D; true;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;      &amp;#125;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;  &amp;#125;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+
+
+
+
+
+&lt;figure class=&quot;highlight plain&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;4&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;5&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;6&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;7&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;8&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;9&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;internal struct WorldTime : IComponentData&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;#123;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    public TimeData Time;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;#125;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;internal struct WorldTimeQueue : IBufferElementData&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;#123;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    public TimeData Time;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;#125;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+
+
+
+
+
+&lt;p&gt;World.cs&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="unity" scheme="http://www.igiven.com/categories/unity/"/>
+    
+    
+      <category term="C" scheme="http://www.igiven.com/tags/C/"/>
+    
+      <category term="Unity" scheme="http://www.igiven.com/tags/Unity/"/>
+    
+      <category term="UNITY" scheme="http://www.igiven.com/tags/UNITY/"/>
+    
+  </entry>
+  
+</feed>

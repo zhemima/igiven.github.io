@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.igiven.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="General Purpose Component Shared component data    不存储在chunk中,而是存储在sharedComponentManager,而chunk中存的是索引.. 若ForEach中包含了Share Component，那么必须调用WithoutBurst方法和使用Run来执行 Chunk component data    相当于单例…更改后,会更">
+<meta property="og:type" content="article">
+<meta property="og:title" content="unity ecs component">
+<meta property="og:url" content="http://www.igiven.com/unity-2020-10-18-unity-ecs-component/index.html">
+<meta property="og:site_name" content="IGiven">
+<meta property="og:description" content="General Purpose Component Shared component data    不存储在chunk中,而是存储在sharedComponentManager,而chunk中存的是索引.. 若ForEach中包含了Share Component，那么必须调用WithoutBurst方法和使用Run来执行 Chunk component data    相当于单例…更改后,会更">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-10-18-unity-ecs-component/5d295d398f62598876.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-10-18-unity-ecs-component/5d295b6d78b7f51832.png">
+<meta property="article:published_time" content="2020-10-18T00:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-26T08:36:17.950Z">
+<meta property="article:author" content="zhepama">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="GitHub">
+<meta property="article:tag" content="Unity">
+<meta property="article:tag" content="同步">
+<meta property="article:tag" content="UNITY">
+<meta property="article:tag" content="mesh">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.igiven.com/assets/images/2020-10-18-unity-ecs-component/5d295d398f62598876.png">
+
+<link rel="canonical" href="http://www.igiven.com/unity-2020-10-18-unity-ecs-component/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>unity ecs component | IGiven</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="IGiven" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="IGiven" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">IGiven</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">李九仙的博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">139</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">32</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-留言">
+
+    <a href="/guestbook/" rel="section"><i class="fa fa-sticky-note fa-fw"></i>留言</a>
+
+  </li>
+        <li class="menu-item menu-item-rss">
+
+    <a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/unity-2020-10-18-unity-ecs-component/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+      <meta itemprop="name" content="zhepama">
+      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="IGiven">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          unity ecs component<a href="https://github.com/zhepama/igiven.github.io/edit/master/source/_posts/unity/2020-10-18-unity-ecs-component.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil-alt"></i></a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-10-18 08:00:00" itemprop="dateCreated datePublished" datetime="2020-10-18T08:00:00+08:00">2020-10-18</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 16:36:17" itemprop="dateModified" datetime="2021-06-26T16:36:17+08:00">2021-06-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/unity/" itemprop="url" rel="index"><span itemprop="name">unity</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <ul>
+<li>General Purpose Component</li>
+<li>Shared component data    不存储在chunk中,而是存储在sharedComponentManager,而chunk中存的是索引.. 若ForEach中包含了Share Component，那么必须调用WithoutBurst方法和使用Run来执行</li>
+<li>Chunk component data    相当于单例…更改后,会更改所有相关实体</li>
+<li>System State Components  类似一个标记..但是实体销毁时,并不会回收entity,只有当所有satecomponent移除后</li>
+<li>Dynamic buffer components    可以理解为一个数组component</li>
+</ul>
+<h2 id="General-Purpose-Component（普通用途组件）"><a href="#General-Purpose-Component（普通用途组件）" class="headerlink" title="General Purpose Component（普通用途组件）"></a>General Purpose Component（普通用途组件）</h2><p>这里指的是最普通的组件，可以通过实现 <code>IComponentData</code> 接口来创建。</p>
+<p><code>IComponentData</code> 不存储行为，只储存数据。<code>IComponentData</code> 还是一个结构体（Struct）而不是一个类（Class），这意味着被复制时默认是通过值而不是通过引用。</p>
+<p>通常我们会用下面的<strong>模式</strong>来修改组件数据：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">var transform &#x3D; group.transform[index]; &#x2F;&#x2F; Read</span><br><span class="line">    </span><br><span class="line">transform.heading &#x3D; playerInput.move; &#x2F;&#x2F; Modify</span><br><span class="line">transform.position +&#x3D; deltaTime * playerInput.move * settings.playerMoveSpeed;</span><br><span class="line"></span><br><span class="line">group.transform[index] &#x3D; transform; &#x2F;&#x2F; Write</span><br></pre></td></tr></table></figure>
+
+<p><code>IComponentData</code> 结构不包含托管对象（managed objects）的引用，所有<code>IComponentData</code> 被存在无垃圾回收的<a href="https://docs.unity3d.com/Packages/com.unity.entities@0.0/manual/chunk_iteration.html" target="_blank" rel="noopener">块内存（chunk memory）</a>中。</p>
+<p>你可能还听过一种组件是不包含数据、只用来标记的“Tag”组件（Tag component），其用途也很广，例如我们可以轻易地给实体加标记来区分玩家和敌人，这样系统中能更容易通过组件的类型来筛选我们想要的实体。如果我们给一个内存块（Chunk）中的所有实体都添加”Tag“组件的话，只有内存块中对应的原型会修改，不添加数据，因此官方也推荐利用好”Tag“组件。</p>
+<p>See file: /Packages/com.unity.entities/Unity.Entities/IComponentData.cs.</p>
+<h2 id="Shared-components（共享组件）"><a href="#Shared-components（共享组件）" class="headerlink" title="Shared components（共享组件）"></a>Shared components（共享组件）</h2><p>Shared components 是一种特殊的组件，你可以把某些特殊的需要共享的值放到 shared component 中，从而在实体中与其他组件划分开。例如有时候我们的实体需要共享一套材质，我们可以为需要共享的材质创建 <code>Rendering.RenderMesh</code>，再放到 shared components 中。原型中也可以定义 shared components，这一点和其他组件是一样的。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">[System.Serializable]</span><br><span class="line">public struct RenderMesh : ISharedComponentData</span><br><span class="line">&#123;</span><br><span class="line">    public Mesh                 mesh;</span><br><span class="line">    public Material             material;</span><br><span class="line"></span><br><span class="line">    public ShadowCastingMode    castShadows;</span><br><span class="line">    public bool                 receiveShadows;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当你为一个实体添加一个 shared components 时， <code>EntityManager</code> 会把所有带有同样 shared components 的实体放到一个同样的内存块中（Chunks）。shared components 允许我们的系统去一并处理相似的（有同样 shared components 的）实体。</p>
+<h3 id="内存结构"><a href="#内存结构" class="headerlink" title="内存结构"></a>内存结构</h3><p><img src="../../assets/images/2020-10-18-unity-ecs-component/5d295d398f62598876.png" alt="img"></p>
+<p>每个内存块（Chunk）会有一个存放 shared components 索引的数组。这句话包含了几个要点：</p>
+<ol>
+<li>对于实体来说，有同样 <code>SharedComponentData</code> 的实体会被一起放到同样的内存块（Chunk）中。</li>
+<li>如果我们有两个存储在同样的内存块中的两个实体，它们有同样的 <code>SharedComponentData</code> 类型和值。我们修改其中一个实体的 <code>SharedComponentData</code> 的值，这样会导致这个实体会被移动到一个新的内存块中，因为一个内存块共享同一个数组的 <code>SharedComponentData</code> 索引。事实上，从一个实体中增加或者移除一个组件，或者改变 shared components 的值都会导致这种操作的发生。</li>
+<li>其索引存储在内存块而非实体中，因此 <code>SharedComponentData</code> 对实体来说是低开销的。</li>
+<li>因为内存块只需要存其索引，<code>SharedComponentData</code> 的内存消耗几乎可以忽略不计。</li>
+</ol>
+<p>因为上面的第二个要点，我们不能滥用 shared components。滥用 shared components 将让 Unity 不能利用好内存块（Chunk），因此我们要避免添加不必要的数据或修改数据到 shared components 中。我们可以通过 Entity Debugger 来监测内存块的利用。</p>
+<p><img src="../../assets/images/2020-10-18-unity-ecs-component/5d295b6d78b7f51832.png" alt="img"></p>
+<p>拿上一段 RenderMesh 的例子来说，共享材质会更有效率，因为 shared components 有其自己的 <code>manager</code> 和哈希表。其中 <code>manager</code> 带有一个存储 shared components 数据的自由列表（<a href="https://zh.wikipedia.org/wiki/自由表" target="_blank" rel="noopener">freelist</a>），哈希表可以快速地找到相应的值。内存块里面存的是索引数组，需要找数据的时候就会从 Shared Component Manager 中找。</p>
+<h3 id="其他要点"><a href="#其他要点" class="headerlink" title="其他要点"></a>其他要点</h3><ul>
+<li><code>EntityQuery</code> 可以迭代所有拥有相同 <code>SharedComponentData</code> 的实体</li>
+<li>我们可以用 <code>EntityQuery.SetFilter()</code> 来迭代所有拥有某个特定 <code>SharedComponentData</code> 的实体。这种操作开销十分低，因为 <code>SetFilter</code> 内部筛选的只是 int 的索引。前面说了每个内存块都有一个<code>SharedComponentData</code> 索引数组，因此对于每个内存块来说，筛选（filtering）的消耗都是可以忽略不计的。</li>
+<li>怎么样获取 <code>SharedComponentData</code> 的值呢？<code>EntityManager.GetAllUniqueSharedComponentData&lt;T&gt;</code> 可以得到在存活的实体中（alive entities）的所有的泛型 T 类型的<code>SharedComponentData</code> 值，结果以参数中的列表返回，你也可以通过其重载的方法获得所有值的索引。其他获取值的方法可以参考 /Packages/com.unity.entities/Unity.Entities/EntityManagerAccessComponentData.cs。</li>
+<li><code>SharedComponentData</code> 是自动引用计数的，例如在没有任何内存块拥有某个<code>SharedComponentData</code> 索引的时候，引用计数会置零，从而知道要删除<code>SharedComponentData</code> 的数据 。这一点就能看出其在 ECS 的世界中是非常独特的存在，想要深入了解可以看这篇文章<a href="https://gametorrahod.com/everything-about-isharedcomponentdata/" target="_blank" rel="noopener">《Everything about ISharedComponentData》</a>。</li>
+<li><code>SharedComponentData</code> 应该尽量不去更改，因为更改 <code>SharedComponentData</code> 会导致实体的组件数据需要复制到其他的内存块中。</li>
+</ul>
+<p>你也可以读读这篇更深入的文章<a href="https://gametorrahod.com/everything-about-isharedcomponentdata/" target="_blank" rel="noopener">《Everything about ISharedComponentData》</a>。</p>
+<h2 id="System-state-components（系统状态组件）"><a href="#System-state-components（系统状态组件）" class="headerlink" title="System state components（系统状态组件）"></a>System state components（系统状态组件）</h2><p><code>SystemStateComponentData</code> 允许你跟踪系统（System）的资源，并允许你合适地创建和删除某些资源，这些过程中不依赖独立的回调（individual callback）。</p>
+<blockquote>
+<p>假设有一个网络同步 System State，其监控一个 Component A 的同步，则我只需要定义一个 SystemStateComponent SA。当 Entity [有 A，无 SA] 时，表示 A 刚添加，此时添加 SA。等到 Entity [无 A，有 SA] 时,表示 A 被删除（尝试销毁Entity 时也会删除 A）。<br><a href="https://zhuanlan.zhihu.com/p/51289405" target="_blank" rel="noopener">《浅入浅出Unity ECS》</a> BenzzZX</p>
+</blockquote>
+<p><code>SystemStateComponentData</code> 和 <code>SystemStateSharedComponentData</code> 这两个类型与 <code>ComponentData</code> 和 <code>SharedComponentData</code> 十分相似，不同的是前者两个类型都是系统级别的，不会在实体删除的时候被删除。</p>
+<h3 id="Motivation（诱因）"><a href="#Motivation（诱因）" class="headerlink" title="Motivation（诱因）"></a>Motivation（诱因）</h3><p>System state components 有这样特殊的行为，是因为：</p>
+<ul>
+<li>系统可能需要保持一个基于 <code>ComponentData</code> 的内部状态。例如已经被分配的资源。</li>
+<li>系统需要通过值来管理这些状态，也需要管理其他系统所造成的的状态改变。例如在组件中的值改变的时候，或者在相关组件被添加或者被删除的时候。</li>
+<li>“没有回调”是 ECS 设计规则的重要元素。</li>
+</ul>
+<h3 id="Concept（概念）"><a href="#Concept（概念）" class="headerlink" title="Concept（概念）"></a>Concept（概念）</h3><p><code>SystemStateComponentData</code> 普遍用法是镜像一个用户组件，并提供内部状态。</p>
+<p>上面引用的网络同步的例子中，A 就是用户分配的 <code>ComponentData</code>，SA 就是系统分配的 <code>SystemComponentData</code>。</p>
+<p>下面以 FooComponent （<code>ComponentData</code>）和 FooStateComponent（<code>SystemComponentData</code>）做主要用途的示例。前两个用途已经在前面的网络同步例子中呈现过。</p>
+<h4 id="检测组件的添加"><a href="#检测组件的添加" class="headerlink" title="检测组件的添加"></a>检测组件的添加</h4><p>如果用户添加 FooComponent 时，FooStateComponent 还不存在。FooSystem 会在 update 中查询，如果实体只有 FooComponent 而没有 FooStateComponent,，则可以判断这个实体是新添加的。这时候 FooSystem 会加上 FooStateComponent 组件和其他需要的内部状态。</p>
+<h4 id="检测组件的删除"><a href="#检测组件的删除" class="headerlink" title="检测组件的删除"></a>检测组件的删除</h4><p>如果用户删除 FooComponent 后，FooStateComponent 仍然存在。FooSystem 会在 update 中查询，如果实体没有 FooComponent 而有 FooStateComponent,，则可以判断 FooComponent 已经被删除了。这时候 FooSystem 会给删除 FooStateComponent 组件和修改其他需要的内部状态。</p>
+<h4 id="监测实体的删除"><a href="#监测实体的删除" class="headerlink" title="监测实体的删除"></a>监测实体的删除</h4><p>通常 <code>DestroyEntity</code> 这个方法可以用来：</p>
+<ol>
+<li>找到所有由某个实体 ID 标记的所有组件</li>
+<li>删除那些组件</li>
+<li>回收实体 ID 以作重用</li>
+</ol>
+<p>然而，<code>DestroyEntity</code> 无法删除 <code>SystemStateComponentData</code> 。</p>
+<p>在你删除实体时，<code>EntityManager</code> <strong>不会</strong>移除任何 system state components，在它们没被删除的时候，<code>EntityManager</code> 也不会回收其实体的 ID 。这样允许系统（System）在一个实体被删除的时候，去整理内部的状态（internal state），也能清理关联着实体 ID 的相关的资源和状态。实体 ID 只会在所有 <code>SystemStateComponentData</code> 被删除的时候才被重用。</p>
+<h2 id="Dynamic-Buffers（动态缓冲）"><a href="#Dynamic-Buffers（动态缓冲）" class="headerlink" title="Dynamic Buffers（动态缓冲）"></a>Dynamic Buffers（动态缓冲）</h2><p><code>DynamicBuffer</code> 也是组件的一种类型，它能把一个变量内存空间大小的弹性的缓冲（variable-sized, “stretchy” buffer）和一个实体关联起来。它内部存储着一定数量的元素，但如果内部所占内存空间太大，会额外划分一个堆内存（heap memory）来存储。</p>
+<p>动态缓冲的内存管理是全自动的。与 <code>DynamicBuffer</code> 关联的内存由 <code>EntityManager</code> 来管理，这样当<code>DynamicBuffer</code> 组件被删除的时候，所关联的堆内存空间也会自动释放掉。</p>
+<p>上面的解释可能略显苍白，实际上 <code>DynamicBuffer</code> 可以看成一个有默认大小的数组，其行为和性能都和 <code>NativeArray</code>（在 ECS 中常用的无 GC 容器类型）差不多，但是存储数据超过默认大小也没关系，上文提到了会创建一个堆内存来存储多的数据。<code>DynamicBuffer</code> 可以通过 <code>ToNativeArray</code> 转成 <code>NativeArray</code> 类型，其中只是把指针重新指向缓冲，不会复制数据。</p>
+<p><a href="http://tsubakit1.hateblo.jp/entry/2018/11/07/234502" target="_blank" rel="noopener">【Unity】ECSで配列を格納する Dynamic Buffers</a> 这篇文章中，作者用<code>DynamicBuffer</code> 来储存临近的圆柱体实体，从而更方便地与这些实体交互。</p>
+<h3 id="定义缓冲"><a href="#定义缓冲" class="headerlink" title="定义缓冲"></a>定义缓冲</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F; 8 指的是缓冲中默认元素的数量，例如这例子中存的是 Integer 类型</span><br><span class="line">&#x2F;&#x2F; 那么 8 integers （32 bytes）就是缓冲的默认大小</span><br><span class="line">&#x2F;&#x2F; 64 位机器中则占 16 bytes</span><br><span class="line">[InternalBufferCapacity(8)]</span><br><span class="line">public struct MyBufferElement : IBufferElementData</span><br><span class="line">&#123;</span><br><span class="line">    &#x2F;&#x2F; 下面的隐式转换是可选的，这样可以少写些代码</span><br><span class="line">    public static implicit operator int(MyBufferElement e) &#123; return e.Value; &#125;</span><br><span class="line">    public static implicit operator MyBufferElement(int e) &#123; return new MyBufferElement &#123; Value &#x3D; e &#125;; &#125;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; 每个缓冲元素要存储的值</span><br><span class="line">    public int Value;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可能有点奇怪，我们要定义缓冲中元素的结构而不是 <code>Buffer</code> 缓冲本身，其实这样在 ECS 中有两个好处：</p>
+<ol>
+<li>对于 <code>float3</code> 或者其他常见的值类型来说，这样能支持多种 <code>DynamicBuffer</code> 。我们可以重用已有的缓冲元素的结构，来定义其他的 <code>Buffers</code>。</li>
+<li>我们可以将 <code>Buffer</code> 的元素类型包含在 <code>EntityArchetypes</code> 中，这样它会表现得像拥有一个组件一样。例如用 <code>AddBuffer()</code> 方法，可以通过 <code>entityManager.AddBuffer&lt;MyBufferElement&gt;(entity);</code> 来添加缓冲。</li>
+</ol>
+<h2 id="关于prefab到entity"><a href="#关于prefab到entity" class="headerlink" title="关于prefab到entity"></a>关于prefab到entity</h2><ul>
+<li><code>IDeclareReferencedPrefabs</code> ： 将prefab引用添加到Conversion World。在<code>IConvertGameObjectToEntity</code>中可以通过GameObjectConversionSystem根据prefab获取entity</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">DeclareReferencedPrefabs</span><span class="params">(List&lt;GameObject&gt; referencedPrefabs)</span> </span>=&gt; referencedPrefabs.Add(Prefab);</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>IConvertGameObjectToEntity</code>：自动生成一个新的entity，然后自定义对entity的操作。</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Convert</span><span class="params">(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        dstManager.AddComponentData(entity, <span class="keyword">new</span> PeriodicSpawner</span><br><span class="line">        &#123;</span><br><span class="line">            Prefab = conversionSystem.GetPrimaryEntity(Prefab),</span><br><span class="line">            SecondsBetweenSpawns = <span class="number">1</span> / SpawnsPerSecond</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<ul>
+<li><a href="https://github.com/Knightmore/MultiWorldBootstrap" target="_blank" rel="noopener">Knightmore/MultiWorldBootstrap: Unity ICustomBootstrap extension for multiple custom world creation in ECS (github.com)</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C</a>
+              <a href="/tags/GitHub/" rel="tag"># GitHub</a>
+              <a href="/tags/Unity/" rel="tag"># Unity</a>
+              <a href="/tags/%E5%90%8C%E6%AD%A5/" rel="tag"># 同步</a>
+              <a href="/tags/UNITY/" rel="tag"># UNITY</a>
+              <a href="/tags/mesh/" rel="tag"># mesh</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/unity-2020-10-17-runtime-spriteatlas/" rel="prev" title="运行时打包图集">
+      <i class="fa fa-chevron-left"></i> 运行时打包图集
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/unity-2020-10-19-game-object-conversion-and-subscene/" rel="next" title="基于 Game Object Conversion 和 SubScene 的 DOTS 开发工作流">
+      基于 Game Object Conversion 和 SubScene 的 DOTS 开发工作流 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  
+  <div class="comments">
+  <script src="https://utteranc.es/client.js" repo="zhepama/igiven.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async></script>
+  </div>
+  
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#General-Purpose-Component（普通用途组件）"><span class="nav-number">1.</span> <span class="nav-text">General Purpose Component（普通用途组件）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Shared-components（共享组件）"><span class="nav-number">2.</span> <span class="nav-text">Shared components（共享组件）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#内存结构"><span class="nav-number">2.1.</span> <span class="nav-text">内存结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#其他要点"><span class="nav-number">2.2.</span> <span class="nav-text">其他要点</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#System-state-components（系统状态组件）"><span class="nav-number">3.</span> <span class="nav-text">System state components（系统状态组件）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Motivation（诱因）"><span class="nav-number">3.1.</span> <span class="nav-text">Motivation（诱因）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Concept（概念）"><span class="nav-number">3.2.</span> <span class="nav-text">Concept（概念）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#检测组件的添加"><span class="nav-number">3.2.1.</span> <span class="nav-text">检测组件的添加</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#检测组件的删除"><span class="nav-number">3.2.2.</span> <span class="nav-text">检测组件的删除</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#监测实体的删除"><span class="nav-number">3.2.3.</span> <span class="nav-text">监测实体的删除</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Dynamic-Buffers（动态缓冲）"><span class="nav-number">4.</span> <span class="nav-text">Dynamic Buffers（动态缓冲）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#定义缓冲"><span class="nav-number">4.1.</span> <span class="nav-text">定义缓冲</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#关于prefab到entity"><span class="nav-number">5.</span> <span class="nav-text">关于prefab到entity</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhepama"
+      src="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+  <p class="site-author-name" itemprop="name">zhepama</p>
+  <div class="site-description" itemprop="description">一个不专业的程序员,写着专业的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">139</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhepama" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhepama" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhepama@gmail.com" title="E-Mail → mailto:zhepama@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.godgodgame.com/" title="http:&#x2F;&#x2F;www.godgodgame.com" rel="noopener" target="_blank">GODGODGAME</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.igiven.com/" title="https:&#x2F;&#x2F;www.igiven.com">IGIVEN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhepama.github.io/C-Sharp-Playground/zh/" title="https:&#x2F;&#x2F;zhepama.github.io&#x2F;C-Sharp-Playground&#x2F;zh&#x2F;" rel="noopener" target="_blank">数据结构与算法</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhepama</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

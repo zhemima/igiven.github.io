@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.igiven.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="让C#代码支持热更的流程   Generate Code这一步主要根据是根据C#类中需要支持热更的方法生成其对应的委托方法，但是并不是每个方法对应一个委托，而是根据调用参数和返回参数公用委托。 Hotfix Inject这一步主要是对Unity编译出的Dll中的C#类添加判断条件，以此来选择调用Lua中的修复方法还是直接执行C#代码   Generate Code 实现和生成结果在Gen代码阶段">
+<meta property="og:type" content="article">
+<meta property="og:title" content="xlua注入源码解读">
+<meta property="og:url" content="http://www.igiven.com/unity-2019-09-03-xlua-inject/index.html">
+<meta property="og:site_name" content="IGiven">
+<meta property="og:description" content="让C#代码支持热更的流程   Generate Code这一步主要根据是根据C#类中需要支持热更的方法生成其对应的委托方法，但是并不是每个方法对应一个委托，而是根据调用参数和返回参数公用委托。 Hotfix Inject这一步主要是对Unity编译出的Dll中的C#类添加判断条件，以此来选择调用Lua中的修复方法还是直接执行C#代码   Generate Code 实现和生成结果在Gen代码阶段">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2019-09-03T00:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-26T08:36:17.946Z">
+<meta property="article:author" content="zhepama">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="C#">
+<meta property="article:tag" content="Unity">
+<meta property="article:tag" content="UNITY">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://www.igiven.com/unity-2019-09-03-xlua-inject/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>xlua注入源码解读 | IGiven</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="IGiven" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="IGiven" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">IGiven</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">李九仙的博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">139</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">32</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-留言">
+
+    <a href="/guestbook/" rel="section"><i class="fa fa-sticky-note fa-fw"></i>留言</a>
+
+  </li>
+        <li class="menu-item menu-item-rss">
+
+    <a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/unity-2019-09-03-xlua-inject/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+      <meta itemprop="name" content="zhepama">
+      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="IGiven">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          xlua注入源码解读<a href="https://github.com/zhepama/igiven.github.io/edit/master/source/_posts/unity/2019-09-03-xlua-inject.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil-alt"></i></a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-09-03 08:00:00" itemprop="dateCreated datePublished" datetime="2019-09-03T08:00:00+08:00">2019-09-03</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 16:36:17" itemprop="dateModified" datetime="2021-06-26T16:36:17+08:00">2021-06-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/unity/" itemprop="url" rel="index"><span itemprop="name">unity</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <ul>
+<li><strong>让C#代码支持热更的流程</strong></li>
+</ul>
+<ol>
+<li>Generate Code<br>这一步主要根据是根据C#类中需要支持热更的方法生成其对应的委托方法，但是并不是每个方法对应一个委托，而是根据调用参数和返回参数公用委托。</li>
+<li>Hotfix Inject<br>这一步主要是对Unity编译出的Dll中的C#类添加判断条件，以此来选择调用Lua中的修复方法还是直接执行C#代码</li>
+</ol>
+<ul>
+<li><strong>Generate Code 实现和生成结果</strong><br>在Gen代码阶段，对热更生效的部分逻辑，基本就是根据之前在代码中标记了HotfixAttribute的类进行收集，然后使用XLua的模板代码生成器，生成对应名为DelegateBridge类。__Gen_Delegate_Imp这个就是到时候要重复使用到的映射到Lua中function的委托。</li>
+</ul>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> __Gen_Delegate_Imp0()</span><br><span class="line">&#123;</span><br><span class="line">    RealStatePtr L = luaEnv.rawL;</span><br><span class="line">    <span class="keyword">int</span> errFunc = LuaAPI.pcall_prepare(L, errorFuncRef, luaReference);</span><br><span class="line">    PCall(L, <span class="number">0</span>, <span class="number">0</span>, errFunc);</span><br><span class="line">    LuaAPI.lua_settop(L, errFunc - <span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>生成的代码就是先设置errorFuncRef（异常回调），luaReference（Lua方法）。如果在XLua中设置了热更修复代码，那么就会在C#中生成一个DelegateBridge，而其luaReference的指向就是Lua中的方法，所以这个只能调用指定的__Gen_Delegate_Imp，调用其他会报错。</p>
+<ul>
+<li><strong>Hotfix Inject</strong><br>这一步是在Unity为C#代码生成完对应dll之后，由XLua再来对dll注入一些判断条件式来完成是否进行Lua调用的行为。<br>判断方法很简单，检查对应类静态字段是否有DelegateBridge对象。<br>实现如下：</li>
+</ul>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">injectMethod</span>(<span class="params">MethodDefinition method, HotfixFlagInTool hotfixType</span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">            <span class="keyword">var</span> type = method.DeclaringType;</span><br><span class="line">            <span class="keyword">bool</span> isFinalize = (method.Name == <span class="string">"Finalize"</span> &amp;&amp; method.IsSpecialName);</span><br><span class="line">            <span class="comment">//__Gen_Delegate_Imp 方法引用</span></span><br><span class="line">            MethodReference invoke = <span class="literal">null</span>;</span><br><span class="line">            <span class="keyword">int</span> param_count = method.Parameters.Count + (method.IsStatic ? <span class="number">0</span> : <span class="number">1</span>);</span><br><span class="line">            <span class="comment">//根据返回值和参数个数类型，查找对应的委托方法</span></span><br><span class="line">            <span class="keyword">if</span> (!findHotfixDelegate(method, <span class="keyword">out</span> invoke, hotfixType))</span><br><span class="line">            &#123;</span><br><span class="line">                Error(<span class="string">"can not find delegate for "</span> + method.DeclaringType + <span class="string">"."</span> + method.Name + <span class="string">"! try re-genertate code."</span>);</span><br><span class="line">                <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (invoke == <span class="literal">null</span>)</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> Exception(<span class="string">"unknow exception!"</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            </span><br><span class="line">            invoke = injectAssembly.MainModule.Import(invoke);</span><br><span class="line">            <span class="comment">//插入的类静态字段，用来标记对应的方法是否有对应的Lua注入</span></span><br><span class="line">            FieldReference fieldReference = <span class="literal">null</span>;</span><br><span class="line">            <span class="comment">//方法中的变量定义</span></span><br><span class="line">            VariableDefinition injection = <span class="literal">null</span>;</span><br><span class="line">            <span class="keyword">bool</span> isIntKey = hotfixType.HasFlag(HotfixFlagInTool.IntKey) &amp;&amp; !type.HasGenericParameters &amp;&amp; isTheSameAssembly;</span><br><span class="line">            <span class="comment">//isIntKey = !type.HasGenericParameters;</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (!isIntKey)</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="comment">//新建变量，加入方法体的变量组中</span></span><br><span class="line">                injection = <span class="keyword">new</span> VariableDefinition(invoke.DeclaringType);</span><br><span class="line">                method.Body.Variables.Add(injection);</span><br><span class="line">                <span class="comment">//获取这个方法对应的委托名，因为有重载方法存在，所以之前已经注入的过的方法会在这边获取时候计数加1，</span></span><br><span class="line">                <span class="comment">//比如第一个重载获取的是__Hotfix0，那么下一个重载会是__Hotfix1，判断是否注入就是是否设置对应FieldReference。</span></span><br><span class="line">                <span class="keyword">var</span> luaDelegateName = getDelegateName(method);</span><br><span class="line">                <span class="keyword">if</span> (luaDelegateName == <span class="literal">null</span>)</span><br><span class="line">                &#123;</span><br><span class="line">                    Error(<span class="string">"too many overload!"</span>);</span><br><span class="line">                    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="comment">//创建对应的静态Field名字就是上面取到的luaDelegateName </span></span><br><span class="line">                FieldDefinition fieldDefinition = <span class="keyword">new</span> FieldDefinition(luaDelegateName, Mono.Cecil.FieldAttributes.Static | Mono.Cecil.FieldAttributes.Private,</span><br><span class="line">                    invoke.DeclaringType);</span><br><span class="line">                type.Fields.Add(fieldDefinition);</span><br><span class="line">                fieldReference = fieldDefinition.GetGeneric();</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">bool</span> ignoreValueType = hotfixType.HasFlag(HotfixFlagInTool.ValueTypeBoxing);</span><br><span class="line">            <span class="comment">//IL插入位置，现在定位的是方法体的第一行</span></span><br><span class="line">            <span class="keyword">var</span> insertPoint = method.Body.Instructions[<span class="number">0</span>];</span><br><span class="line">            <span class="comment">//获取IL处理器</span></span><br><span class="line">            <span class="keyword">var</span> processor = method.Body.GetILProcessor();</span><br><span class="line">            <span class="comment">//构造函数的处理逻辑先跳过这边不做分析</span></span><br><span class="line">            <span class="keyword">if</span> (method.IsConstructor)</span><br><span class="line">            &#123;</span><br><span class="line">                insertPoint = findNextRet(method.Body.Instructions, insertPoint);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            Dictionary&lt;Instruction, Instruction&gt; originToNewTarget = <span class="keyword">new</span> Dictionary&lt;Instruction, Instruction&gt;();</span><br><span class="line">            HashSet&lt;Instruction&gt; noCheck = <span class="keyword">new</span> HashSet&lt;Instruction&gt;();</span><br><span class="line">            </span><br><span class="line">            <span class="keyword">while</span> (insertPoint != <span class="literal">null</span>)</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="comment">//isIntKey这边用到的是Xlua中的AutoIdMap，这边只对最基础的功能做分析，这边就分析基础的注入了。</span></span><br><span class="line">                Instruction firstInstruction;</span><br><span class="line">                <span class="keyword">if</span> (isIntKey)</span><br><span class="line">                &#123;</span><br><span class="line">                    firstInstruction = processor.Create(OpCodes.Ldc_I4, bridgeIndexByKey.Count);</span><br><span class="line">                    processor.InsertBefore(insertPoint, firstInstruction);</span><br><span class="line">                    processor.InsertBefore(insertPoint, processor.Create(OpCodes.Call, hotfixFlagGetter));</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">else</span></span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="comment">//创建第一条IL语句，获取类的静态Field压入方法栈中，其实就是之前luaDelegateName获取的字段</span></span><br><span class="line">                    firstInstruction = processor.Create(OpCodes.Ldsfld, fieldReference);</span><br><span class="line">                    <span class="comment">//插入insertPoint之前</span></span><br><span class="line">                    processor.InsertBefore(insertPoint, firstInstruction);</span><br><span class="line">                    <span class="comment">//创建并插入IL，获取栈顶的值并压入到对应的变量中，injection就是我们之前创建的新建变量</span></span><br><span class="line">                    processor.InsertBefore(insertPoint, processor.Create(OpCodes.Stloc, injection));</span><br><span class="line">                    <span class="comment">//创建并插入IL，压入变量体中的值到栈</span></span><br><span class="line">                    processor.InsertBefore(insertPoint, processor.Create(OpCodes.Ldloc, injection));</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="comment">//创建跳转语句，为false时候直接跳转insertPoint,</span></span><br><span class="line">                <span class="comment">//这边OpCodes.Brfalse看起来是布尔值判断，其实也会判断是否为null</span></span><br><span class="line">                <span class="keyword">var</span> jmpInstruction = processor.Create(OpCodes.Brfalse, insertPoint);</span><br><span class="line">                processor.InsertBefore(insertPoint, jmpInstruction);</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (isIntKey)</span><br><span class="line">                &#123;</span><br><span class="line">                    processor.InsertBefore(insertPoint, processor.Create(OpCodes.Ldc_I4, bridgeIndexByKey.Count));</span><br><span class="line">                    processor.InsertBefore(insertPoint, processor.Create(OpCodes.Call, delegateBridgeGetter));</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">else</span></span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="comment">//创建并插入IL,再次压入变量的值，因为上面做完判断后，栈顶的值就会被弹出，所以这边要再次压入</span></span><br><span class="line">                    processor.InsertBefore(insertPoint, processor.Create(OpCodes.Ldloc, injection));</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; param_count; i++)</span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="keyword">if</span> (i &lt; ldargs.Length)</span><br><span class="line">                    &#123;</span><br><span class="line">                        processor.InsertBefore(insertPoint, processor.Create(ldargs[i]));</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">else</span> <span class="keyword">if</span> (i &lt; <span class="number">256</span>)</span><br><span class="line">                    &#123;</span><br><span class="line">                        processor.InsertBefore(insertPoint, processor.Create(OpCodes.Ldarg_S, (<span class="keyword">byte</span>)i));</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">else</span></span><br><span class="line">                    &#123;</span><br><span class="line">                        processor.InsertBefore(insertPoint, processor.Create(OpCodes.Ldarg, (<span class="keyword">short</span>)i));</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">if</span> (i == <span class="number">0</span> &amp;&amp; !method.IsStatic &amp;&amp; type.IsValueType)</span><br><span class="line">                    &#123;</span><br><span class="line">                        processor.InsertBefore(insertPoint, processor.Create(OpCodes.Ldobj, type));</span><br><span class="line">                        </span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="comment">//对值类型进行Box</span></span><br><span class="line">                    <span class="keyword">if</span> (ignoreValueType)</span><br><span class="line">                    &#123;</span><br><span class="line">                        TypeReference paramType;</span><br><span class="line">                        <span class="keyword">if</span> (method.IsStatic)</span><br><span class="line">                        &#123;</span><br><span class="line">                            paramType = method.Parameters[i].ParameterType;</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="keyword">else</span></span><br><span class="line">                        &#123;</span><br><span class="line">                            paramType = (i == <span class="number">0</span>) ? type : method.Parameters[i - <span class="number">1</span>].ParameterType;</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="keyword">if</span> (paramType.IsValueType)</span><br><span class="line">                        &#123;</span><br><span class="line">                            processor.InsertBefore(insertPoint, processor.Create(OpCodes.Box, paramType));</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="comment">//创建并插入IL，调用invoke方法，因为之前已经压入injection的值，DelegateBridge的对象</span></span><br><span class="line">                processor.InsertBefore(insertPoint, processor.Create(OpCodes.Call, invoke));</span><br><span class="line">                <span class="comment">//普通方法，加入返回操作</span></span><br><span class="line">                <span class="keyword">if</span> (!method.IsConstructor &amp;&amp; !isFinalize)</span><br><span class="line">                &#123;</span><br><span class="line">                    processor.InsertBefore(insertPoint, processor.Create(OpCodes.Ret));</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (!method.IsConstructor)</span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">else</span></span><br><span class="line">                &#123;</span><br><span class="line">                    originToNewTarget[insertPoint] = firstInstruction;</span><br><span class="line">                    noCheck.Add(jmpInstruction);</span><br><span class="line">                &#125;</span><br><span class="line">                insertPoint = findNextRet(method.Body.Instructions, insertPoint);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (method.IsConstructor)</span><br><span class="line">            &#123;</span><br><span class="line">                fixBranch(processor, method.Body.Instructions, originToNewTarget, noCheck);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (isFinalize)</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">if</span> (method.Body.ExceptionHandlers.Count == <span class="number">0</span>)</span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="keyword">throw</span> <span class="keyword">new</span> InvalidProgramException(<span class="string">"Finalize has not try-catch? Type :"</span> + method.DeclaringType);</span><br><span class="line">                &#125;</span><br><span class="line">                method.Body.ExceptionHandlers[<span class="number">0</span>].TryStart = method.Body.Instructions[<span class="number">0</span>];</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (isIntKey)</span><br><span class="line">            &#123;</span><br><span class="line">                bridgeIndexByKey.Add(method);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">string</span> <span class="title">getDelegateName</span>(<span class="params">MethodDefinition method</span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">            <span class="keyword">string</span> fieldName = method.Name;</span><br><span class="line">            <span class="keyword">if</span> (fieldName.StartsWith(<span class="string">"."</span>))</span><br><span class="line">            &#123;</span><br><span class="line">                fieldName = fieldName.Substring(<span class="number">1</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">string</span> ccFlag = method.IsConstructor ? <span class="string">"_c"</span> : <span class="string">""</span>;</span><br><span class="line">            <span class="keyword">string</span> luaDelegateName = <span class="literal">null</span>;</span><br><span class="line">            <span class="keyword">var</span> type = method.DeclaringType;</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; MAX_OVERLOAD; i++)</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">string</span> tmp = ccFlag + <span class="string">"__Hotfix"</span> + i + <span class="string">"_"</span> + fieldName;</span><br><span class="line">                <span class="keyword">if</span> (!type.Fields.Any(f =&gt; f.Name == tmp)) <span class="comment">// injected</span></span><br><span class="line">                &#123;</span><br><span class="line">                    luaDelegateName = tmp;</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> luaDelegateName;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>xlua.hotfix</strong>在完成生成代码和注入后，只要在Lua中调用xlua.hotfix或util.hotfix<em>ex方法就可以实现C#代码热更了。</em>hotfix和hotfixex的区别在与是否可以调用原C#代码，其实ex的实现也是调用了hotfix，在下面将分析hotfix和hotfix_ex的实现原理。<br>先分析下hotfix的Lua代码，代码在第一篇文章中的实例化lua中：</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">init_xlua.lua</span><br><span class="line">xlua.hotfix &#x3D; function(cs, field, func)</span><br><span class="line">           &#x2F;&#x2F;判空</span><br><span class="line">           if func &#x3D;&#x3D; nil then func &#x3D; false end</span><br><span class="line">           &#x2F;&#x2F;检查并且统一转化为table</span><br><span class="line">           &#x2F;&#x2F;因为在Xlua中可以一次传一个方法，或者一次传一组方法</span><br><span class="line">           local tbl &#x3D; (type(field) &#x3D;&#x3D; &#39;table&#39;) and field or &#123;[field] &#x3D; func&#125;</span><br><span class="line">           &#x2F;&#x2F;遍历需要hotfix的代码，key是方法名，v是对应的func</span><br><span class="line">           for k, v in pairs(tbl) do</span><br><span class="line">               &#x2F;&#x2F;构造函数的hotfix，这边不做分析了，原理一样</span><br><span class="line">               local cflag &#x3D; &#39;&#39;</span><br><span class="line">               if k &#x3D;&#x3D; &#39;.ctor&#39; then</span><br><span class="line">                   cflag &#x3D; &#39;_c&#39;</span><br><span class="line">                   k &#x3D; &#39;ctor&#39;</span><br><span class="line">               end</span><br><span class="line">               &#x2F;&#x2F;检查v的类型</span><br><span class="line">               local f &#x3D; type(v) &#x3D;&#x3D; &#39;function&#39; and v or nil</span><br><span class="line">               &#x2F;&#x2F;调用access函数，其在初始化注册，最终实现在C#中下文解析实现</span><br><span class="line">               xlua.access(cs, cflag .. &#39;__Hotfix0_&#39;..k, f) -- at least one</span><br><span class="line">               &#x2F;&#x2F;尝试给重载方法也添加上function如果有重载的话</span><br><span class="line">               pcall(function()</span><br><span class="line">                   for i &#x3D; 1, 99 do</span><br><span class="line">                       xlua.access(cs, cflag .. &#39;__Hotfix&#39;..i..&#39;_&#39;..k, f)</span><br><span class="line">                   end</span><br><span class="line">               end)</span><br><span class="line">           end</span><br><span class="line">           &#x2F;&#x2F;设置私有访问</span><br><span class="line">           xlua.private_accessible(cs)</span><br><span class="line">         end</span><br></pre></td></tr></table></figure>
+
+<p><strong>XLuaAccess在C#中的实现：</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br></pre></td><td class="code"><pre><span class="line"> &#x2F;&#x2F;xlua.access(cs, cflag .. &#39;__Hotfix0_&#39;..k, f)</span><br><span class="line"></span><br><span class="line"> public static int XLuaAccess(RealStatePtr L)</span><br><span class="line"> &#123;</span><br><span class="line">     try</span><br><span class="line">     &#123;</span><br><span class="line">         </span><br><span class="line">         ObjectTranslator translator &#x3D; ObjectTranslatorPool.Instance.Find(L);</span><br><span class="line">         &#x2F;&#x2F;获取对应的CS类Type</span><br><span class="line">         Type type &#x3D; getType(L, translator, 1);</span><br><span class="line">         object obj &#x3D; null;</span><br><span class="line">         if (type &#x3D;&#x3D; null &amp;&amp; LuaAPI.lua_type(L, 1) &#x3D;&#x3D; LuaTypes.LUA_TUSERDATA)</span><br><span class="line">         &#123;</span><br><span class="line">             obj &#x3D; translator.SafeGetCSObj(L, 1);</span><br><span class="line">             if (obj &#x3D;&#x3D; null)</span><br><span class="line">             &#123;</span><br><span class="line">                 return LuaAPI.luaL_error(L, &quot;xlua.access, #1 parameter must a type&#x2F;c# object&#x2F;string&quot;);</span><br><span class="line">             &#125;</span><br><span class="line">             type &#x3D; obj.GetType();</span><br><span class="line">         &#125;</span><br><span class="line"></span><br><span class="line">         if (type &#x3D;&#x3D; null)</span><br><span class="line">         &#123;</span><br><span class="line">             return LuaAPI.luaL_error(L, &quot;xlua.access, can not find c# type&quot;);</span><br><span class="line">         &#125;</span><br><span class="line">         &#x2F;&#x2F;将cflag .. &#39;__Hotfix0_&#39;..k 转为fieldName，这个字段就是之前Inject时候创建的类静态字段名</span><br><span class="line">         string fieldName &#x3D; LuaAPI.lua_tostring(L, 2);</span><br><span class="line"></span><br><span class="line">         BindingFlags bindingFlags &#x3D; BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;</span><br><span class="line">         &#x2F;&#x2F;这边访问一定是Set所以后面就不分析了，这边就是反射获取对应的FieldInfo，重点在于translator.GetObject方法。</span><br><span class="line">         if (LuaAPI.lua_gettop(L) &gt; 2) &#x2F;&#x2F; set</span><br><span class="line">         &#123;</span><br><span class="line">             var field &#x3D; type.GetField(fieldName, bindingFlags);</span><br><span class="line">             if (field !&#x3D; null)</span><br><span class="line">             &#123;</span><br><span class="line">                 field.SetValue(obj, translator.GetObject(L, 3, field.FieldType));</span><br><span class="line">                 return 0;</span><br><span class="line">             &#125;</span><br><span class="line">             var prop &#x3D; type.GetProperty(fieldName, bindingFlags);</span><br><span class="line">             if (prop !&#x3D; null)</span><br><span class="line">             &#123;</span><br><span class="line">                 prop.SetValue(obj, translator.GetObject(L, 3, prop.PropertyType), null);</span><br><span class="line">                 return 0;</span><br><span class="line">             &#125;</span><br><span class="line">         &#125;</span><br><span class="line">         else</span><br><span class="line">         &#123;</span><br><span class="line">             ...</span><br><span class="line">         &#125;</span><br><span class="line">         return LuaAPI.luaL_error(L, &quot;xlua.access, no field &quot; + fieldName);</span><br><span class="line">     &#125;</span><br><span class="line">     catch (Exception e)</span><br><span class="line">     &#123;</span><br><span class="line">         return LuaAPI.luaL_error(L, &quot;c# exception in xlua.access: &quot; + e);</span><br><span class="line">     &#125;</span><br><span class="line"> &#125;</span><br><span class="line"> &#x2F;&#x2F;为了减少篇幅，只展示必要代码</span><br><span class="line"> public object GetObject(RealStatePtr L, int index, Type type)</span><br><span class="line"> &#123;</span><br><span class="line">     int udata &#x3D; LuaAPI.xlua_tocsobj_safe(L, index);</span><br><span class="line"></span><br><span class="line">     if (udata !&#x3D; -1)</span><br><span class="line">     &#123;</span><br><span class="line">         ...</span><br><span class="line">     &#125;</span><br><span class="line">     else</span><br><span class="line">     &#123;</span><br><span class="line">         &#x2F;&#x2F;一些特殊值类型的返回</span><br><span class="line">         ...</span><br><span class="line">         return (objectCasters.GetCaster(type)(L, index, null));</span><br><span class="line">     &#125;</span><br><span class="line"> &#125;</span><br><span class="line"> &#x2F;&#x2F;为了减少篇幅，只展示必要代码</span><br><span class="line"> public ObjectCast GetCaster(Type type)</span><br><span class="line">&#123;</span><br><span class="line">     ...</span><br><span class="line">     ObjectCast oc;</span><br><span class="line">     &#x2F;&#x2F;缓存行为，继续分析第一次获取的caster委托</span><br><span class="line">     if (!castersMap.TryGetValue(type, out oc))</span><br><span class="line">     &#123;</span><br><span class="line">         oc &#x3D; genCaster(type);</span><br><span class="line">         castersMap.Add(type, oc);</span><br><span class="line">     &#125;</span><br><span class="line">     return oc;</span><br><span class="line"> &#125;</span><br><span class="line"> &#x2F;&#x2F;为了减少篇幅，只展示必要代码</span><br><span class="line"> private ObjectCast genCaster(Type type)</span><br><span class="line"> &#123;</span><br><span class="line">     </span><br><span class="line">     ObjectCast fixTypeGetter &#x3D; (RealStatePtr L, int idx, object target) &#x3D;&gt;</span><br><span class="line">     &#123;</span><br><span class="line">         if (LuaAPI.lua_type(L, idx) &#x3D;&#x3D; LuaTypes.LUA_TUSERDATA)</span><br><span class="line">         &#123;</span><br><span class="line">             object obj &#x3D; translator.SafeGetCSObj(L, idx);</span><br><span class="line">             return (obj !&#x3D; null &amp;&amp; type.IsAssignableFrom(obj.GetType())) ? obj : null;</span><br><span class="line">         &#125;</span><br><span class="line">         return null;</span><br><span class="line">     &#125;; </span><br><span class="line">     if ...</span><br><span class="line">     &#x2F;&#x2F;在Inject代码时候我们已经知道其字段类型就是DelegateBridge，所以会返回的就是这个表达式</span><br><span class="line">     else if (typeof(DelegateBridgeBase).IsAssignableFrom(type))</span><br><span class="line">     &#123;</span><br><span class="line">         return (RealStatePtr L, int idx, object target) &#x3D;&gt;</span><br><span class="line">         &#123;</span><br><span class="line">             &#x2F;&#x2F;缓存行为，分析CreateDelegateBridge</span><br><span class="line">             object obj &#x3D; fixTypeGetter(L, idx, target);</span><br><span class="line">             if (obj !&#x3D; null) return obj;</span><br><span class="line"></span><br><span class="line">             if (!LuaAPI.lua_isfunction(L, idx))</span><br><span class="line">             &#123;</span><br><span class="line">                 return null;</span><br><span class="line">             &#125;</span><br><span class="line"></span><br><span class="line">             return translator.CreateDelegateBridge(L, null, idx);</span><br><span class="line">         &#125;;</span><br><span class="line">     &#125;</span><br><span class="line"> &#125;</span><br><span class="line"> &#x2F;&#x2F;为了减少篇幅，只展示必要代码</span><br><span class="line"> public object CreateDelegateBridge(RealStatePtr L, Type delegateType, int idx)</span><br><span class="line"> &#123;</span><br><span class="line">     &#x2F;&#x2F;这边只是查找是否这个方法已经有缓存了，有的话直接返回，没有就要Create，我们继续分析Create的事。</span><br><span class="line">     LuaAPI.lua_pushvalue(L, idx);</span><br><span class="line">     LuaAPI.lua_rawget(L, LuaIndexes.LUA_REGISTRYINDEX);</span><br><span class="line">     &#x2F;&#x2F;不为null就是已经生成过，就直接从缓存获取</span><br><span class="line">     if (!LuaAPI.lua_isnil(L, -1))</span><br><span class="line">     &#123;</span><br><span class="line">         retrun ...</span><br><span class="line">     &#125;</span><br><span class="line">     else</span><br><span class="line">     &#123;</span><br><span class="line">         &#x2F;&#x2F;弹出刚刚查询过的nil值</span><br><span class="line">         LuaAPI.lua_pop(L, 1);</span><br><span class="line">     &#125;</span><br><span class="line">     &#x2F;&#x2F;开始生成对应的DelegateBridge</span><br><span class="line">     &#x2F;&#x2F;压入idx对应的值，idx对应的值是Lua中的function</span><br><span class="line">     LuaAPI.lua_pushvalue(L, idx);</span><br><span class="line">     &#x2F;&#x2F;获取function对应的引用id</span><br><span class="line">     int reference &#x3D; LuaAPI.luaL_ref(L);</span><br><span class="line">     &#x2F;&#x2F;再次压入idx对应的值，idx对应的值是Lua中的function</span><br><span class="line">     LuaAPI.lua_pushvalue(L, idx);</span><br><span class="line">     &#x2F;&#x2F;压入function对应的引用id</span><br><span class="line">     LuaAPI.lua_pushnumber(L, reference);</span><br><span class="line">     &#x2F;&#x2F;将栈顶的两个值以字典形式存在全局变量表中，这个的作用就是上面的代码查询是否已经在lua中缓存。</span><br><span class="line">     LuaAPI.lua_rawset(L, LuaIndexes.LUA_REGISTRYINDEX);</span><br><span class="line">     DelegateBridgeBase bridge;</span><br><span class="line">     try</span><br><span class="line">     &#123;</span><br><span class="line">         &#x2F;&#x2F;创建DelegateBridge，注意这边的reference，这个就是对应了lua中修复的lua函数，</span><br><span class="line">         &#x2F;&#x2F;我们在Inject时候call的方法会使用到这个参数。</span><br><span class="line">         bridge &#x3D; new DelegateBridge(reference, luaEnv);</span><br><span class="line">     &#125;</span><br><span class="line">     catch(Exception e)</span><br><span class="line">     &#123;</span><br><span class="line">         &#x2F;&#x2F;异常情况下的，清场操作</span><br><span class="line">         LuaAPI.lua_pushvalue(L, idx);</span><br><span class="line">         LuaAPI.lua_pushnil(L);</span><br><span class="line">         LuaAPI.lua_rawset(L, LuaIndexes.LUA_REGISTRYINDEX);</span><br><span class="line">         LuaAPI.lua_pushnil(L);</span><br><span class="line">         LuaAPI.xlua_rawseti(L, LuaIndexes.LUA_REGISTRYINDEX, reference);</span><br><span class="line">         throw e;</span><br><span class="line">     &#125;</span><br><span class="line">     &#x2F;&#x2F;因为hotfix时候，delegateType传进来是个null，后续代码不会被调用到，就不做分析了。</span><br><span class="line">     if (delegateType &#x3D;&#x3D; null)</span><br><span class="line">     &#123;</span><br><span class="line">         &#x2F;&#x2F;缓存到字典中，注意这里是弱引用所以会被回收，被回收后，需要从lua中查询到对应引用值，然后再生产。</span><br><span class="line">         delegate_bridges[reference] &#x3D; new WeakReference(bridge);</span><br><span class="line">         return bridge;</span><br><span class="line">     &#125;</span><br><span class="line">     ...</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+
+<p>这样在进行调用hotfix后，对应的要修复的类的静态字段就会被设置上对应的DelegateBridge对象，然后在C#代码执行到对应的需要热更修复的方法时候，会先执行我们注入的IL代码，检查是否有对应的DelegateBridge。那么就是调用DelegateBridge中对应的方法，方法中包含的reference就是Lua对应的function，这样就执行到了lua中去，实现了热更。</p>
+<ul>
+<li><strong>util.hotfix_ex的实现</strong><br>其实现直白的来讲就是在调用util.hotfix_ex(functionB)时候，真正设置的是一个中间函数A，它被设置为对应方法的热更修复函数。<br>在调用A进行热更时候，它先设置这个方法的热更方法为空，然后调用原先设置的functionB，当functionB调用完后，然后再设置回热更方法为A，那么就能实现在热更修复方法functionB中调用原先的方法。<br>因为设置这些参数都是带反射的，所以在高频场景是有性能消耗的。<br>代码实现如下：</li>
+</ul>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">local</span> <span class="function"><span class="keyword">function</span> <span class="title">hotfix_ex</span><span class="params">(cs, field, func)</span></span></span><br><span class="line">    <span class="comment">--断言，检查参数</span></span><br><span class="line">    <span class="built_in">assert</span>(<span class="built_in">type</span>(field) == <span class="string">'string'</span> <span class="keyword">and</span> <span class="built_in">type</span>(func) == <span class="string">'function'</span>, <span class="string">'invalid argument: #2 string needed, #3 function needed!'</span>)</span><br><span class="line">    <span class="comment">--创建中间函数，就是上文提到的A</span></span><br><span class="line">    <span class="keyword">local</span> <span class="function"><span class="keyword">function</span> <span class="title">func_after</span><span class="params">(...)</span></span></span><br><span class="line">        <span class="comment">--先将需要热更修复的方法设置为nil，那么再调用方法时候会执行的就是之前方法</span></span><br><span class="line">        xlua.hotfix(cs, field, <span class="literal">nil</span>)</span><br><span class="line">        <span class="comment">--执行func，就是上文提到的functionB</span></span><br><span class="line">        <span class="keyword">local</span> ret = &#123;func(...)&#125;</span><br><span class="line">        <span class="comment">---重新将需要热更修复的方法设置为中间函数A</span></span><br><span class="line">        xlua.hotfix(cs, field, func_after)</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">unpack</span>(ret)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    <span class="comment">--设置需要热更修复为中间函数A</span></span><br><span class="line">    xlua.hotfix(cs, field, func_after)</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>结束语</strong>整个Hotfix的实现也分析完了，后续的文章将继续分析，XLua中的各种优化技巧实现，比如无GC传值，模板生成技术。</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C</a>
+              <a href="/tags/C/" rel="tag"># C#</a>
+              <a href="/tags/Unity/" rel="tag"># Unity</a>
+              <a href="/tags/UNITY/" rel="tag"># UNITY</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/tool-2019-09-02-nuget-manager/" rel="prev" title="使用配置文件来管理NuGet包版本F">
+      <i class="fa fa-chevron-left"></i> 使用配置文件来管理NuGet包版本F
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/unity-2019-09-04-mono-cecil-inject/" rel="next" title="如何快速的注入汇编">
+      如何快速的注入汇编 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  
+  <div class="comments">
+  <script src="https://utteranc.es/client.js" repo="zhepama/igiven.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async></script>
+  </div>
+  
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhepama"
+      src="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+  <p class="site-author-name" itemprop="name">zhepama</p>
+  <div class="site-description" itemprop="description">一个不专业的程序员,写着专业的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">139</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhepama" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhepama" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhepama@gmail.com" title="E-Mail → mailto:zhepama@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.godgodgame.com/" title="http:&#x2F;&#x2F;www.godgodgame.com" rel="noopener" target="_blank">GODGODGAME</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.igiven.com/" title="https:&#x2F;&#x2F;www.igiven.com">IGIVEN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhepama.github.io/C-Sharp-Playground/zh/" title="https:&#x2F;&#x2F;zhepama.github.io&#x2F;C-Sharp-Playground&#x2F;zh&#x2F;" rel="noopener" target="_blank">数据结构与算法</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhepama</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

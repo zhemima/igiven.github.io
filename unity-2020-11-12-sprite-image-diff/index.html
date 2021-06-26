@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.igiven.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="coffeecato写在前面：本文确实不错，作者用以说明自动生成网格的示图非常具有代表性，从drawcall的生成过程分析性能开销的重点，引出了overdraw和达到GPU像素填充率限制的原因，从中也可以看出作者对这个主题的理解颇有深度。查看作者的个人自述，居然是个2012年毕业的小伙子，后生可畏啊！翻译本文对自己也是个考验。英文水平捉急，如果错误请多多指正。 原文：UNITY SPRITES:">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Unity中Sprite和UI Image的区别">
+<meta property="og:url" content="http://www.igiven.com/unity-2020-11-12-sprite-image-diff/index.html">
+<meta property="og:site_name" content="IGiven">
+<meta property="og:description" content="coffeecato写在前面：本文确实不错，作者用以说明自动生成网格的示图非常具有代表性，从drawcall的生成过程分析性能开销的重点，引出了overdraw和达到GPU像素填充率限制的原因，从中也可以看出作者对这个主题的理解颇有深度。查看作者的个人自述，居然是个2012年毕业的小伙子，后生可畏啊！翻译本文对自己也是个考验。英文水平捉急，如果错误请多多指正。 原文：UNITY SPRITES:">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-11-12-sprite-image-diff/20171116103038856">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-11-12-sprite-image-diff/20171114233841299">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-11-12-sprite-image-diff/20171114233856654">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-11-12-sprite-image-diff/20171114233911906">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-11-12-sprite-image-diff/20171114233924452">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-11-12-sprite-image-diff/20171114233938619">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-11-12-sprite-image-diff/20171114233951951">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-11-12-sprite-image-diff/20171114234009365">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-11-12-sprite-image-diff/20171114234059641">
+<meta property="article:published_time" content="2020-11-12T00:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-26T08:36:17.950Z">
+<meta property="article:author" content="zhepama">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="Unity">
+<meta property="article:tag" content="UNITY">
+<meta property="article:tag" content="mesh">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.igiven.com/assets/images/2020-11-12-sprite-image-diff/20171116103038856">
+
+<link rel="canonical" href="http://www.igiven.com/unity-2020-11-12-sprite-image-diff/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Unity中Sprite和UI Image的区别 | IGiven</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="IGiven" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="IGiven" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">IGiven</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">李九仙的博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">139</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">32</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-留言">
+
+    <a href="/guestbook/" rel="section"><i class="fa fa-sticky-note fa-fw"></i>留言</a>
+
+  </li>
+        <li class="menu-item menu-item-rss">
+
+    <a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/unity-2020-11-12-sprite-image-diff/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+      <meta itemprop="name" content="zhepama">
+      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="IGiven">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Unity中Sprite和UI Image的区别<a href="https://github.com/zhepama/igiven.github.io/edit/master/source/_posts/unity/2020-11-12-sprite-image-diff.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil-alt"></i></a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-11-12 08:00:00" itemprop="dateCreated datePublished" datetime="2020-11-12T08:00:00+08:00">2020-11-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 16:36:17" itemprop="dateModified" datetime="2021-06-26T16:36:17+08:00">2021-06-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/unity/" itemprop="url" rel="index"><span itemprop="name">unity</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>coffeecato写在前面：<br>本文确实不错，作者用以说明自动生成网格的示图非常具有代表性，从drawcall的生成过程分析性能开销的重点，引出了overdraw和达到GPU像素填充率限制的原因，从中也可以看出作者对这个主题的理解颇有深度。查看作者的个人自述，居然是个2012年毕业的小伙子，后生可畏啊！翻译本文对自己也是个考验。<br>英文水平捉急，如果错误请多多指正。</p>
+<p><em>原文：<a href="https://rubentorresbonet.wordpress.com/2016/05/26/unity-sprites-spriterenderer-vs-canvasrenderer-ui-image/" target="_blank" rel="noopener">UNITY SPRITES: SPRITERENDERER VS. CANVASRENDERER (UI IMAGE)</a></em><br>翻译已征得原作者同意：<br><img src="../../assets/images/2020-11-12-sprite-image-diff/20171116103038856" alt="这里写图片描述"></p>
+<p>当在一个公司项目工作时，我被问到关于sprites(SpriteRenderer)和UI image(CanvasRenderer)的区别。我没找到多少相关的信息，所以我决定在公司准备一场介绍来帮助大家把两者的区别搞清楚。本文中你将会看到一个比当时的介绍更完整的版本。运行环境是Unity5.3.4f1.</p>
+<p>Sprites本质上是半透明texture，其中texture是在导入时被设置导入为sprites的。它们不是直接被应用于meshes,而是会应用于长方形/多边形（最后，它们始终是meshes，因为没有那么大的区别）。Sprites就是被渲染到2d/3d场景或者其他界面中的图片.</p>
+<p><strong>1.用法</strong><br>在Unity中使用sprites很简单。只需将目标图片移动到assets文件夹下然后点击打开inspector settings.将texture type改为sprite(2D and UI),如下图：<br><img src="../../assets/images/2020-11-12-sprite-image-diff/20171114233841299" alt="这里写图片描述"><br>现在你该决定将图片当成sprite使用还是作为UI Image.但是如果考虑到渲染，你可能并不确定你想要使用哪种方式。我们将会在下一节描述两种方式间的区别；现在我们大概描述一下如何在Unity中创建它们。</p>
+<p>如果你想使用SpriteRenderer,将sprite从Project窗口移动到Hierarchy窗口或者Scene窗口。成功创建后的窗口应该像这样：<br><img src="../../assets/images/2020-11-12-sprite-image-diff/20171114233856654" alt="这里写图片描述"><br>如果你想创建UI Image,在Hierarchy中右键然后create new UI–&gt;Image.这个控件需要canvas,如果没有canvas会自动创建一个。最后，你将看到：<br><img src="../../assets/images/2020-11-12-sprite-image-diff/20171114233911906" alt="这里写图片描述"></p>
+<p><strong>2.对比：SpriteRenderer vs CanvasRenderer</strong></p>
+<p>在Hierarchy窗口,你可以把sprites随便放在哪。然而，UI Images不得不放在canvas下面。你可以通过transform移动其他obejcts那样移动sprites,但是images使用RectTransform来在界面系统中移动。</p>
+<p>使用默认材质时，Sprites是在”Queue” = “Transparent” “RenderType” = “Geometry”(原文： transparent geometry queue)模式下渲染的。UI Images也是在这种模式下渲染的，除非你使用了Overlay 模式渲染（coffeecato补充：Canvas的Render Mode）,这种情况下它将会通过Canvas.RenderOverlay渲染。你可能会猜到，这样在移动设备上的开销很大。我们稍后会讨论到。</p>
+<p>sprites和images的一个最重要的区别在于sprites支持网格的自动构造，而UI Image的网格始终由矩形构成。构造网格的原因将会在下一节讲到；我们将会看到它的重要性及它对性能的重大影响。</p>
+<p>最后，两种方式都可以通过使用sprite atlases来减少draw calls.</p>
+<p>下面的例子将会帮助看到二者之间的区别：<br><img src="../../assets/images/2020-11-12-sprite-image-diff/20171114233924452" alt="这里写图片描述"><br>上图中可以看到，UI Image创造了一个紧密的矩形来包裹sprite,而SpriteRenderer创造了一个能更好匹配将要渲染的sprite的网格。看看另一个例子：<br><img src="../../assets/images/2020-11-12-sprite-image-diff/20171114233938619" alt="这里写图片描述"><br>同样的情况出现这个例子中。但是网格这次看起来更复杂了，为什么呢？Unity尝试去为sprites构造最佳的网格来避免引入太多的多边形。可能有人会说这样的权衡到底是利是弊。</p>
+<p>如果我们导入一张拥有孤岛（coffeecato补充：原文是islands）的png，一张图片包含被透明区域分隔开的图形会发生什么情况？<br><img src="../../assets/images/2020-11-12-sprite-image-diff/20171114233951951" alt="这里写图片描述"></p>
+<p>上图中我们看到的情况很有意思，SpriteRenderer创造了两个子网格，一个对应一个孤岛；然后UI Image只是通过扩展矩形来覆盖整个图片。</p>
+<p><strong>3.性能</strong></p>
+<p>你可能会猜到，上面例子显示的不同处理方式可能会导致性能的差异。当渲染很多对象时，差别会更明显（比如地形中的草，或者粒子特效）。下面我们来分析一下其中的原因。</p>
+<p>当渲染texture时，设置好顶点，索引，uv坐标，纹理数据和shader参数，然后向GPU发送数据，这个过程就是著名的draw call.随后，在图片最终显示之前，一些乱七八糟的事情在GPU发生。一个简单的渲染管线通常包括：</p>
+<ol>
+<li>CPU 发送一个draw命令到GPU</li>
+<li>GPU获取到绘制所需的所有信息</li>
+<li>几何图形通过顶点着色器和光栅化被转化为像素</li>
+<li>每个像素通过片元着色器被转化然后被写入到帧缓存一次或数次</li>
+<li>当一帧结束时，图形会显示在你的显示器上</li>
+</ol>
+<p>回到主题，SpriteRenderer和UI Image之间的区别是什么？显而易见，sprites的开销更大，因为它的几何数据更复杂。但是如果我告诉你顶点操作通常比片元操作开销小的多呢？尤其对于移动设备和半透明对象。</p>
+<p>在很多引擎包括Unity中，半透明材质是由后向前渲染的。那意味着，最远的物体（从camera出发）最先渲染，这样alpha混合操作才能像预期那样工作。对于不透明材质，渲染正好反过来这样便于我们剔除不可见物体。</p>
+<p>像素着色器会被渲染sprite中的每一个像素都执行，因此，当存在较大的图形时（相对屏幕尺寸），片元着色器将会在很多像素上执行。问题在于，当透明物体在视锥体内时没有很有效的方法将它们剔除，因此你将会渲染所有的半透明物体即使其中的大多数最终都不可见。所以你会发现同一个像素会渲染多次，在帧缓存中也会重写多次。这个问题通常被称为<strong>overdraw</strong>.同样地，由于这种现象带来了<strong>内存带宽</strong>的浪费，会很快达到GPU <strong>像素填充率</strong>的限制，这种情况是移动设备应当极力避免的。这就是问题的关键。</p>
+<p>如果你确实理解了上面一段，你将会弄明白SpriteRenderer和CanvasRenderer是多么的不同。前者通过构造网格清除了不必要的透明像素（因此，避免了执行开销巨大的片元着色器，从而避免了overdraw），然而UI Image创建了一个简单的网格很可能会引起很多overdraw。你需要在复杂的几何图形和更多的片操作之间做一个权衡。</p>
+<p>你应该会想到使用sprite atlases，因为spritest通常数量很大同时尺寸很小。这会导致绘制sprites有很多drawcall.同样地，对于较大的图形，图形压缩也是不错的方法。<br><img src="../../assets/images/2020-11-12-sprite-image-diff/20171114234009365" alt="这里写图片描述"></p>
+<p>你可以通过Atlas Packer很方便的创建sprite atlas.同时，有时自动构造的网格性能上并不好你也无法控制它，因此你可能会使用一些性能更好的插件比如ShoeBox 或者 TexturePacker.<br><img src="../../assets/images/2020-11-12-sprite-image-diff/20171114234059641" alt="这里写图片描述"></p>
+<p><strong>4.结论</strong></p>
+<p>当下次再遇到sprites时，不妨考虑下面的建议：</p>
+<ol>
+<li>如果sprites的数量不多，想用什么用什么。如果拥有上百个sprites，重新读读本文。</li>
+<li>使用profiler和frame debugger来搞清楚发生的状况。</li>
+<li>避免使用透明，尽量使用不透明的物体替代透明物体。</li>
+<li>避免在屏幕上渲染尺寸较大的sprites，这会引起更多的overdraw。你可以通过在Scene View中选择rendering mode为Overdraw来查看overdraw的情况。这对于粒子特效很关键。</li>
+<li>选择更复杂的几何体而不是更多的像素，尤其对于移动设备。可以通过选择Scene View中的Shading Mode为shaded wireframe来查看。</li>
+<li>如果需要对界面进行较多的位置操作（比如content fitter, vertical groups等）选择UI Images.</li>
+<li>减少渲染区域的分辨率来查看性能有没有实质的提升，通过这种方法来判断是否达到了像素填充率的限制。</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C</a>
+              <a href="/tags/Unity/" rel="tag"># Unity</a>
+              <a href="/tags/UNITY/" rel="tag"># UNITY</a>
+              <a href="/tags/mesh/" rel="tag"># mesh</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/unity-2020-11-11-how-to-build-reactive-systems-with-unity-ecs/" rel="prev" title="如何使用Unity ECS打造Reactive System？">
+      <i class="fa fa-chevron-left"></i> 如何使用Unity ECS打造Reactive System？
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/unity-2020-11-13-simple-save/" rel="next" title="简单保存工具">
+      简单保存工具 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  
+  <div class="comments">
+  <script src="https://utteranc.es/client.js" repo="zhepama/igiven.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async></script>
+  </div>
+  
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhepama"
+      src="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+  <p class="site-author-name" itemprop="name">zhepama</p>
+  <div class="site-description" itemprop="description">一个不专业的程序员,写着专业的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">139</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhepama" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhepama" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhepama@gmail.com" title="E-Mail → mailto:zhepama@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.godgodgame.com/" title="http:&#x2F;&#x2F;www.godgodgame.com" rel="noopener" target="_blank">GODGODGAME</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.igiven.com/" title="https:&#x2F;&#x2F;www.igiven.com">IGIVEN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhepama.github.io/C-Sharp-Playground/zh/" title="https:&#x2F;&#x2F;zhepama.github.io&#x2F;C-Sharp-Playground&#x2F;zh&#x2F;" rel="noopener" target="_blank">数据结构与算法</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhepama</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

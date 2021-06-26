@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.igiven.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485868788899091929394959697989910010110210">
+<meta property="og:type" content="article">
+<meta property="og:title" content="简单保存工具">
+<meta property="og:url" content="http://www.igiven.com/unity-2020-11-13-simple-save/index.html">
+<meta property="og:site_name" content="IGiven">
+<meta property="og:description" content="12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808182838485868788899091929394959697989910010110210">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-11-13T00:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-26T08:36:17.950Z">
+<meta property="article:author" content="zhepama">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="GitHub">
+<meta property="article:tag" content="Unity">
+<meta property="article:tag" content="sync">
+<meta property="article:tag" content="UNITY">
+<meta property="article:tag" content="JS">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://www.igiven.com/unity-2020-11-13-simple-save/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>简单保存工具 | IGiven</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="IGiven" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="IGiven" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">IGiven</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">李九仙的博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">139</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">32</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-留言">
+
+    <a href="/guestbook/" rel="section"><i class="fa fa-sticky-note fa-fw"></i>留言</a>
+
+  </li>
+        <li class="menu-item menu-item-rss">
+
+    <a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/unity-2020-11-13-simple-save/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+      <meta itemprop="name" content="zhepama">
+      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="IGiven">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          简单保存工具<a href="https://github.com/zhepama/igiven.github.io/edit/master/source/_posts/unity/2020-11-13-simple-save.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil-alt"></i></a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-11-13 08:00:00" itemprop="dateCreated datePublished" datetime="2020-11-13T08:00:00+08:00">2020-11-13</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 16:36:17" itemprop="dateModified" datetime="2021-06-26T16:36:17+08:00">2021-06-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/unity/" itemprop="url" rel="index"><span itemprop="name">unity</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br></pre></td><td class="code"><pre><span class="line">using Newtonsoft.Json;</span><br><span class="line">using System.IO;</span><br><span class="line">using System.Security.Cryptography;</span><br><span class="line">using System.Text;</span><br><span class="line">using System.Threading.Tasks;</span><br><span class="line">using UnityEngine;</span><br><span class="line"></span><br><span class="line">namespace DotHass.Unity</span><br><span class="line">&#123;</span><br><span class="line">    public class SaveService : ISaveService</span><br><span class="line">    &#123;</span><br><span class="line">        &#x2F;&#x2F; IMPORTANT: Make sure to change this key for each project you use this encryption in to help secure your</span><br><span class="line">        &#x2F;&#x2F; encrypted values. This key must be exactly 32 characters long (256 bit).</span><br><span class="line">        public string Key &#x3D; &quot;:&#123;j%6j?E:t#&#125;G10mM%9hp5S&#x3D;%&#125;2,Y26e&quot;;</span><br><span class="line"></span><br><span class="line">        public bool Encrypt &#x3D; false;</span><br><span class="line"></span><br><span class="line">        public SaveService()</span><br><span class="line">        &#123;</span><br><span class="line">            &#x2F;&#x2F; Create a new encryption provider</span><br><span class="line">            SimpleEncryption.provider &#x3D; new RijndaelManaged</span><br><span class="line">            &#123;</span><br><span class="line">                &#x2F;&#x2F; Get the bytes from the supplied string key and use it as the provider&#39;s key</span><br><span class="line">                Key &#x3D; Encoding.ASCII.GetBytes(Key),</span><br><span class="line"></span><br><span class="line">                &#x2F;&#x2F; Ensure that the same data is always encrypted the same way when used with the same key</span><br><span class="line">                Mode &#x3D; CipherMode.ECB</span><br><span class="line">            &#125;;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        protected Task DeleteAsync(string key)</span><br><span class="line">        &#123;</span><br><span class="line">            var fullPath &#x3D; this.GetFullPath(key);</span><br><span class="line">            this.Delete(fullPath);</span><br><span class="line">            return Task.CompletedTask;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        protected Task SaveAsync(string key, object value)</span><br><span class="line">        &#123;</span><br><span class="line">           </span><br><span class="line"></span><br><span class="line">            var fullPath &#x3D; this.GetFullPath(key);</span><br><span class="line">            var content &#x3D; JsonConvert.SerializeObject(value);</span><br><span class="line"></span><br><span class="line">            return WriteAsync(fullPath, content);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        protected async Task&lt;T&gt; LoadAsync&lt;T&gt;(string key, T defaultValue)</span><br><span class="line">        &#123;</span><br><span class="line">            var fullPath &#x3D; this.GetFullPath(key);</span><br><span class="line"></span><br><span class="line">            if (this.Exists(fullPath) &#x3D;&#x3D; false)</span><br><span class="line">            &#123;</span><br><span class="line">                return defaultValue;</span><br><span class="line">            &#125;</span><br><span class="line">            return await LoadAsync&lt;T&gt;(key);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        private async Task&lt;T&gt; LoadAsync&lt;T&gt;(string key)</span><br><span class="line">        &#123;</span><br><span class="line">            var fullPath &#x3D; this.GetFullPath(key);</span><br><span class="line">            var content &#x3D; await this.ReadAsync(fullPath);</span><br><span class="line">            return JsonConvert.DeserializeObject&lt;T&gt;(content);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        protected string GetFullPath(string key)</span><br><span class="line">        &#123;</span><br><span class="line">            return Path.Combine(Application.persistentDataPath, key.ToUpper());</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        public bool Exists(string fullPath)</span><br><span class="line">        &#123;</span><br><span class="line">            return File.Exists(fullPath);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        public void Delete(string fullPath)</span><br><span class="line">        &#123;</span><br><span class="line">            if (File.Exists(fullPath))</span><br><span class="line">            &#123;</span><br><span class="line">                File.Delete(fullPath);</span><br><span class="line">            &#125;</span><br><span class="line">            else if (Directory.Exists(fullPath))</span><br><span class="line">            &#123;</span><br><span class="line">                Directory.Delete(fullPath, true);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        public async Task WriteAsync(string fullPath, string content)</span><br><span class="line">        &#123;</span><br><span class="line">            if (this.Encrypt &#x3D;&#x3D; true)</span><br><span class="line">            &#123;</span><br><span class="line">                content &#x3D; SimpleEncryption.EncryptString(content);</span><br><span class="line">            &#125;</span><br><span class="line">            using (StreamWriter sw &#x3D; new StreamWriter(fullPath, false, Encoding.UTF8))</span><br><span class="line">            &#123;</span><br><span class="line">                &#x2F;&#x2F;覆盖该文件</span><br><span class="line">                await sw.WriteAsync(content);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        public async Task&lt;string&gt; ReadAsync(string fullPath)</span><br><span class="line">        &#123;</span><br><span class="line">            using (StreamReader sw &#x3D; new StreamReader(fullPath, Encoding.UTF8))</span><br><span class="line">            &#123;</span><br><span class="line">                var fetchedString &#x3D; await sw.ReadToEndAsync();</span><br><span class="line"></span><br><span class="line">                if (this.Encrypt &#x3D;&#x3D; true)</span><br><span class="line">                &#123;</span><br><span class="line">                    fetchedString &#x3D; SimpleEncryption.DecryptString(fetchedString);</span><br><span class="line">                &#125;</span><br><span class="line">                return fetchedString;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br></pre></td><td class="code"><pre><span class="line">using System;</span><br><span class="line">using System.Security.Cryptography;</span><br><span class="line">using System.Text;</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F;&#x2F; &lt;summary&gt;</span><br><span class="line">&#x2F;&#x2F;&#x2F; https:&#x2F;&#x2F;github.com&#x2F;sabresaurus&#x2F;PlayerPrefsEditor&#x2F;blob&#x2F;master&#x2F;Runtime&#x2F;SimpleEncryption.cs</span><br><span class="line">&#x2F;&#x2F;&#x2F; &lt;&#x2F;summary&gt;</span><br><span class="line">namespace DotHass.Unity</span><br><span class="line">&#123;</span><br><span class="line">    public static class SimpleEncryption</span><br><span class="line">    &#123;</span><br><span class="line">        &#x2F;&#x2F; IMPORTANT: Make sure to change this key for each project you use this encryption in to help secure your</span><br><span class="line">        &#x2F;&#x2F; encrypted values. This key must be exactly 32 characters long (256 bit).</span><br><span class="line">        private static readonly string key &#x3D; &quot;:&#123;j%6j?E:t#&#125;G10mM%9hp5S&#x3D;%&#125;2,Y26C&quot;;</span><br><span class="line"></span><br><span class="line">        &#x2F;&#x2F; Cache the encryption provider</span><br><span class="line">        public static RijndaelManaged provider &#x3D; null;</span><br><span class="line"></span><br><span class="line">        private static void SetupProvider()</span><br><span class="line">        &#123;</span><br><span class="line">            &#x2F;&#x2F; Create a new encryption provider</span><br><span class="line">            provider &#x3D; new RijndaelManaged();</span><br><span class="line"></span><br><span class="line">            &#x2F;&#x2F; Get the bytes from the supplied string key and use it as the provider&#39;s key</span><br><span class="line">            provider.Key &#x3D; Encoding.ASCII.GetBytes(key);</span><br><span class="line"></span><br><span class="line">            &#x2F;&#x2F; Ensure that the same data is always encrypted the same way when used with the same key</span><br><span class="line">            provider.Mode &#x3D; CipherMode.ECB;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        &#x2F;&#x2F;&#x2F; &lt;summary&gt;</span><br><span class="line">        &#x2F;&#x2F;&#x2F; Encrypts the specified string using the key stored in SimpleEncryption and returns the encrypted result</span><br><span class="line">        &#x2F;&#x2F;&#x2F; &lt;&#x2F;summary&gt;</span><br><span class="line">        public static string EncryptString(string sourceString)</span><br><span class="line">        &#123;</span><br><span class="line">            if (provider &#x3D;&#x3D; null)</span><br><span class="line">            &#123;</span><br><span class="line">                &#x2F;&#x2F; Encryption provider hasn&#39;t been set up yet, so set it up</span><br><span class="line">                SetupProvider();</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            &#x2F;&#x2F; Create an encryptor to encrypt the bytes</span><br><span class="line">            ICryptoTransform encryptor &#x3D; provider.CreateEncryptor();</span><br><span class="line"></span><br><span class="line">            &#x2F;&#x2F; Convert the source string into bytes to be encrypted</span><br><span class="line">            byte[] sourceBytes &#x3D; Encoding.UTF8.GetBytes(sourceString);</span><br><span class="line"></span><br><span class="line">            &#x2F;&#x2F; Encrypt the bytes using the encryptor we just created</span><br><span class="line">            byte[] outputBytes &#x3D; encryptor.TransformFinalBlock(sourceBytes, 0, sourceBytes.Length);</span><br><span class="line"></span><br><span class="line">            &#x2F;&#x2F; Convert the encrypted bytes into a Base 64 string, so we can safely represent them as a string and return</span><br><span class="line">            &#x2F;&#x2F; that string</span><br><span class="line">            return Convert.ToBase64String(outputBytes);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        &#x2F;&#x2F;&#x2F; &lt;summary&gt;</span><br><span class="line">        &#x2F;&#x2F;&#x2F; Decrypts the specified string from its specified encrypted value into the returned decrypted value using the</span><br><span class="line">        &#x2F;&#x2F;&#x2F; key stored in SimpleEncryption</span><br><span class="line">        &#x2F;&#x2F;&#x2F; &lt;&#x2F;summary&gt;</span><br><span class="line">        public static string DecryptString(string sourceString)</span><br><span class="line">        &#123;</span><br><span class="line">            if (provider &#x3D;&#x3D; null)</span><br><span class="line">            &#123;</span><br><span class="line">                &#x2F;&#x2F; Encryption provider hasn&#39;t been set up yet, so set it up</span><br><span class="line">                SetupProvider();</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            &#x2F;&#x2F; Create a decryptor to decrypt the encrypted bytes</span><br><span class="line">            ICryptoTransform decryptor &#x3D; provider.CreateDecryptor();</span><br><span class="line"></span><br><span class="line">            &#x2F;&#x2F; Convert the base 64 string representing the encrypted bytes back into an array of encrypted bytes</span><br><span class="line">            byte[] sourceBytes &#x3D; Convert.FromBase64String(sourceString);</span><br><span class="line"></span><br><span class="line">            &#x2F;&#x2F; Use the decryptor we just created to decrypt those bytes</span><br><span class="line">            byte[] outputBytes &#x3D; decryptor.TransformFinalBlock(sourceBytes, 0, sourceBytes.Length);</span><br><span class="line"></span><br><span class="line">            &#x2F;&#x2F; Turn the decrypted bytes back into the decrypted string and return it</span><br><span class="line">            return Encoding.UTF8.GetString(outputBytes);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        &#x2F;&#x2F;&#x2F; &lt;summary&gt;</span><br><span class="line">        &#x2F;&#x2F;&#x2F; Encrypts the specified float value and returns an encrypted string</span><br><span class="line">        &#x2F;&#x2F;&#x2F; &lt;&#x2F;summary&gt;</span><br><span class="line">        public static string EncryptFloat(float value)</span><br><span class="line">        &#123;</span><br><span class="line">            &#x2F;&#x2F; Convert the float into its 4 bytes</span><br><span class="line">            byte[] bytes &#x3D; BitConverter.GetBytes(value);</span><br><span class="line"></span><br><span class="line">            &#x2F;&#x2F; Represent those bytes as a base 64 string</span><br><span class="line">            string base64 &#x3D; Convert.ToBase64String(bytes);</span><br><span class="line"></span><br><span class="line">            &#x2F;&#x2F; Return the encrypted version of that base 64 string</span><br><span class="line">            return SimpleEncryption.EncryptString(base64);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        &#x2F;&#x2F;&#x2F; &lt;summary&gt;</span><br><span class="line">        &#x2F;&#x2F;&#x2F; Encrypts the specified int value and returns an encrypted string</span><br><span class="line">        &#x2F;&#x2F;&#x2F; &lt;&#x2F;summary&gt;</span><br><span class="line">        public static string EncryptInt(int value)</span><br><span class="line">        &#123;</span><br><span class="line">            &#x2F;&#x2F; Convert the int value into its 4 bytes</span><br><span class="line">            byte[] bytes &#x3D; BitConverter.GetBytes(value);</span><br><span class="line"></span><br><span class="line">            &#x2F;&#x2F; Represent those bytes as a base 64 string</span><br><span class="line">            string base64 &#x3D; Convert.ToBase64String(bytes);</span><br><span class="line"></span><br><span class="line">            &#x2F;&#x2F; Return the encrypted version of that base 64 string</span><br><span class="line">            return SimpleEncryption.EncryptString(base64);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        &#x2F;&#x2F;&#x2F; Encrypts the specified bool value and returns an encrypted string</span><br><span class="line">        &#x2F;&#x2F;&#x2F; &lt;&#x2F;summary&gt;</span><br><span class="line">        public static string EncryptBool(bool value)</span><br><span class="line">        &#123;</span><br><span class="line">            &#x2F;&#x2F; Convert the bool value into its 4 bytes</span><br><span class="line">            byte[] bytes &#x3D; BitConverter.GetBytes(value);</span><br><span class="line"></span><br><span class="line">            &#x2F;&#x2F; Represent those bytes as a base 64 string</span><br><span class="line">            string base64 &#x3D; Convert.ToBase64String(bytes);</span><br><span class="line"></span><br><span class="line">            &#x2F;&#x2F; Return the encrypted version of that base 64 string</span><br><span class="line">            return SimpleEncryption.EncryptString(base64);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        &#x2F;&#x2F;&#x2F; &lt;summary&gt;</span><br><span class="line">        &#x2F;&#x2F;&#x2F; Decrypts the encrypted string representing a float into the decrypted float</span><br><span class="line">        &#x2F;&#x2F;&#x2F; &lt;&#x2F;summary&gt;</span><br><span class="line">        public static float DecryptFloat(string sourceString)</span><br><span class="line">        &#123;</span><br><span class="line">            &#x2F;&#x2F; Decrypt the encrypted string</span><br><span class="line">            string decryptedString &#x3D; SimpleEncryption.DecryptString(sourceString);</span><br><span class="line"></span><br><span class="line">            &#x2F;&#x2F; Convert the decrypted Base 64 representation back into bytes</span><br><span class="line">            byte[] bytes &#x3D; Convert.FromBase64String(decryptedString);</span><br><span class="line"></span><br><span class="line">            &#x2F;&#x2F; Turn the bytes back into a float and return it</span><br><span class="line">            return BitConverter.ToSingle(bytes, 0);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        &#x2F;&#x2F;&#x2F; &lt;summary&gt;</span><br><span class="line">        &#x2F;&#x2F;&#x2F; Decrypts the encrypted string representing an int into the decrypted int</span><br><span class="line">        &#x2F;&#x2F;&#x2F; &lt;&#x2F;summary&gt;</span><br><span class="line">        public static int DecryptInt(string sourceString)</span><br><span class="line">        &#123;</span><br><span class="line">            &#x2F;&#x2F; Decrypt the encrypted string</span><br><span class="line">            string decryptedString &#x3D; SimpleEncryption.DecryptString(sourceString);</span><br><span class="line"></span><br><span class="line">            &#x2F;&#x2F; Convert the decrypted Base 64 representation back into bytes</span><br><span class="line">            byte[] bytes &#x3D; Convert.FromBase64String(decryptedString);</span><br><span class="line"></span><br><span class="line">            &#x2F;&#x2F; Turn the bytes back into a int and return it</span><br><span class="line">            return BitConverter.ToInt32(bytes, 0);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        &#x2F;&#x2F;&#x2F; &lt;summary&gt;</span><br><span class="line">        &#x2F;&#x2F;&#x2F; Decrypts the encrypted string representing a bool into the decrypted bool</span><br><span class="line">        &#x2F;&#x2F;&#x2F; &lt;&#x2F;summary&gt;</span><br><span class="line">        public static bool DecryptBool(string sourceString)</span><br><span class="line">        &#123;</span><br><span class="line">            &#x2F;&#x2F; Decrypt the encrypted string</span><br><span class="line">            string decryptedString &#x3D; SimpleEncryption.DecryptString(sourceString);</span><br><span class="line"></span><br><span class="line">            &#x2F;&#x2F; Convert the decrypted Base 64 representation back into bytes</span><br><span class="line">            byte[] bytes &#x3D; Convert.FromBase64String(decryptedString);</span><br><span class="line"></span><br><span class="line">            &#x2F;&#x2F; Turn the bytes back into a bool and return it</span><br><span class="line">            return BitConverter.ToBoolean(bytes, 0);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C</a>
+              <a href="/tags/GitHub/" rel="tag"># GitHub</a>
+              <a href="/tags/Unity/" rel="tag"># Unity</a>
+              <a href="/tags/sync/" rel="tag"># sync</a>
+              <a href="/tags/UNITY/" rel="tag"># UNITY</a>
+              <a href="/tags/JS/" rel="tag"># JS</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/unity-2020-11-12-sprite-image-diff/" rel="prev" title="Unity中Sprite和UI Image的区别">
+      <i class="fa fa-chevron-left"></i> Unity中Sprite和UI Image的区别
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/dotnet-2020-11-13-Reflection-Method/" rel="next" title=".NET Core/Framework 创建委托以大幅度提高反射调用的性能">
+      .NET Core/Framework 创建委托以大幅度提高反射调用的性能 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  
+  <div class="comments">
+  <script src="https://utteranc.es/client.js" repo="zhepama/igiven.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async></script>
+  </div>
+  
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhepama"
+      src="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+  <p class="site-author-name" itemprop="name">zhepama</p>
+  <div class="site-description" itemprop="description">一个不专业的程序员,写着专业的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">139</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhepama" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhepama" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhepama@gmail.com" title="E-Mail → mailto:zhepama@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.godgodgame.com/" title="http:&#x2F;&#x2F;www.godgodgame.com" rel="noopener" target="_blank">GODGODGAME</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.igiven.com/" title="https:&#x2F;&#x2F;www.igiven.com">IGIVEN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhepama.github.io/C-Sharp-Playground/zh/" title="https:&#x2F;&#x2F;zhepama.github.io&#x2F;C-Sharp-Playground&#x2F;zh&#x2F;" rel="noopener" target="_blank">数据结构与算法</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhepama</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

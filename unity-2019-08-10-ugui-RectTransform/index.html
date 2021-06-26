@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.igiven.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="在編輯器中快速設定 RectTransform快速控制器的基本操作我們就不在這裡贅述，基本上都可以在 Unity 網站裡找到很好的教學文件與影片。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="一次精通 RectTransform">
+<meta property="og:url" content="http://www.igiven.com/unity-2019-08-10-ugui-RectTransform/index.html">
+<meta property="og:site_name" content="IGiven">
+<meta property="og:description" content="在編輯器中快速設定 RectTransform快速控制器的基本操作我們就不在這裡贅述，基本上都可以在 Unity 網站裡找到很好的教學文件與影片。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-10-ugui-RectTransform/4B112FCB-1D5E-41FC-A19D-AA5322C52414.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-10-ugui-RectTransform/B30BC54C-DA7C-4882-9B3C-FA194FE9ACA5.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-10-ugui-RectTransform/static-anchors.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-10-ugui-RectTransform/ezgif-1-eea893f81f2e.gif">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-10-ugui-RectTransform/anchor_x1.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-10-ugui-RectTransform/anchor_x.gif">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-10-ugui-RectTransform/anchor_y1.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-10-ugui-RectTransform/anchor_y.gif">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-10-ugui-RectTransform/anchor_xy.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-10-ugui-RectTransform/anchor_xy.gif">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-10-ugui-RectTransform/Pivot_01.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-10-ugui-RectTransform/Pivot_02.gif">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-10-ugui-RectTransform/Pivot_03.gif">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-10-ugui-RectTransform/84177-b27df7bbe9d3c829.webp">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-10-ugui-RectTransform/image-20200420000104602.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-10-ugui-RectTransform/image-20200420000313192.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-10-ugui-RectTransform/image-20200420000549965.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-10-ugui-RectTransform/image-20200420013535477.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-10-ugui-RectTransform/image-20200420013708207.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-10-ugui-RectTransform/20171218185814418.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-10-ugui-RectTransform/20171218185822581.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-10-ugui-RectTransform/84177-3bd3ac83352a431b.webp">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-10-ugui-RectTransform/84177-6feb68ae67ceaae8.webp">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-10-ugui-RectTransform/1566677675284.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-10-ugui-RectTransform/1566678423941.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-10-ugui-RectTransform/1566677736663.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-10-ugui-RectTransform/1566678433363.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-10-ugui-RectTransform/1566678329701.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-10-ugui-RectTransform/BluePrint_RawEdit_01.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-10-ugui-RectTransform/BluePrintMode_m2-1024x711.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-10-ugui-RectTransform/RawEditMode_02.gif">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-10-ugui-RectTransform/RawEditMode_01.gif">
+<meta property="article:published_time" content="2019-08-10T00:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-26T08:36:17.946Z">
+<meta property="article:author" content="zhepama">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="C#">
+<meta property="article:tag" content="Unity">
+<meta property="article:tag" content="UNITY">
+<meta property="article:tag" content="ugui">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.igiven.com/assets/images/2019-08-10-ugui-RectTransform/4B112FCB-1D5E-41FC-A19D-AA5322C52414.png">
+
+<link rel="canonical" href="http://www.igiven.com/unity-2019-08-10-ugui-RectTransform/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>一次精通 RectTransform | IGiven</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="IGiven" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="IGiven" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">IGiven</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">李九仙的博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">139</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">32</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-留言">
+
+    <a href="/guestbook/" rel="section"><i class="fa fa-sticky-note fa-fw"></i>留言</a>
+
+  </li>
+        <li class="menu-item menu-item-rss">
+
+    <a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/unity-2019-08-10-ugui-RectTransform/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+      <meta itemprop="name" content="zhepama">
+      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="IGiven">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          一次精通 RectTransform<a href="https://github.com/zhepama/igiven.github.io/edit/master/source/_posts/unity/2019-08-10-ugui-RectTransform.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil-alt"></i></a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-08-10 08:00:00" itemprop="dateCreated datePublished" datetime="2019-08-10T08:00:00+08:00">2019-08-10</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 16:36:17" itemprop="dateModified" datetime="2021-06-26T16:36:17+08:00">2021-06-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/unity/" itemprop="url" rel="index"><span itemprop="name">unity</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="在編輯器中快速設定-RectTransform"><a href="#在編輯器中快速設定-RectTransform" class="headerlink" title="在編輯器中快速設定 RectTransform"></a>在編輯器中快速設定 RectTransform</h2><p>快速控制器的基本操作我們就不在這裡贅述，基本上都可以在 Unity 網站裡找到很好的教學文件與影片。</p>
+<p><img src="../../assets/images/2019-08-10-ugui-RectTransform/4B112FCB-1D5E-41FC-A19D-AA5322C52414.png" alt="img"></p>
+<h2 id="RectTransform-的控制精髓：錨點們-Anchor-Points"><a href="#RectTransform-的控制精髓：錨點們-Anchor-Points" class="headerlink" title="RectTransform 的控制精髓：錨點們 Anchor Points"></a>RectTransform 的控制精髓：錨點們 Anchor Points</h2><p>在透過快速設定器修改 RectTransform 的過程中，你會發現右上區域會隨著不同的配置出現不同的屬性設定如下圖：</p>
+<p><img src="../../assets/images/2019-08-10-ugui-RectTransform/B30BC54C-DA7C-4882-9B3C-FA194FE9ACA5.png" alt="img"></p>
+<p>Pos X 與 Left、Pos Y 與 Top、Width 與 Right、Height 與 Bottom 這四對屬性個別不會同時出現，有 Pos X 就沒有 Left，有 Width 就沒有 Right，那麼他們出現的規則是什麼呢？</p>
+<p>簡單來說其實就是：</p>
+<p>「當兩個錨點的某一維度值相等時，該維度的尺寸則是固定的（跟 Parent 尺寸無關），反之該維度的尺寸則是相對於 Parent 的尺寸而變化。」</p>
+<p>其實全部都取決於控制 <em>RectTransform</em> 型態最重要的屬性「最大與最小錨點們（Min / Max Anchors）」，而快速設定器其實也只是在幫你快速的調整這兩個錨點的值，所以只要了解這兩個設定值關係與行為，其實你已經完全掌握了 <em>RectTransform</em> ，而依照上述邏輯，透過兩個錨點所產生出的配置型態總共有四種：</p>
+<p>A. 當兩錨點 x, y 維度的值都相等時。<br>B. 當兩錨點 x 維度的值不相等、y 維度值相等時。<br>C. 當兩錨點 x 維度的值相等、y 維度值不相等時。<br>D. 當兩錨點 x, y 維度的值都不相等時。</p>
+<h3 id="A-當兩錨點-x-y-維度的值都相等時："><a href="#A-當兩錨點-x-y-維度的值都相等時：" class="headerlink" title="A. 當兩錨點 x, y 維度的值都相等時："></a>A. 當兩錨點 x, y 維度的值都相等時：</h3><p>當兩錨點 x, y 值都相等時，代表此物件的寬高尺寸都是固定值，所以我們會透過 PosX、PosY、Width 以及 Height 來定義此物件的顯示方式，PosX 與 PosY 則分別表示錨點到物件 Pivot 點的位移，而此物件的實際顯示區域則會受到 Pivot 的 x, y 值設定所影響。</p>
+<p><img src="../../assets/images/2019-08-10-ugui-RectTransform/static-anchors.png" alt="img"><br><img src="../../assets/images/2019-08-10-ugui-RectTransform/ezgif-1-eea893f81f2e.gif" alt="img"></p>
+<h3 id="B-當兩錨點-x-維度的值不相等、y-維度值相等時："><a href="#B-當兩錨點-x-維度的值不相等、y-維度值相等時：" class="headerlink" title="B. 當兩錨點 x 維度的值不相等、y 維度值相等時："></a>B. 當兩錨點 x 維度的值不相等、y 維度值相等時：</h3><p>當兩錨點 x 維度的值不相等、y 維度值相等時，代表 x 維度的尺寸會受到 Parent 的尺寸影響，在 x 維度上則是使用間距（Padding）的概念來排版，所以會用到 Left、PosY、Right 以及 Height，實際的 Width 是由 Left 與 Right 來控制。</p>
+<p><img src="../../assets/images/2019-08-10-ugui-RectTransform/anchor_x1.png" alt="img"><br><img src="../../assets/images/2019-08-10-ugui-RectTransform/anchor_x.gif" alt="img"></p>
+<h3 id="C-當兩錨點-x-維度的值相等、y-維度值不相等時："><a href="#C-當兩錨點-x-維度的值相等、y-維度值不相等時：" class="headerlink" title="C. 當兩錨點 x 維度的值相等、y 維度值不相等時："></a>C. 當兩錨點 x 維度的值相等、y 維度值不相等時：</h3><p>當兩錨點 x 維度的值相等、y 維度值不相等時，代表 y 維度的尺寸會受到 Parent 的尺寸影響，在 y 維度上則是使用間距（Padding）的概念來排版，所以會用到 PosX、Top、Width 以及 Bottom，實際的 Height 是由 Top 與 Bottom 來控制。</p>
+<p><img src="../../assets/images/2019-08-10-ugui-RectTransform/anchor_y1.png" alt="img"><br><img src="../../assets/images/2019-08-10-ugui-RectTransform/anchor_y.gif" alt="img"></p>
+<h3 id="D-當兩錨點-x-y-維度的值都不相等時："><a href="#D-當兩錨點-x-y-維度的值都不相等時：" class="headerlink" title="D. 當兩錨點 x, y 維度的值都不相等時："></a>D. 當兩錨點 x, y 維度的值都不相等時：</h3><p>當兩錨點 x, y 維度的值都不相等時，代表物件的寬高尺寸都會受到 Parent 的影響，完全是使用四個方向的間距來定義此物件的顯示區域 Left、Top、Right 以及 Bottom。</p>
+<p><img src="../../assets/images/2019-08-10-ugui-RectTransform/anchor_xy.png" alt="img"><br><img src="../../assets/images/2019-08-10-ugui-RectTransform/anchor_xy.gif" alt="img"></p>
+<h1 id="一些术语解释"><a href="#一些术语解释" class="headerlink" title="一些术语解释"></a>一些术语解释</h1><h3 id="pivot"><a href="#pivot" class="headerlink" title="pivot"></a>pivot</h3><p>物體自身的支點，影響物體的旋轉、縮放、位置，改變 UI Pivot 必須先開啟控制面板的 Pivot 按鈕，如下圖</p>
+<p><img src="../../assets/images/2019-08-10-ugui-RectTransform/Pivot_01.png" alt="Pivot_01">，</p>
+<p>Pivot (0.5, 0.5)<br><img src="../../assets/images/2019-08-10-ugui-RectTransform/Pivot_02.gif" alt="Pivot_02"></p>
+<p>Pivot (0, 1)<br><img src="../../assets/images/2019-08-10-ugui-RectTransform/Pivot_03.gif" alt="Pivot_03"></p>
+<p>它是一个X,Y值范围是0到1的点，这个点的会在<strong>Anchor</strong>（锚点）计算位置的时候会使用到，下面用一张图来解释<strong>Pivot</strong>点的位置</p>
+<p><img src="../../assets/images/2019-08-10-ugui-RectTransform/84177-b27df7bbe9d3c829.webp" alt="img"></p>
+<p>pivot和text的填充</p>
+<p><img src="../../assets/images/2019-08-10-ugui-RectTransform/image-20200420000104602.png" alt="image-20200420000104602"></p>
+<p>当pivot为0.5和0.5时数字的填充时以中心点向上下方向扩展rect</p>
+<p><img src="../../assets/images/2019-08-10-ugui-RectTransform/image-20200420000313192.png" alt="image-20200420000313192"></p>
+<p>一般来讲,动态改变文本,为了使其按照从上到下,可以把pivot设置在左上角  0,1</p>
+<p><img src="../../assets/images/2019-08-10-ugui-RectTransform/image-20200420000549965.png" alt="image-20200420000549965"></p>
+<p>点击上方的pivot可以切换pivot的所在位置</p>
+<p>center :rect的中心点</p>
+<p>pivot:pivot的点所在位置</p>
+<p>这同样适用于layout,下图设置成0,1.在中间位置添加panel,他会向下扩充,加上verticallayoutgroup和contentsizefitter两个组件</p>
+<p><img src="../../assets/images/2019-08-10-ugui-RectTransform/image-20200420013535477.png" alt="image-20200420013535477"></p>
+<p>设置成0.5,0.5.他会向上下扩充</p>
+<p><img src="../../assets/images/2019-08-10-ugui-RectTransform/image-20200420013708207.png" alt="image-20200420013708207"></p>
+<h3 id="位置"><a href="#位置" class="headerlink" title="位置"></a>位置</h3><ul>
+<li><code>position</code>世界坐标是三维的全局坐标,一般作为基准坐标</li>
+<li><code>localPosition</code> 相对于父级物体的相对位置</li>
+<li><code>anchoredPosition</code> 相对位置，但是相对的是自身的Anchor</li>
+<li><code>anchoredPosition3D</code>  相对位置，但是相对的是自身的Anchor</li>
+</ul>
+<p>关于<code>position</code>和<code>localPosition</code>，它们的值根其所属的Canvas的渲染模式有关。</p>
+<ul>
+<li><p>在Screen Space——Overlay的模式下，由于Canvas的世界尺寸与其像素尺寸在数值上相等，因此其rectTransform的position与其在屏幕空间的坐标在数值上也相等。这种模式下，要获取某个RectTransform的屏幕坐标，直接使用position就可以。</p>
+</li>
+<li><p>在Screen Space——Camera的模式和World Space下，RectTransform的渲染与摄像机有关，在获取其屏幕坐标时，需要利用canvas.worldCamera，或者transform.TransformPoint等坐标转换函数进行坐标转换。</p>
+</li>
+</ul>
+<p>关于<code>anchoredPosition</code>和<code>anchoredPositoin3D</code>都可以认为是以像素为单位。</p>
+<ul>
+<li>当锚点全部重合时，<code>anchoredPosition</code>代表的就是自身Pivot到Anchor的向量。</li>
+</ul>
+<p><img src="../../assets/images/2019-08-10-ugui-RectTransform/20171218185814418.png" alt=""></p>
+<ul>
+<li>当Anchor不重合时,Pivot相对于四个锚点<strong>中点</strong>的坐标</li>
+</ul>
+<p><img src="../../assets/images/2019-08-10-ugui-RectTransform/20171218185822581.png" alt=""></p>
+<h3 id="offsetMin-和-offsetMax"><a href="#offsetMin-和-offsetMax" class="headerlink" title="offsetMin 和 offsetMax"></a>offsetMin 和 offsetMax</h3><p><code>offsetMax</code>是<strong>RectTransform右上角</strong>相对于<strong>右上Anchor</strong>的距离；<code>offsetMin</code>是<strong>RectTransform左下角</strong>相对于<strong>左下Anchor</strong>的距离。<em>這就是為什麼 offsetMax 的值跟編輯器中 Top、Right 值剛好正負相反的原因。</em></p>
+<p><img src="../../assets/images/2019-08-10-ugui-RectTransform/84177-3bd3ac83352a431b.webp" alt="img"></p>
+<p><img src="../../assets/images/2019-08-10-ugui-RectTransform/84177-6feb68ae67ceaae8.webp" alt="img"></p>
+<h3 id="rect"><a href="#rect" class="headerlink" title="rect"></a>rect</h3><p>如果想要获取一个RectTransform的矩形信息，应该使用rectTransform.rect属性。</p>
+<p>rect属性同样是一个计算出来的值，但是它表示的是该rectTransform对应的矩形的相关信息。</p>
+<p>rect 的 x 和 y 返回左下角相对于pivot的距离,w 和 h 返回本身的宽高.</p>
+<p>注意:<strong>Awake中Rectangle还没有初始化出来,所以不要在awake中获取rect</strong></p>
+<h3 id="anchorMin-和-anchorMax"><a href="#anchorMin-和-anchorMax" class="headerlink" title="anchorMin 和 anchorMax"></a>anchorMin 和 anchorMax</h3><p>这个是针对锚点的,锚点时相对于父容器定义的,所以这两个属性也是相对于父容器的.分别指锚点占父容器尺寸的百分比位置.</p>
+<h3 id="sizeDelta"><a href="#sizeDelta" class="headerlink" title="sizeDelta"></a>sizeDelta</h3><p>sizeDelta是个由引擎计算出来的值，这个值很容易被错误地使用。要正确地使用sizeDelta，就要先理解它是怎么算出来的。</p>
+<blockquote>
+<p>The size of this RectTransform relative to the distances between the anchors.<br>If the anchors are together, sizeDelta is the same as size. If the anchors are in each of the four corners of the parent, the sizeDelta is how much bigger or smaller the rectangle is compared to its parent.</p>
+</blockquote>
+<p><em>sizeDelta</em>是<code>offsetMax-offsetMin</code>的结果。在锚点全部重合的情况下，它的值就是面板上的<em>（Width，Height）</em>。在锚点完全不重合的情况下，它是相对于父矩形的尺寸。</p>
+<p>一个常见的错误是，当<em>RectTransform</em>的锚点并非全部重合时，使用<em>sizeDelta</em>作为这个<em>RectTransform</em>的尺寸。此时拿到的结果一般来说并非预期的结果。</p>
+<p>所以 <em>RectTransform</em> 宽和高真正的計算方法是:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">GUI.Label(new Rect(20, 20, 600, 40), &quot;Rect : &quot; + rect.rect);</span><br><span class="line">var width &#x3D;  (rect.anchorMax.x - rect.anchorMin.x) * parent.rect.width + rect.sizeDelta.x;</span><br><span class="line">var height &#x3D; (rect.anchorMax.y - rect.anchorMin.y) * parent.rect.height + rect.sizeDelta.y;</span><br><span class="line">GUI.Label(new Rect(20, 60, 600, 40), $&quot;width :&#123;width&#125; height:&#123;height&#125; &quot;);</span><br></pre></td></tr></table></figure>
+
+<p>意思就是 sizeDelta 個別維度的值是跟兩錨點個別維度的差值相關，所以只有當兩錨點某的維度的值相等的時候，sizeDelta 在此維度的值才會剛好等於最後顯示的 size 大小。</p>
+<h1 id="代码修改坐标及大小"><a href="#代码修改坐标及大小" class="headerlink" title="代码修改坐标及大小"></a>代码修改坐标及大小</h1><p><strong>1.改变RectTransform的top</strong> 注意offsetMax`是<strong>RectTransform右上角</strong>相对于<strong>右上Anchor</strong>的距离,所以top的值应该是一个负值</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">GetComponent&lt;RectTransform&gt;().offsetMax &#x3D; new Vector2(GetComponent&lt;RectTransform&gt;().offsetMax.x, top);</span><br></pre></td></tr></table></figure>
+
+<p><strong>2.改变RectTransform的bottom</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">GetComponent&lt;RectTransform&gt;().offsetMin &#x3D; new Vector2(GetComponent&lt;RectTransform&gt;().offsetMin.x, bottom);</span><br></pre></td></tr></table></figure>
+
+<p><strong>3.改变RectTransform的width，height</strong> ,会根据上面的计算公式重新计算得出width和height,所以如果锚点不是在同一个点的情况下,你设置的值和实际的值是有很大区别的</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">GetComponent&lt;RectTransform&gt;().sizeDelta &#x3D; new Vector2(width, height);</span><br></pre></td></tr></table></figure>
+
+<p>例如:</p>
+<p><img src="../../assets/images/2019-08-10-ugui-RectTransform/1566677675284.png" alt="1566677675284"></p>
+<p><img src="../../assets/images/2019-08-10-ugui-RectTransform/1566678423941.png" alt="1566678423941"></p>
+<p>当使用脚本直接改变大小后</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rect.sizeDelta &#x3D; new Vector2(750, 200);</span><br></pre></td></tr></table></figure>
+
+<p><img src="../../assets/images/2019-08-10-ugui-RectTransform/1566677736663.png" alt="1566677736663"></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">var width &#x3D;  (rect.anchorMax.x - rect.anchorMin.x) * parent.rect.width + rect.sizeDelta.x;</span><br><span class="line">var height &#x3D; (rect.anchorMax.y - rect.anchorMin.y) * parent.rect.height + rect.sizeDelta.y;</span><br></pre></td></tr></table></figure>
+
+<p>他的宽和高经过了运算使其分别为1500,1534</p>
+<p><strong>4.改变RectTransform的pos</strong> 注意anchoredPosition是相对于锚点的位置</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">GetComponent&lt;RectTransform&gt;().anchoredPosition3D &#x3D; new Vector3(posx,posy,posz);</span><br><span class="line">GetComponent&lt;RectTransform&gt;().anchoredPosition &#x3D; new Vector2(posx,posy);</span><br></pre></td></tr></table></figure>
+
+<p><strong>5.使用SetSizeWithCurrentAnchors函数来进行设定，其中Horizontal和Vertical分别对应宽和高。此函数受当前锚点和中心点的影响。</strong>由于会受到<code>povit</code>的影响设置的高度是根据povit进行上下缩小的</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">var rt &#x3D; gameObject.GetComponent&lt;RectTransform&gt;();</span><br><span class="line">rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 100);</span><br><span class="line">rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 30);</span><br></pre></td></tr></table></figure>
+<p>上面同样的示例:</p>
+<p><img src="../../assets/images/2019-08-10-ugui-RectTransform/1566678433363.png" alt="1566678433363"></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 200);</span><br></pre></td></tr></table></figure>
+
+<p><img src="../../assets/images/2019-08-10-ugui-RectTransform/1566678329701.png" alt="1566678329701"></p>
+<p>可以看到它围绕着<code>pivot</code>上下都缩减了180</p>
+<p><strong>6.使用SetInsetAndSizeFromParentEdge函数来进行设定。此函数不受锚点和中心的影响，其中第一个参数代表对齐方式，第二个参数为距离边界的距离，第三个参数为宽度。</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">var rt &#x3D; gameObject.GetComponent&lt;RectTransform&gt;();</span><br><span class="line">rt.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Right, 0, 100);</span><br><span class="line">rt.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Bottom, 0, 30);</span><br></pre></td></tr></table></figure>
+
+
+<h1 id="recttransform的一些其他操做"><a href="#recttransform的一些其他操做" class="headerlink" title="recttransform的一些其他操做"></a>recttransform的一些其他操做</h1><h3 id="Blue-Print-Mode-藍圖模式-、-Raw-Edit-Mode-原始编辑模式"><a href="#Blue-Print-Mode-藍圖模式-、-Raw-Edit-Mode-原始编辑模式" class="headerlink" title="Blue Print Mode(藍圖模式) 、 Raw Edit Mode(原始编辑模式)"></a>Blue Print Mode(藍圖模式) 、 Raw Edit Mode(原始编辑模式)</h3><h2 id=""><a href="#" class="headerlink" title=""></a><img src="../../assets/images/2019-08-10-ugui-RectTransform/BluePrint_RawEdit_01.png" alt="BluePrint_RawEdit_01"></h2><h4 id="Blue-Print-Mode-藍圖模式"><a href="#Blue-Print-Mode-藍圖模式" class="headerlink" title="Blue Print Mode (藍圖模式)"></a>Blue Print Mode (藍圖模式)</h4><p>忽略了物體的 Local Rotation 和 Local Scale，方便以原來的旋轉與大小調整物體</p>
+<p><img src="../../assets/images/2019-08-10-ugui-RectTransform/BluePrintMode_m2-1024x711.png" alt="img"></p>
+<h4 id="Raw-Edit-Mode-原始编辑模式"><a href="#Raw-Edit-Mode-原始编辑模式" class="headerlink" title="Raw Edit Mode (原始编辑模式)"></a>Raw Edit Mode (原始编辑模式)</h4><p>在 Inspector 中調整 Pivot 和 Anchor 時，物體會維持目前的位置與大小(Inspector 中數值部分)，調整情形如下，請注意數值部分</p>
+<p>Inspector 中調整  Pivot</p>
+<p><img src="../../assets/images/2019-08-10-ugui-RectTransform/RawEditMode_02.gif" alt="RawEditMode_02"></p>
+<p>Inspector 中調整  Anchor</p>
+<p><img src="../../assets/images/2019-08-10-ugui-RectTransform/RawEditMode_01.gif" alt="RawEditMode_01"></p>
+<h3 id="參考資料"><a href="#參考資料" class="headerlink" title="參考資料"></a>參考資料</h3><ul>
+<li><a href="http://docs.unity3d.com/Manual/UIBasicLayout.html" target="_blank" rel="noopener">Unity – Manual: Basic Layout</a></li>
+<li><a href="http://tsubakit1.hateblo.jp/entry/2014/12/19/033946" target="_blank" rel="noopener">UnityのuGUIのレイアウト調整機能について解説してみる（RectTransform入門）</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C</a>
+              <a href="/tags/C/" rel="tag"># C#</a>
+              <a href="/tags/Unity/" rel="tag"># Unity</a>
+              <a href="/tags/UNITY/" rel="tag"># UNITY</a>
+              <a href="/tags/ugui/" rel="tag"># ugui</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/unity-2019-08-09-unity2d-shipei/" rel="prev" title="关于unity的适配问题">
+      <i class="fa fa-chevron-left"></i> 关于unity的适配问题
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/tool-2019-08-10-powershell-command/" rel="next" title="powershell 常用命令">
+      powershell 常用命令 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  
+  <div class="comments">
+  <script src="https://utteranc.es/client.js" repo="zhepama/igiven.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async></script>
+  </div>
+  
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#在編輯器中快速設定-RectTransform"><span class="nav-number">1.</span> <span class="nav-text">在編輯器中快速設定 RectTransform</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RectTransform-的控制精髓：錨點們-Anchor-Points"><span class="nav-number">2.</span> <span class="nav-text">RectTransform 的控制精髓：錨點們 Anchor Points</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#A-當兩錨點-x-y-維度的值都相等時："><span class="nav-number">2.1.</span> <span class="nav-text">A. 當兩錨點 x, y 維度的值都相等時：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#B-當兩錨點-x-維度的值不相等、y-維度值相等時："><span class="nav-number">2.2.</span> <span class="nav-text">B. 當兩錨點 x 維度的值不相等、y 維度值相等時：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#C-當兩錨點-x-維度的值相等、y-維度值不相等時："><span class="nav-number">2.3.</span> <span class="nav-text">C. 當兩錨點 x 維度的值相等、y 維度值不相等時：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#D-當兩錨點-x-y-維度的值都不相等時："><span class="nav-number">2.4.</span> <span class="nav-text">D. 當兩錨點 x, y 維度的值都不相等時：</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#一些术语解释"><span class="nav-number"></span> <span class="nav-text">一些术语解释</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#pivot"><span class="nav-number">0.1.</span> <span class="nav-text">pivot</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#位置"><span class="nav-number">0.2.</span> <span class="nav-text">位置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#offsetMin-和-offsetMax"><span class="nav-number">0.3.</span> <span class="nav-text">offsetMin 和 offsetMax</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#rect"><span class="nav-number">0.4.</span> <span class="nav-text">rect</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#anchorMin-和-anchorMax"><span class="nav-number">0.5.</span> <span class="nav-text">anchorMin 和 anchorMax</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sizeDelta"><span class="nav-number">0.6.</span> <span class="nav-text">sizeDelta</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#代码修改坐标及大小"><span class="nav-number"></span> <span class="nav-text">代码修改坐标及大小</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#recttransform的一些其他操做"><span class="nav-number"></span> <span class="nav-text">recttransform的一些其他操做</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Blue-Print-Mode-藍圖模式-、-Raw-Edit-Mode-原始编辑模式"><span class="nav-number">0.1.</span> <span class="nav-text">Blue Print Mode(藍圖模式) 、 Raw Edit Mode(原始编辑模式)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#"><span class="nav-number">1.</span> <span class="nav-text"></span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Blue-Print-Mode-藍圖模式"><span class="nav-number">1.0.1.</span> <span class="nav-text">Blue Print Mode (藍圖模式)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Raw-Edit-Mode-原始编辑模式"><span class="nav-number">1.0.2.</span> <span class="nav-text">Raw Edit Mode (原始编辑模式)</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#參考資料"><span class="nav-number">1.1.</span> <span class="nav-text">參考資料</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhepama"
+      src="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+  <p class="site-author-name" itemprop="name">zhepama</p>
+  <div class="site-description" itemprop="description">一个不专业的程序员,写着专业的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">139</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhepama" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhepama" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhepama@gmail.com" title="E-Mail → mailto:zhepama@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.godgodgame.com/" title="http:&#x2F;&#x2F;www.godgodgame.com" rel="noopener" target="_blank">GODGODGAME</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.igiven.com/" title="https:&#x2F;&#x2F;www.igiven.com">IGIVEN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhepama.github.io/C-Sharp-Playground/zh/" title="https:&#x2F;&#x2F;zhepama.github.io&#x2F;C-Sharp-Playground&#x2F;zh&#x2F;" rel="noopener" target="_blank">数据结构与算法</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhepama</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

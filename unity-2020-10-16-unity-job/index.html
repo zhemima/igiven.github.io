@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.igiven.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="创建Job创建Job需要定义一个结构体，实现IJob接口。实现了IJob接口之后，就可以让这个Job和其他Job并行运行了。 到这呢，就可以给Job一个真正的定义了：Job是一个统称，任何实现了IJob接口的结构体，都可以成为一个Job。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="UNITY JOB SYSTEM详解">
+<meta property="og:url" content="http://www.igiven.com/unity-2020-10-16-unity-job/index.html">
+<meta property="og:site_name" content="IGiven">
+<meta property="og:description" content="创建Job创建Job需要定义一个结构体，实现IJob接口。实现了IJob接口之后，就可以让这个Job和其他Job并行运行了。 到这呢，就可以给Job一个真正的定义了：Job是一个统称，任何实现了IJob接口的结构体，都可以成为一个Job。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-10-16T00:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-26T08:36:17.946Z">
+<meta property="article:author" content="zhepama">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="C#">
+<meta property="article:tag" content="Unity">
+<meta property="article:tag" content="UNITY">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://www.igiven.com/unity-2020-10-16-unity-job/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>UNITY JOB SYSTEM详解 | IGiven</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="IGiven" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="IGiven" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">IGiven</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">李九仙的博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">139</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">32</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-留言">
+
+    <a href="/guestbook/" rel="section"><i class="fa fa-sticky-note fa-fw"></i>留言</a>
+
+  </li>
+        <li class="menu-item menu-item-rss">
+
+    <a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/unity-2020-10-16-unity-job/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+      <meta itemprop="name" content="zhepama">
+      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="IGiven">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          UNITY JOB SYSTEM详解<a href="https://github.com/zhepama/igiven.github.io/edit/master/source/_posts/unity/2020-10-16-unity-job.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil-alt"></i></a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-10-16 08:00:00" itemprop="dateCreated datePublished" datetime="2020-10-16T08:00:00+08:00">2020-10-16</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 16:36:17" itemprop="dateModified" datetime="2021-06-26T16:36:17+08:00">2021-06-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/unity/" itemprop="url" rel="index"><span itemprop="name">unity</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="创建Job"><a href="#创建Job" class="headerlink" title="创建Job"></a>创建Job</h1><p>创建Job需要定义一个结构体，实现<code>IJob</code>接口。实现了<code>IJob</code>接口之后，就可以让这个Job和其他Job并行运行了。</p>
+<p>到这呢，就可以给Job一个真正的定义了：Job是一个统称，任何实现了<code>IJob</code>接口的结构体，都可以成为一个Job。</p>
+<p>创建Job的步骤如下：<br> 1、创建一个实现<code>IJob</code>接口的结构体<br> 2、给结构体添加所需的成员变量，可以使用blittable类型或者NativeContainer类型。<br> 3、在结构体中添加一个Execute方法，具体执行的任务在这个方法里实现。</p>
+<p>当执行Job时，Execute方法会在一个内核上执行完毕。</p>
+<p>注意：设计job时，记住job操作的是数据的拷贝，除非使用<code>NativeContainer</code>。所以，在主线程访问job数据的唯一方法就是写入<code>NativeContainer</code>。</p>
+<p>实例代码如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 这个Job的功能：将两个浮点数相加</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">struct</span> <span class="title">MyJob</span> :</span> IJob</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">float</span> a;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">float</span> b;</span><br><span class="line">    <span class="keyword">public</span> NativeArray&lt;<span class="keyword">float</span>&gt; result;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Execute</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        result[<span class="number">0</span>] = a + b;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="调度Job"><a href="#调度Job" class="headerlink" title="调度Job"></a>调度Job</h1><p>创建Job后，如何执行一个Job呢？</p>
+<p>这时候需要调度Job，调度Job的步骤如下：<br> 1、实例化Job<br> 2、构造Job的数据<br> 3、调用<code>Schedule</code>方法。</p>
+<p>调用<code>Schedule</code>方法会将Job放到Job执行队列的适当位置。一旦安排了Job后，就不能再中断job执行了。</p>
+<p><strong>注意</strong>：只能在主线程中调用<code>Schedule</code>方法。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 创建一个长度为1的native array用来存储job执行后的结果</span></span><br><span class="line">NativeArray&lt;<span class="keyword">float</span>&gt; result = <span class="keyword">new</span> NativeArray&lt;<span class="keyword">float</span>&gt;(<span class="number">1</span>, Allocator.TempJob);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 设置job的数据</span></span><br><span class="line">MyJob jobData = <span class="keyword">new</span> MyJob();</span><br><span class="line">jobData.a = <span class="number">10</span>;</span><br><span class="line">jobData.b = <span class="number">10</span>;</span><br><span class="line">jobData.result = result;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Schedule</span></span><br><span class="line">JobHandle handle = jobData.Schedule();</span><br><span class="line"></span><br><span class="line"><span class="comment">// 等待job执行完毕</span></span><br><span class="line">handle.Complete();</span><br><span class="line"></span><br><span class="line"><span class="comment">// 获取result中的数据</span></span><br><span class="line"><span class="keyword">float</span> aPlusB = result[<span class="number">0</span>];</span><br><span class="line"></span><br><span class="line"><span class="comment">// 一定要释放native array申请的内存</span></span><br><span class="line">result.Dispose();</span><br></pre></td></tr></table></figure>
+
+<h1 id="Job的依赖关系"><a href="#Job的依赖关系" class="headerlink" title="Job的依赖关系"></a>Job的依赖关系</h1><p>很多时候，Job并不是独立运行的，需要依赖前一个Job的结果，这时候如何调度呢？</p>
+<h2 id="JobHandle"><a href="#JobHandle" class="headerlink" title="JobHandle"></a>JobHandle</h2><p>当调用<code>Schedule</code>方法时，会返回一个<code>JobHandle</code>。你可以使用这个<code>JobHandle</code>作为其他job的依赖项。具体方法就是将第一个job的<code>JobHandle</code>传给第二个job调用<code>Schedule</code>时的参数，例如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">JobHandle firstJobHandle &#x3D; firstJob.Schedule();</span><br><span class="line">secondJob.Schedule(firstJobHandle);</span><br></pre></td></tr></table></figure>
+
+<p>那如果一个job有多个依赖项怎么办呢？这时候可以用<code>JobHandle.CombineDependencies</code>方法合并他们。具体如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 声明一个JobHandle的NativeArray数组</span></span><br><span class="line">NativeArray&lt;JobHandle&gt; handles = <span class="keyword">new</span> NativeArray&lt;JobHandle&gt;(numJobs, Allocator.TempJob);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 将多个handles放到数组中</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 将多个handles合并到一起</span></span><br><span class="line">JobHandle jh = JobHandle.CombineDependencies(handles);</span><br></pre></td></tr></table></figure>
+
+<h1 id="等待Job执行完毕"><a href="#等待Job执行完毕" class="headerlink" title="等待Job执行完毕"></a>等待Job执行完毕</h1><p>在主线程中如何等待Job执行完毕呢？可以调用<code>JobHandle</code>中的<code>Complete</code>方法强制等待。<code>Complete</code>方法执行过后，你就可以在主线程中安全地访问job中使用的<code>NativeContainer</code>了。</p>
+<p><strong>注意</strong><br> 当你调用job的Schedule方法后，job并不会立即开始执行。如果你在主线程中等待job执行完毕，并且你需要访问job使用的NativeContainer中的数据时，你可以调用<code>JobHandle.Complete</code>方法。这个方法会启动job的执行。调用JobHandle的Complete方法后，会将job的NativeContainer所有权还给主线程。所以只有调用过JobHandle上的Complete方法后，主线程才能安全的访问NativeContainer中的数据。同理，也可以调用依赖此job的JobHandle上的Complete方法。例如，你可以调用jobA的Complete方法，也可以调用依赖jobA的JobB的Complete方法。这两种情况下，主线程都可以安全访问jobA使用的NativeContainer。</p>
+<h2 id="实例代码"><a href="#实例代码" class="headerlink" title="实例代码"></a>实例代码</h2><p>Job代码：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Job：两个浮点数相加</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">struct</span> <span class="title">MyJob</span> :</span> IJob</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">float</span> a;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">float</span> b;</span><br><span class="line">    <span class="keyword">public</span> NativeArray&lt;<span class="keyword">float</span>&gt; result;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Execute</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        result[<span class="number">0</span>] = a + b;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Job：给一个值加一</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">struct</span> <span class="title">AddOneJob</span> :</span> IJob</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">public</span> NativeArray&lt;<span class="keyword">float</span>&gt; result;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Execute</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        result[<span class="number">0</span>] = result[<span class="number">0</span>] + <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>主线程代码：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 创建存储结果的NativeArray</span></span><br><span class="line">NativeArray&lt;<span class="keyword">float</span>&gt; result = <span class="keyword">new</span> NativeArray&lt;<span class="keyword">float</span>&gt;(<span class="number">1</span>, Allocator.TempJob);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 设置job #1</span></span><br><span class="line">MyJob jobData = <span class="keyword">new</span> MyJob();</span><br><span class="line">jobData.a = <span class="number">10</span>;</span><br><span class="line">jobData.b = <span class="number">10</span>;</span><br><span class="line">jobData.result = result;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 调度job1</span></span><br><span class="line">JobHandle firstHandle = jobData.Schedule();</span><br><span class="line"></span><br><span class="line"><span class="comment">// 设置job2</span></span><br><span class="line">AddOneJob incJobData = <span class="keyword">new</span> AddOneJob();</span><br><span class="line">incJobData.result = result;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 调度 job2，依赖job1</span></span><br><span class="line">JobHandle secondHandle = incJobData.Schedule(firstHandle);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 等待job2执行完毕</span></span><br><span class="line">secondHandle.Complete();</span><br><span class="line"></span><br><span class="line"><span class="comment">// 访问结果</span></span><br><span class="line"><span class="keyword">float</span> aPlusB = result[<span class="number">0</span>];</span><br><span class="line"></span><br><span class="line"><span class="comment">// 释放内存</span></span><br><span class="line">result.Dispose();</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+<h1 id="相关链接"><a href="#相关链接" class="headerlink" title="相关链接"></a>相关链接</h1><ul>
+<li><a href="https://docs.unity3d.com/cn/2020.2/Manual/JobSystem.html" target="_blank" rel="noopener">C# 作业系统 - Unity 手册 (unity3d.com)</a></li>
+<li><a href="https://mp.weixin.qq.com/s/ZOVzDZQYBkfs6gAdrTMJUA" target="_blank" rel="noopener">Job System介绍</a></li>
+<li><a href="https://mp.weixin.qq.com/s?__biz=MzU5MjQ1NTEwOA==&mid=2247495224&idx=1&sn=6da0b515c54aee71ae64166369ae2320&chksm=fe1dda93c96a53851da09775d9c4a8947a26b26dfdc4aba2775685efee3451c026a8d353a851&mpshare=1&scene=23&srcid=1026M4Dnvzb65VokHexArRV2#rd" target="_blank" rel="noopener">深入解读Job System（1） </a></li>
+<li><a href="https://mp.weixin.qq.com/s?__biz=MzU5MjQ1NTEwOA==&mid=2247495225&idx=1&sn=8c7212a747704da0b85d364529464509&chksm=fe1dda92c96a53848bca7cf95731ce8a9c853c80a4d3e7aa3f249c87d3a50620f30ce85254d6&mpshare=1&scene=23&srcid=1026HlBykd8qHTStfScE4ION#rd" target="_blank" rel="noopener">深入解读Job system（2）</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C</a>
+              <a href="/tags/C/" rel="tag"># C#</a>
+              <a href="/tags/Unity/" rel="tag"># Unity</a>
+              <a href="/tags/UNITY/" rel="tag"># UNITY</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/unity-2020-10-15-unity-ecs/" rel="prev" title="UNITY ECS 详解">
+      <i class="fa fa-chevron-left"></i> UNITY ECS 详解
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/unity-2020-10-17-runtime-spriteatlas/" rel="next" title="运行时打包图集">
+      运行时打包图集 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  
+  <div class="comments">
+  <script src="https://utteranc.es/client.js" repo="zhepama/igiven.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async></script>
+  </div>
+  
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#创建Job"><span class="nav-number">1.</span> <span class="nav-text">创建Job</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#调度Job"><span class="nav-number">2.</span> <span class="nav-text">调度Job</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Job的依赖关系"><span class="nav-number">3.</span> <span class="nav-text">Job的依赖关系</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#JobHandle"><span class="nav-number">3.1.</span> <span class="nav-text">JobHandle</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#等待Job执行完毕"><span class="nav-number">4.</span> <span class="nav-text">等待Job执行完毕</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#实例代码"><span class="nav-number">4.1.</span> <span class="nav-text">实例代码</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#相关链接"><span class="nav-number">5.</span> <span class="nav-text">相关链接</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhepama"
+      src="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+  <p class="site-author-name" itemprop="name">zhepama</p>
+  <div class="site-description" itemprop="description">一个不专业的程序员,写着专业的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">139</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhepama" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhepama" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhepama@gmail.com" title="E-Mail → mailto:zhepama@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.godgodgame.com/" title="http:&#x2F;&#x2F;www.godgodgame.com" rel="noopener" target="_blank">GODGODGAME</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.igiven.com/" title="https:&#x2F;&#x2F;www.igiven.com">IGIVEN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhepama.github.io/C-Sharp-Playground/zh/" title="https:&#x2F;&#x2F;zhepama.github.io&#x2F;C-Sharp-Playground&#x2F;zh&#x2F;" rel="noopener" target="_blank">数据结构与算法</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhepama</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

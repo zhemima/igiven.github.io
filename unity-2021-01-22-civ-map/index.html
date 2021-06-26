@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.igiven.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="作者：哈里叔叔链接：https:&#x2F;&#x2F;www.zhihu.com&#x2F;question&#x2F;52019284&#x2F;answer&#x2F;1476187895来源：知乎著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。 对称性对抗游戏简介对称性对抗游戏是指参与游戏的玩家所拥有的资源、交互方式、受制规则、最终目标是相同或相近的，是一种公平、对称的零和游戏。如《英雄无敌》《文明》《卡坦岛》等游戏。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="文明6地图生成算法">
+<meta property="og:url" content="http://www.igiven.com/unity-2021-01-22-civ-map/index.html">
+<meta property="og:site_name" content="IGiven">
+<meta property="og:description" content="作者：哈里叔叔链接：https:&#x2F;&#x2F;www.zhihu.com&#x2F;question&#x2F;52019284&#x2F;answer&#x2F;1476187895来源：知乎著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。 对称性对抗游戏简介对称性对抗游戏是指参与游戏的玩家所拥有的资源、交互方式、受制规则、最终目标是相同或相近的，是一种公平、对称的零和游戏。如《英雄无敌》《文明》《卡坦岛》等游戏。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2021-01-22-civ-map/v2-9c3f623a46a9e27b84fa3bc74cbc54bd_hd.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2021-01-22-civ-map/v2-9c3f623a46a9e27b84fa3bc74cbc54bd_720w.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2021-01-22-civ-map/v2-c217513044c65234f7773e83f2aefd8f_hd.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2021-01-22-civ-map/v2-c217513044c65234f7773e83f2aefd8f_720w.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2021-01-22-civ-map/v2-af9bc4a5e3c7c7d7d5c674d76a5510e0_hd.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2021-01-22-civ-map/v2-af9bc4a5e3c7c7d7d5c674d76a5510e0_720w.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2021-01-22-civ-map/v2-4a2127dcc15dabf1b2a6da2d5964035d_hd.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2021-01-22-civ-map/v2-4a2127dcc15dabf1b2a6da2d5964035d_720w.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2021-01-22-civ-map/v2-9666e99f436d9863363e73d8148fabc4_hd.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2021-01-22-civ-map/v2-9666e99f436d9863363e73d8148fabc4_720w.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2021-01-22-civ-map/v2-53f678a81cd6969e60c89f5b8c5318a3_hd.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2021-01-22-civ-map/v2-53f678a81cd6969e60c89f5b8c5318a3_720w.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2021-01-22-civ-map/v2-fac9f90ba270e0869f56081434f79a4d_hd.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2021-01-22-civ-map/v2-fac9f90ba270e0869f56081434f79a4d_720w.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2021-01-22-civ-map/v2-3924e3347b5634505b2a19101ddc28f7_hd.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2021-01-22-civ-map/v2-3924e3347b5634505b2a19101ddc28f7_720w.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2021-01-22-civ-map/v2-36f553af401b6bddf8238a387674559b_hd.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2021-01-22-civ-map/v2-36f553af401b6bddf8238a387674559b_720w.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2021-01-22-civ-map/v2-cbd869e4e4aaf2271e96a91adc50208e_hd.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2021-01-22-civ-map/v2-cbd869e4e4aaf2271e96a91adc50208e_720w.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2021-01-22-civ-map/v2-aff4ede9c673351500855f48cadcb4f0_hd.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2021-01-22-civ-map/v2-aff4ede9c673351500855f48cadcb4f0_720w.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2021-01-22-civ-map/v2-17df5c19a246e5bbbef3fa428646a3e8_hd.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2021-01-22-civ-map/v2-17df5c19a246e5bbbef3fa428646a3e8_720w.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2021-01-22-civ-map/v2-32e30c53111a6cc563aa0e1a819f18e3_hd.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2021-01-22-civ-map/v2-32e30c53111a6cc563aa0e1a819f18e3_720w.jpg">
+<meta property="article:published_time" content="2021-01-22T00:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-26T08:36:17.950Z">
+<meta property="article:author" content="zhepama">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="游戏">
+<meta property="article:tag" content="GitHub">
+<meta property="article:tag" content="Unity">
+<meta property="article:tag" content="UNITY">
+<meta property="article:tag" content="地图">
+<meta property="article:tag" content="游戏开发">
+<meta property="article:tag" content="JS">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.igiven.com/assets/images/2021-01-22-civ-map/v2-9c3f623a46a9e27b84fa3bc74cbc54bd_hd.jpg">
+
+<link rel="canonical" href="http://www.igiven.com/unity-2021-01-22-civ-map/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>文明6地图生成算法 | IGiven</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="IGiven" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="IGiven" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">IGiven</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">李九仙的博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">139</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">32</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-留言">
+
+    <a href="/guestbook/" rel="section"><i class="fa fa-sticky-note fa-fw"></i>留言</a>
+
+  </li>
+        <li class="menu-item menu-item-rss">
+
+    <a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/unity-2021-01-22-civ-map/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+      <meta itemprop="name" content="zhepama">
+      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="IGiven">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          文明6地图生成算法<a href="https://github.com/zhepama/igiven.github.io/edit/master/source/_posts/unity/2021-01-22-civ-map.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil-alt"></i></a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-01-22 08:00:00" itemprop="dateCreated datePublished" datetime="2021-01-22T08:00:00+08:00">2021-01-22</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 16:36:17" itemprop="dateModified" datetime="2021-06-26T16:36:17+08:00">2021-06-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/unity/" itemprop="url" rel="index"><span itemprop="name">unity</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>作者：哈里叔叔<br>链接：<a href="https://www.zhihu.com/question/52019284/answer/1476187895" target="_blank" rel="noopener">https://www.zhihu.com/question/52019284/answer/1476187895</a><br>来源：知乎<br>著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</p>
+<h3 id="对称性对抗游戏简介"><a href="#对称性对抗游戏简介" class="headerlink" title="对称性对抗游戏简介"></a>对称性对抗游戏简介</h3><p>对称性对抗游戏是指参与游戏的玩家所拥有的资源、交互方式、受制规则、最终目标是相同或相近的，是一种公平、对称的零和游戏。如《英雄无敌》《文明》《卡坦岛》等游戏。</p>
+<p>我们参考文明的4X要素<a href="#ref_1">[1]</a>搭建了一个多人回合制战略游戏，如下图所示：地图开始被“战争迷雾”所覆盖。玩家必须派遣探险者进入这片迷雾中，以揭露要扩张的土地，要开发的资源以及要消灭的对手。</p>
+<p><img src="../../assets/images/2021-01-22-civ-map/v2-9c3f623a46a9e27b84fa3bc74cbc54bd_hd.jpg" alt="img">)<img src="../../assets/images/2021-01-22-civ-map/v2-9c3f623a46a9e27b84fa3bc74cbc54bd_720w.jpg" alt="img"></p>
+<h3 id="地图的平衡性指标"><a href="#地图的平衡性指标" class="headerlink" title="地图的平衡性指标"></a>地图的平衡性指标</h3><p>我们参考<a href="#ref_2">[2]</a><a href="#ref_3">[3]</a>两篇参考文献制定出评估对称性对抗游戏地图平衡性的两点指标。</p>
+<p><strong>1. 战略特征（Strategic Feature）</strong></p>
+<p>战略特征是指玩家在游戏中可以利用的战略资源。 战略特征的平衡是指每一名玩家在一定时间内获得基本相同的资源（包括类型和数量）。</p>
+<p>下面两张图显示了两名玩家战略特征不平衡的情况，蓝色玩家初始时可以获得更多的矿产资源，而黄色玩家的出生点附近几乎没有矿产资源，这会导致游戏初期黄色玩家的发展受限。</p>
+<p><img src="../../assets/images/2021-01-22-civ-map/v2-c217513044c65234f7773e83f2aefd8f_hd.jpg" alt="img">)<img src="../../assets/images/2021-01-22-civ-map/v2-c217513044c65234f7773e83f2aefd8f_720w.jpg" alt="img"></p>
+<p><strong>2. 玩家占位符（player placeholder）</strong></p>
+<p>玩家初始的出生点占位的分布也会影响游戏的平衡性。</p>
+<p>下面两张图显示了玩家初始占位符分布密度不同导致游戏性不平衡的情况。左图的玩家初始分布密集，这会导致这个地区的玩家在游戏前期相互碾压、发展受限；而右图中的黄色玩家在游戏前期缺少竞争，能够更好地发展自身建设。</p>
+<p><img src="../../assets/images/2021-01-22-civ-map/v2-af9bc4a5e3c7c7d7d5c674d76a5510e0_hd.jpg" alt="img">)<img src="../../assets/images/2021-01-22-civ-map/v2-af9bc4a5e3c7c7d7d5c674d76a5510e0_720w.jpg" alt="img"></p>
+<p>除了以上两点对游戏平衡性的影响之外，战略游戏地图的随机地图还要考虑到：地图的美观性、根据玩家的偏好定制参数、生成地图的效率等要求。</p>
+<h3 id="地图的生成过程"><a href="#地图的生成过程" class="headerlink" title="地图的生成过程"></a>地图的生成过程</h3><p><strong>1. 根据玩家的偏好定制地图参数</strong></p>
+<p>在新建游戏之前，我们会让玩家根据自己的喜好定制地图参数，包括地图的尺寸、玩家的总数量、地图的类型（盘古大陆、大洲、海岛群）、水体比例、植被比例、岩石比例与资源的比例等。</p>
+<p><img src="../../assets/images/2021-01-22-civ-map/v2-4a2127dcc15dabf1b2a6da2d5964035d_hd.jpg" alt="img">)<img src="../../assets/images/2021-01-22-civ-map/v2-4a2127dcc15dabf1b2a6da2d5964035d_720w.jpg" alt="img"></p>
+<p><strong>2. 生成地图的轮廓：柏林噪声</strong></p>
+<p>柏林噪声（Perlin noise）指由Ken Perlin发明的自然噪声生成算法<a href="#ref_4">[4]</a>。在游戏开发领域，柏林噪声可以用于生成波形，起伏不平的材质或者纹理。如下图所示：</p>
+<p><img src="../../assets/images/2021-01-22-civ-map/v2-9666e99f436d9863363e73d8148fabc4_hd.jpg" alt="img">)<img src="../../assets/images/2021-01-22-civ-map/v2-9666e99f436d9863363e73d8148fabc4_720w.jpg" alt="img"></p>
+<p>与椒盐噪声相比，柏林噪声有较好的连续性分布，可以更好的模拟自然界中的地形分布与地表装饰物分布。利用柏林噪声生成自然地图可以参考B站视频：<a href="https://link.zhihu.com/?target=https%3A//www.bilibili.com/video/BV1sJ411e7nt">柏林噪声程序化生成随机地图</a><a href="#ref_5">[5]</a>。</p>
+<p>柏林噪声的生成采用伪随机数的生成方式，相同的“随机数种子”会生成相同的地貌。这也是很多随机地图生成器中会暴露“种子”让玩家根据种子生成地图的原因。如果想跟好朋友分享某个生成结果比较好的地图，只需要共享“种子”字符串，就能在随机地图生成器中还原出所生成的地形，而不需要把整个地图文件保存到本地再分享。</p>
+<p>Unity官方自带生成柏林函数的函数。我们引用了柏林噪声js库来进行地形的实现。我们利用柏林噪声的采样尺度来决定地图的类型是连续的大陆型地图还是离散的大洲型地图；将随机取到的连续噪声均衡化作为地图的高度图，根据用户设置的水体占比来制定海平面高度，最终生成的地形结果如下图所示： </p>
+<p><img src="../../assets/images/2021-01-22-civ-map/v2-53f678a81cd6969e60c89f5b8c5318a3_hd.jpg" alt="img">)<img src="../../assets/images/2021-01-22-civ-map/v2-53f678a81cd6969e60c89f5b8c5318a3_720w.jpg" alt="img"></p>
+<p><strong>3. 玩家出生点的选择：米切尔最佳候选算法</strong></p>
+<p>为了保证每位玩家两两之间的初始分布不会过近，我们在生成游戏地形后，在陆地上对玩家初始占位符进行均匀采样。为了兼顾效果与效率，我们最终选用米切尔最佳候选 算法（best candidate）。</p>
+<p>米切尔最佳候选算法是一种渐进、增量式的均匀采样方法。它每一轮采样都是从多个随机采样点中，保留与之前轮的所有采样点中最小距离最大的点作为本轮的采样结果。更加具体直观的算法解释可以参考:<a href="https://link.zhihu.com/?target=https%3A//bindog.github.io/blog/2014/08/09/visualizing-algorithms/">算法可视化</a><a href="#ref_6">[6]</a>中有关米切尔候选算法的部分</p>
+<p>如下图所示：黑色点是之前轮已经确定的采样点，灰色点是本轮随机采样的候选点，每个候选点都选出与之前轮采样点中距离最近的距离，再从中选出最小距离最大的红色点作为本轮采样的结果。</p>
+<p><img src="../../assets/images/2021-01-22-civ-map/v2-fac9f90ba270e0869f56081434f79a4d_hd.jpg" alt="img">)<img src="../../assets/images/2021-01-22-civ-map/v2-fac9f90ba270e0869f56081434f79a4d_720w.jpg" alt="img"></p>
+<p>利用这种采样方式采样出玩家的初始占位符，可以避免任意两个玩家之间的距离过近导致游戏平衡性被破坏，如下图所示：</p>
+<p><img src="../../assets/images/2021-01-22-civ-map/v2-3924e3347b5634505b2a19101ddc28f7_hd.jpg" alt="img">)<img src="../../assets/images/2021-01-22-civ-map/v2-3924e3347b5634505b2a19101ddc28f7_720w.jpg" alt="img"></p>
+<p><strong>4. 战略资源的分布</strong></p>
+<p>采样出玩家的分布之后，我们将地图单元格分为两种类型：每个玩家占位符附近距离N以内的单元格为玩家区域（Player Zones），不隶属于任何玩家区域的单元格被称为隔离区或自然区（Natural Zones）。</p>
+<p>为了让每名玩家在游戏初始时具有公平的战略特征，我们对每位玩家的玩家区域内定额分配植被、岩石与矿产资源。根据用户设定的植被、岩石与资源占比分别计算出每位玩家区应当分配到的植被、岩石与资源数量，然后在每个玩家区域内不重不漏地采样出相等数量的植被、岩石与资源单元格。</p>
+<p>对于自然区，我们按照玩家设置的参数，采用米切尔候选算法均匀采样每一种资源。这样可以保证每位玩家在游戏初始时能够得到数量一致的战略特征。如下图所示：</p>
+<p><img src="../../assets/images/2021-01-22-civ-map/v2-36f553af401b6bddf8238a387674559b_hd.jpg" alt="img">)<img src="../../assets/images/2021-01-22-civ-map/v2-36f553af401b6bddf8238a387674559b_720w.jpg" alt="img"></p>
+<p><strong>5. 边界情况处理</strong></p>
+<p>用以上方式生成的地图在某些情况下会产生不好的结果，例如当水体比例过低时生成海岛地形，会导致水体不够划分不出海岛地形；当水体比例过高时，会由于陆地单元格分布不均导致出生在不同规模大小的岛屿上的玩家能够得到的战略资源再度失衡。对于这些边界情况，我们利用种子生长与泛洪填充等启发式生成方法生成地图，优先保证地图类型能够满足用户的需求，并尽可能保证水体与各种战略特征的资源逼近用户的设定。以下是我们在水体占比过低与水体占比过高时生成的地图，可以看出在这两种情况下依然能够保证所生成地图的平衡性：</p>
+<p><img src="../../assets/images/2021-01-22-civ-map/v2-cbd869e4e4aaf2271e96a91adc50208e_hd.jpg" alt="img">)<img src="../../assets/images/2021-01-22-civ-map/v2-cbd869e4e4aaf2271e96a91adc50208e_720w.jpg" alt="img"></p>
+<h3 id="生成地图质量的定量评估"><a href="#生成地图质量的定量评估" class="headerlink" title="生成地图质量的定量评估"></a>生成地图质量的定量评估</h3><p>为了判断我们的生成随机地图算法是否具有良好的平衡性指标，我们设计了一套地图自动扩张算法：每个玩家以出生点占位符为种子，轮流从目前领土所毗邻的无人单元格中抽取一个进行占领以扩张势力范围，直到地图中所有的单元格都被有且只有一个玩家占领；然后我们统计每个玩家占领到的资源数量、距离最近的敌人距离，以及每个玩家与多少数量的玩家领土相邻。如下图所示： </p>
+<p><img src="../../assets/images/2021-01-22-civ-map/v2-aff4ede9c673351500855f48cadcb4f0_hd.jpg" alt="img">)<img src="../../assets/images/2021-01-22-civ-map/v2-aff4ede9c673351500855f48cadcb4f0_720w.jpg" alt="img"></p>
+<p>实验组是我们的算法生成的地图，对照组是根据水体与各种资源的比例随机采样地形、随机采样玩家分布得到的地图。如下方左侧是实验组生成的地图，右侧是对照组生成的地图：</p>
+<p><img src="../../assets/images/2021-01-22-civ-map/v2-17df5c19a246e5bbbef3fa428646a3e8_hd.jpg" alt="img">)<img src="../../assets/images/2021-01-22-civ-map/v2-17df5c19a246e5bbbef3fa428646a3e8_720w.jpg" alt="img"></p>
+<p>实验组与对照组各生成100次地图，统计每个玩家与其他势力最小距离的均值与方差、扩张完成后各资源占有量的均值与方差以及每位玩家潜在冲突势力的均值与方差，统计的结果如下所示：</p>
+<p><img src="../../assets/images/2021-01-22-civ-map/v2-32e30c53111a6cc563aa0e1a819f18e3_hd.jpg" alt="img">)<img src="../../assets/images/2021-01-22-civ-map/v2-32e30c53111a6cc563aa0e1a819f18e3_720w.jpg" alt="img"></p>
+<p>通过定量的统计结果可以看出，我们的方法生成的地图，玩家之间有更大的平均极小距离，这说明每位玩家的出生点占位符设置更加平衡；各种资源的分布方差均比对照组小，说明我们的战略特征分配与朴素的随机生成的地图相比更加均衡。</p>
+<p>综上所述，我们的地图生成结果能够保证对称性多人对抗战略游戏的平衡性。</p>
+<h3 id=""><a href="#" class="headerlink" title=""></a></h3>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C</a>
+              <a href="/tags/%E6%B8%B8%E6%88%8F/" rel="tag"># 游戏</a>
+              <a href="/tags/GitHub/" rel="tag"># GitHub</a>
+              <a href="/tags/Unity/" rel="tag"># Unity</a>
+              <a href="/tags/UNITY/" rel="tag"># UNITY</a>
+              <a href="/tags/%E5%9C%B0%E5%9B%BE/" rel="tag"># 地图</a>
+              <a href="/tags/%E6%B8%B8%E6%88%8F%E5%BC%80%E5%8F%91/" rel="tag"># 游戏开发</a>
+              <a href="/tags/JS/" rel="tag"># JS</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/unity-2021-01-21-wave-collapse-function/" rel="prev" title="波函数坍塌算法生成地图">
+      <i class="fa fa-chevron-left"></i> 波函数坍塌算法生成地图
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/unity-2021-01-23-roguelike-map/" rel="next" title="roguelike地牢生成算法">
+      roguelike地牢生成算法 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  
+  <div class="comments">
+  <script src="https://utteranc.es/client.js" repo="zhepama/igiven.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async></script>
+  </div>
+  
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#对称性对抗游戏简介"><span class="nav-number">1.</span> <span class="nav-text">对称性对抗游戏简介</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#地图的平衡性指标"><span class="nav-number">2.</span> <span class="nav-text">地图的平衡性指标</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#地图的生成过程"><span class="nav-number">3.</span> <span class="nav-text">地图的生成过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#生成地图质量的定量评估"><span class="nav-number">4.</span> <span class="nav-text">生成地图质量的定量评估</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#"><span class="nav-number">5.</span> <span class="nav-text"></span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhepama"
+      src="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+  <p class="site-author-name" itemprop="name">zhepama</p>
+  <div class="site-description" itemprop="description">一个不专业的程序员,写着专业的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">139</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhepama" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhepama" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhepama@gmail.com" title="E-Mail → mailto:zhepama@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.godgodgame.com/" title="http:&#x2F;&#x2F;www.godgodgame.com" rel="noopener" target="_blank">GODGODGAME</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.igiven.com/" title="https:&#x2F;&#x2F;www.igiven.com">IGIVEN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhepama.github.io/C-Sharp-Playground/zh/" title="https:&#x2F;&#x2F;zhepama.github.io&#x2F;C-Sharp-Playground&#x2F;zh&#x2F;" rel="noopener" target="_blank">数据结构与算法</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhepama</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.igiven.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="unity是运行在mono下的,il2cpp有自己的运行时,il2cpp不是运行在mono下的不是mono的aot  mono的gc和.net的gc是不同的,il2cpp运行时实现了自己的垃圾回收(Boehm-Demers-Weiser garbage collector)  编译和运行时是两个阶段,可以用csc.exe编译然后运行在mono上, .NET 4.x可以使用就是这个原理 Note">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Unity的il2cpp">
+<meta property="og:url" content="http://www.igiven.com/unity-2019-06-20-unity-il2cpp-debugger/index.html">
+<meta property="og:site_name" content="IGiven">
+<meta property="og:description" content="unity是运行在mono下的,il2cpp有自己的运行时,il2cpp不是运行在mono下的不是mono的aot  mono的gc和.net的gc是不同的,il2cpp运行时实现了自己的垃圾回收(Boehm-Demers-Weiser garbage collector)  编译和运行时是两个阶段,可以用csc.exe编译然后运行在mono上, .NET 4.x可以使用就是这个原理 Note">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-06-20-unity-il2cpp-debugger/il2cpp-toolchain-smaller.png">
+<meta property="article:published_time" content="2019-06-20T00:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-26T08:36:17.946Z">
+<meta property="article:author" content="zhepama">
+<meta property="article:tag" content="Win">
+<meta property="article:tag" content="windows">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="C#">
+<meta property="article:tag" content="游戏">
+<meta property="article:tag" content="Unity">
+<meta property="article:tag" content="UNITY">
+<meta property="article:tag" content="JS">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.igiven.com/assets/images/2019-06-20-unity-il2cpp-debugger/il2cpp-toolchain-smaller.png">
+
+<link rel="canonical" href="http://www.igiven.com/unity-2019-06-20-unity-il2cpp-debugger/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Unity的il2cpp | IGiven</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="IGiven" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="IGiven" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">IGiven</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">李九仙的博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">139</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">32</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-留言">
+
+    <a href="/guestbook/" rel="section"><i class="fa fa-sticky-note fa-fw"></i>留言</a>
+
+  </li>
+        <li class="menu-item menu-item-rss">
+
+    <a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/unity-2019-06-20-unity-il2cpp-debugger/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+      <meta itemprop="name" content="zhepama">
+      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="IGiven">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Unity的il2cpp<a href="https://github.com/zhepama/igiven.github.io/edit/master/source/_posts/unity/2019-06-20-unity-il2cpp-debugger.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil-alt"></i></a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-06-20 08:00:00" itemprop="dateCreated datePublished" datetime="2019-06-20T08:00:00+08:00">2019-06-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 16:36:17" itemprop="dateModified" datetime="2021-06-26T16:36:17+08:00">2021-06-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/unity/" itemprop="url" rel="index"><span itemprop="name">unity</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <ol>
+<li><p>unity是运行在mono下的,il2cpp有自己的运行时,il2cpp不是运行在mono下的不是mono的aot</p>
+</li>
+<li><p>mono的gc和.net的gc是不同的,il2cpp运行时实现了自己的垃圾回收(Boehm-Demers-Weiser garbage collector)</p>
+</li>
+<li><p>编译和运行时是两个阶段,可以用csc.exe编译然后运行在mono上, .NET 4.x可以使用就是这个原理</p>
+<p>Note that the <strong>.rsp</strong> file needs to match the compiler being invoked. For example:</p>
+<ul>
+<li>when targeting the .NET 3.5 Equivalent (deprecated) scripting runtime version, <strong>mcs</strong> is used with <code>mcs.rsp</code>, and</li>
+<li>when targeting the .NET 4.x Eqivalent scripting runtime version compiler, <strong>csc</strong> is used with <code>csc.rsp</code>.</li>
+</ul>
+</li>
+</ol>
+<p>大约在一年以前，我们写了一篇博客讨论Unity中脚本将来会是个什么样子，在那篇博客中我们提到了崭新的IL2CPP后端，并许诺其会为Unity带来更高效和更适合于各个平台的虚拟机。在2015年的一月份，我们正式发布了第一个使用IL2CPP的平台：iOS 64-bit。而随着Unity 5的发布，又带给大家另一个使用IL2CPP的平台：WebGL。感谢我们社区中用户的大量宝贵的反馈，我们在接下来的时间里根据这些反馈得以更新IL2CPP，发布补丁版本，从而持续的改进IL2CPP的编译器和运行时库。</p>
+<p>我们没有停止改进IL2CPP的打算，但是在目前这个时间点上，我们觉得可以回过头来抽出点时间告诉大家一些IL2CPP的内部工作机制。在接下来的几个月的时间里，我们打算对以下话题（或者还有其他未列出的话题）进行讨论，来做一个IL2CPP深入讲解系列。目前准备讨论的话题有：</p>
+<p>1.基础 - 工具链和命令行参数（本篇博文）<br> 2.IL2CPP生成代码介绍<br> 3.IL2CPP生成代码调试小窍门<br> 4.方法调用介绍（一般方法调用和虚方法调用等）</p>
+<ol>
+<li>通用代码共享的实现<br> 6.P/invoke(Platform Invocation Service)对于类型（types）和方法（methods）的封装<br> 7.垃圾回收器的集成<br> 8.测试框架（Testing frameworks）及其使用</li>
+</ol>
+<p>为了能让这个系列的讨论成为可能，我们会涉及到一些将来肯定会进行改动的IL2CPP的实现细节。但这也没有关系，通过这些讨论，我们希望能给大家提供一些有用和有趣的信息。</p>
+<h2 id="什么是IL2CPP？"><a href="#什么是IL2CPP？" class="headerlink" title="什么是IL2CPP？"></a>什么是IL2CPP？</h2><p>从技术层面上来说，我们说的IL2CPP包含了两部分：一个进行 预先编译（译注：ahead-of-time，又叫AOT，以下一律使用AOT缩写）的编译器。</p>
+<h2 id="一个支持虚拟机的运行时库"><a href="#一个支持虚拟机的运行时库" class="headerlink" title="一个支持虚拟机的运行时库"></a>一个支持虚拟机的运行时库</h2><p>AOT编译器将由.NET 输出的中间语言(IL)代码生成为C++代码。运行时库则提供诸如垃圾回收，与平台无关的线程，IO以及内部调用（C++原生代码直接访问托管代码结构）这样的服务和抽象层。</p>
+<h2 id="AOT编译器"><a href="#AOT编译器" class="headerlink" title="AOT编译器"></a>AOT编译器</h2><p>IL2CPP AOT编译器实际的执行文件是il2cpp.exe。在Windows平台你可以在Unity安装路径的Editor\Data\il2cpp目录下找到。对于OSX平台，它位于Unity安装路径的Contents/Frameworks/il2cpp/build目录内。 il2cpp.exe这个工具是一个托管代码可执行文件，其完全由C#写成。在开发IL2CPP的过程中，我们同时使用.NET和Mono编译器对其进行编译。</p>
+<p>il2cpp 接受来自Unity自带的或者由Mono编译器产生的托管程序集，将这些程序集转换成C++代码。这些转换出的C++代码最终由部署目标平台上的C++编译器进行编译。</p>
+<p>你可以参照下图理解IL2CPP工具链的作用：</p>
+<p><img src="../../assets/images/2019-06-20-unity-il2cpp-debugger/il2cpp-toolchain-smaller.png" alt="il2cpp toolchain smaller"> </p>
+<h2 id="运行时库"><a href="#运行时库" class="headerlink" title="运行时库"></a>运行时库</h2><p>IL2CPP的另外一个部分就是对虚拟机提供支持的运行时库。我们基本上是用C++代码来实现整个运行时库的（好吧，其实里面还是有一些和平台相关的代码使用了程序集，这个只要你知我知便好，不要告诉别人 ）。我们把运行时库称之为libli2cpp，它是作为一个静态库被连接到最终的游戏可执行文件中。这么做的一个主要的好处是可以使得整个IL2CPP技术是简单并且是可移植的。</p>
+<p>你能通过查看随Unity一起发布的libil2cpp头文件来窥探其代码组织方式（Windows平台，头文件在Editor\Data\PlaybackEngines\webglsupport\BuildTools\Libraries\libil2cpp\include目录中。OSX平台，头文件在Contents/Frameworks/il2cpp/libil2cpp目录中）。举个例子，由il2cpp产生的C++代码和libil2cpp之间的接口API，存在于codegen/il2cpp-codegen.h这个文件中。</p>
+<p>运行时的另外一个重要的部分，就是垃圾收集器。在Unity 5中，我们使用libgc垃圾收集器。它是一个典型的贝姆垃圾收集器（Boehm-Demers-Weiser garbage collector）。（译注：相对使用保守垃圾回收策略）。然而我们的libil2cpp被设计成可以方便使用其他垃圾回收器。因此我们现在也在研究集成微软开源的垃圾回收器（Microsoft GC）。对于垃圾回收器这一点，我们会在后续的一篇中专门的讨论，这里就不多说了。</p>
+<h2 id="il2cpp是如何执行的？"><a href="#il2cpp是如何执行的？" class="headerlink" title="il2cpp是如何执行的？"></a>il2cpp是如何执行的？</h2><p>让我们从一个简单的例子入手。这里使用Unity的版本是5.0.1，在Windows环境并且建立一个全新的空项目。然后创建一个带MonoBehaviour的脚本文件，将其作为组件加入到Main Camera上。代码也是非常的简单，输出Hello World：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">using</span> UnityEngine;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HelloWorld</span> :</span> MonoBehaviour &#123;</span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">Start</span> <span class="params">()</span> </span>&#123;</span><br><span class="line">    Debug.Log(<span class="string">"Hello, IL2CPP!"</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当我切换到WebGL平台进行项目生成的时候，我们可以用Process Explorer来对il2cpp的命令行进行观察，得到以下内容：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&quot;C:\Program Files\Unity\Editor\Data\MonoBleedingEdge\bin\mono.exe&quot; &quot;C:\Program Files\Unity\Editor\Data\il2cpp&#x2F;il2cpp.exe&quot; --copy-level&#x3D;None --enable-generic-sharing --enable-unity-event-support --output-format&#x3D;Compact --extra-types.file&#x3D;&quot;C:\Program Files\Unity\Editor\Data\il2cpp\il2cpp_default_extra_types.txt&quot; &quot;C:\Users\Josh Peterson\Documents\IL2CPP Blog Example\Temp\StagingArea\Data\Managed\Assembly-CSharp.dll&quot; &quot;C:\Users\Josh Peterson\Documents\IL2CPP Blog Example\Temp\StagingArea\Data\Managed\UnityEngine.UI.dll&quot; &quot;C:\Users\Josh Peterson\Documents\IL2CPP Blog Example\Temp\StagingArea\Data\il2cppOutput&quot;</span><br></pre></td></tr></table></figure>
+
+<p>嗯，这个真是老太太的裹脚布 - 又臭又长……，所以让我们把命令分拆一下，Unity运行的是这个可执行文件：</p>
+<figure class="highlight plain"><figcaption><span>Files\Unity\Editor\Data\MonoBleedingEdge\bin\mono.exe"```</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">下一个参数是il2cpp.exe工具本身：</span><br><span class="line">&#96;&#96;&#96; &quot;C:\Program Files\Unity\Editor\Data\il2cpp&#x2F;il2cpp.exe&quot;</span><br></pre></td></tr></table></figure>
+
+<p>请注意剩下的参数其实都是传递给il2cpp.exe的而不是mono.exe。上面的例子里传递了5个参数给il2cpp.exe：<br> <code>–copy-level=None</code></p>
+<p>指明il2cpp.exe不对生成的C++文件进行copy操作<br><code>–enable-generic-sharing</code><br> 告诉IL2CPP如果可以，对通用方法进行共享。这个可以减少代码并降低最后二进制文件的尺寸</p>
+<p><code>–enable-unity-event-support</code><br> 确保和Unity events相关的，通过反射机制来运作的代码，能够正确生成。</p>
+<p><code>–output-format=Compact</code><br> 在生成C++代码时为里面的类型和方法使用更短的名字。这会使得C++代码难以阅读，因为原来在IL中的名字被更短的取代了。但好处是可以让C++编译器运行的更快。</p>
+<p><code>–extra-types.file=”C:\Program Files\Unity\Editor\Data\il2cpp\il2cpp_default_extra_types.txt”</code></p>
+<p>使用默认的（也是空的）额外类型文件。il2cpp.exe会将在这个文件中出现的基本类型或者数组类型看作是在运行时生成的而不是一开始出现在IL代码中来对待。</p>
+<p>需要注意的是这些参数可能会在以后的Unity版本中有所变化。我们现在还没有稳定到把il2cpp.exe的命令行参数整理固定下来的阶段。</p>
+<p>最后，我们有由两个文件组成的一个列表和一个目录在这个长长的命令行中：</p>
+<figure class="highlight plain"><figcaption><span>Peterson\Documents\IL2CPP Blog Example\Temp\StagingArea\Data\Managed\Assembly-CSharp.dll”</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">“C:\Users\Josh Peterson\Documents\IL2CPP Blog Example\Temp\StagingArea\Data\Managed\UnityEngine.UI.dll”</span><br><span class="line"></span><br><span class="line">“C:\Users\Josh Peterson\Documents\IL2CPP Blog Example\Temp\StagingArea\Data\il2cppOutput”</span><br></pre></td></tr></table></figure>
+
+<p>il2cpp.exe工具可以接收一个由IL程序集组成的列表。在上面这个例子中，程序集包含了项目中的简单脚本程序集：Assembly-CSharp.dll，和GUI程序集：UnityEngine.UI.dll。大家可能会注意到这里面明显少了什么：UnityEngine.dll到哪去了？系统底层的mscorlib.dll也不见了踪影。实际上，il2cpp.exe会在内部自动引用这些程序集。你当然也可以把这些放入列表中，但他们不是必须的。你只需要提及那些根程序集（那些没有被其他任何程序集引用到的程序集），剩下的il2cpp.exe会根据引用关系自动加入。</p>
+<p>裹脚布的最后一块是一个目录，il2cpp.exe会将最终的C++代码生成到这里。如果你还保持着一颗好奇的心，可以看看这个目录中产生的文件。这些文件是我们下一个讨论的主题。在你审视这些代码前，可以考虑将WebGL构建设置中的“Development Player”选项勾上。这么做会移除–output-format=Compact命令行参数从而让C++代码中的类型和方法的名字更加可读。</p>
+<p>尝试在WebGL或者iOS构建设置中进行些改变。这样你会发现传递给il2cpp.exe的参数也会相应的发生变化。例如，将“Enable Exceptions” 设置成“Full” 会将–emit-null-checks，–enable-stacktrace，和 –enable-array-bounds-check这三个参数加入il2cpp.exe命令行。</p>
+<h2 id="IL2CPP没做的事情"><a href="#IL2CPP没做的事情" class="headerlink" title="IL2CPP没做的事情"></a>IL2CPP没做的事情</h2><p>我想指出IL2CPP有一向挑战我们没有接受,而且我们也高兴我们忽略了它。我们没有尝试重写整个C#标准库。当你使用IL2CPP后端构建Unity项目的时候，所有在mscorlib.dll，System.dll等中的C#标准库和原来使用Mono编译时候的一模一样。</p>
+<p>我们可以依赖健壮的且久经考验的C#标准库，所以当处理有关IL2CPP的bug的时候，我们可以很肯定的说问题出在AOT编译器或者运行时库这两个地方而不是在其他地方。</p>
+<h2 id="我们如何开发，测试，发布IL2CPP"><a href="#我们如何开发，测试，发布IL2CPP" class="headerlink" title="我们如何开发，测试，发布IL2CPP"></a>我们如何开发，测试，发布IL2CPP</h2><p>自从我们在一月份的4.6.1 p5版本中首次引入IL2CPP以来，我们已经连续发布了6个Unity版本和7个补丁（Unity版本号跨越4.6和5.0）。在这些发布中我们修正了超过100个bug。</p>
+<p>为了确保持续的改进得以实施，我们内部只保留一份最新的开发代码在主干分之（trunk branch）上，在发布各个版本之前，我们会将IL2CPP的改动挂到一个特定的分之下，然后进行测试，确保所有的bug已经正确的修正了。我们的QA和维护工作组为此付出了惊人的努力才得以保证发布版本的快速迭代。（译注：感觉是版本管理的标准的开发流程）</p>
+<p>提供高质量Bug的用户社区被证明是一个无价之宝。我们非常感谢用户的反馈来帮助我们改进IL2CPP，并且希望这类反馈越多越好。</p>
+<p>我们的IL2CPP研发组有很强烈的“测试优先”意识。我们时常使用“Test Driven Design”方法，在没有进行足够全面的测试的情况下，几乎不会进行代码的合并工作。这个策略用在IL2CPP项目上非常的棒。我们现在所面对的大部分bug并不是意想不到的行为产生的，而是由意想不到的特殊情况产生的。（例如在一个32位的索引数组中使用了64位的指针从而导致C++编译器失败）面对这种类型的bug我们可以快速的并且很自信的进行修正。</p>
+<p>有了社区的帮助，我们非常努力的让IL2CPP既快又稳定。顺便说一句，如果你对我刚才说的这些有兴趣，我们正在招人（嗯…..我只是这么一说）</p>
+<h2 id="好戏连台"><a href="#好戏连台" class="headerlink" title="好戏连台"></a>好戏连台</h2><p>关于IL2CPP我们还有很多可以说的。下一次我们会深入到il2cpp.exe代码生成的细节中。看看对于C++编译器来说，由il2cpp.exe生成的代码会是个什么样子。</p>
+<h1 id="IL2CPP-脚本限制"><a href="#IL2CPP-脚本限制" class="headerlink" title="IL2CPP 脚本限制"></a>IL2CPP 脚本限制</h1><h2 id="System-Reflection-Emit"><a href="#System-Reflection-Emit" class="headerlink" title="System.Reflection.Emit"></a>System.Reflection.Emit</h2><p>AOT 平台无法实现 <code>System.Reflection.Emit</code> 命名空间中的任何方法。<code>System.Reflection</code> 的其余部分是可接受的，只要编译器可以推断通过反射使用的代码需要在运行时存在。</p>
+<h2 id="序列化"><a href="#序列化" class="headerlink" title="序列化"></a>序列化</h2><p>AOT 平台可能会由于使用了反射而遇到序列化和反序列化问题。如果仅通过反射将某个类型或方法作为序列化或反序列化的一部分使用，则 AOT 编译器无法检测到需要为该类型或方法生成代码。</p>
+<p>这是我们常遇到的问题..一个是scriptobject的asset,一个是网络协议都是序列化数据</p>
+<ol>
+<li>odin,最佳模式新建一个aot场景,将需要的scriptobject放在该场景.或者声明序列化字段</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">public class OdinAOTSetting : Sirenix.OdinInspector.SerializedMonoBehaviour</span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">    public List&lt;ScriptableObject&gt; Configs;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    [NonSerialized, OdinSerialize]</span><br><span class="line">    public UnityEngine.Color Color;</span><br><span class="line"></span><br><span class="line">    [NonSerialized, OdinSerialize]</span><br><span class="line">    public CityMapLandType CityMapLandType;</span><br><span class="line"></span><br><span class="line">    [NonSerialized, OdinSerialize]</span><br><span class="line">    Dictionary&lt;int, InventoryItemConfig&gt; InventoryItemConfigs;</span><br><span class="line">    [NonSerialized, OdinSerialize]</span><br><span class="line">    Dictionary&lt;int, LootTableConfig&gt; LootTableConfigs;</span><br><span class="line">    [NonSerialized, OdinSerialize]</span><br><span class="line">    Dictionary&lt;int, MerchantConfig&gt; MerchantConfigs;</span><br><span class="line">    [NonSerialized, OdinSerialize]</span><br><span class="line">    Dictionary&lt;int, LandConfig&gt; LandConfigs;</span><br><span class="line">    [NonSerialized, OdinSerialize]</span><br><span class="line">    Dictionary&lt;int, MapConfig&gt; MapConfigs;</span><br><span class="line">    [NonSerialized, OdinSerialize]</span><br><span class="line">    Dictionary&lt;long, NPCConfig&gt; NPCConfigs;</span><br><span class="line">    [NonSerialized, OdinSerialize]</span><br><span class="line">    Dictionary&lt;long, QuestConfig&gt; QuestConfigs;</span><br><span class="line">    [NonSerialized, OdinSerialize]</span><br><span class="line">    Dictionary&lt;string, RedeemCodeConfig&gt; RedeemCodeConfigs;</span><br><span class="line">    [NonSerialized, OdinSerialize]</span><br><span class="line">    Dictionary&lt;int, BuffConfig&gt; BuffConfigs;</span><br><span class="line">    [NonSerialized, OdinSerialize]</span><br><span class="line">    Dictionary&lt;int, ProjectileConfig&gt; ProjectileConfigs;</span><br><span class="line">    [NonSerialized, OdinSerialize]</span><br><span class="line">    Dictionary&lt;int, SkillConfig&gt; SkillConfigs;</span><br><span class="line">    [NonSerialized, OdinSerialize]</span><br><span class="line">    Dictionary&lt;string, AttrAsset&gt; AttrAssets;</span><br><span class="line">    [NonSerialized, OdinSerialize]</span><br><span class="line">    Dictionary&lt;string, StatAsset&gt; StatAssets;</span><br><span class="line">    [NonSerialized, OdinSerialize]</span><br><span class="line">    Dictionary&lt;string, StatusEffectAsset&gt; StatusEffectAssets;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li><p>网络协议Json,使用字段,而不是使用属性(get,set),il2cpp 在运行时会剥离去除Get属性，</p>
+</li>
+<li><p>网络协议protobuf,虽然protobuf本身是支持Dictionary的,但是aot就不能使用了..未找到解决办法 ,用class代替</p>
+</li>
+</ol>
+<h2 id="泛型"><a href="#泛型" class="headerlink" title="泛型"></a>泛型</h2><p>每个泛型实例实际上都是一个独立的类型，<code>List&lt;A&gt;</code> 和 <code>List&lt;B&gt;</code>是两个完全没有关系的类型，这意味着，如果在运行时无法通过JIT来创建新类型的话，代码中没有直接使用过的泛型实例都会在运行时出现问题。</p>
+<p>在ILRuntime中解决这个问题有两种方式，一个是使用CLR绑定，把用到的泛型实例都进行CLR绑定。另外一个方式是在Unity主工程中，建立一个类，然后在里面定义用到的那些泛型实例的public变量。这两种方式都可以告诉IL2CPP保留这个类型的代码供运行中使用。</p>
+<p>因此建议大家在实际开发中，尽量使用热更DLL内部的类作为泛型参数，因为DLL内部的类型都是ILTypeInstance，只需处理一个就行了。此外如果泛型模版类就是在DLL里定义的的话，那就完全不需要进行任何处理。</p>
+<h3 id="泛型方法"><a href="#泛型方法" class="headerlink" title="泛型方法"></a>泛型方法</h3><p>跟泛型实例一样，<code>foo.Bar&lt;TypeA&gt;</code> 和<code>foo.Bar&lt;TypeB&gt;</code>是两个完全不同的方法，需要在主工程中显式调用过，IL2CPP才能够完整保留，因此需要尽量避免在热更DLL中调用Unity主工程的泛型方法。如果在iOS上实际运行遇到报错，可以尝试在Unity的主工程中随便写一个static的方法，然后对这个泛型方法调用一下即可，这个方法无需被调用，只是用来告诉IL2CPP我们需要这个方法</p>
+<h2 id="AnimatorController-等"><a href="#AnimatorController-等" class="headerlink" title="AnimatorController 等"></a>AnimatorController 等</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">错误信息#</span><br><span class="line">Could not produce class with ID #</span><br><span class="line">Could not produce class with ID XXX.</span><br><span class="line">This could be caused by a class being stripped from the build even though it is needed. Try disabling &#39;Strip Engine Code&#39; in Player Settings.:&lt;LoadWWWIEnumerator&gt;c__Iterator99:MoveNext()</span><br></pre></td></tr></table></figure>
+
+<p>如果提示的ID的是Editor的，比如 AnimatorController(ID 91)属于Editor包里的，不能用link.xm加回来，可以在<strong>Resource</strong>下建一个空的prefab,在上面挂一个AnimatorController，打包时留下这个prefab就可以确保这个类不被strip掉了。</p>
+<p><strong>参考 :</strong></p>
+<ul>
+<li><a href="https://forum.unity.com/threads/could-not-produce-class-with-id-91-ios.267548/" target="_blank" rel="noopener">Could not produce class with ID 91 - iOS - Unity Forum</a></li>
+<li><a href="https://docs.unity3d.com/cn/2020.2/Manual/ClassIDReference.html" target="_blank" rel="noopener">YAML 类 ID 参考 - Unity 手册 (unity3d.com)</a></li>
+</ul>
+<h2 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h2><ul>
+<li>不要用dynamic关键字</li>
+<li>没有使用的字段都不会被编译..</li>
+</ul>
+<h1 id="托管代码剥离"><a href="#托管代码剥离" class="headerlink" title="托管代码剥离"></a>托管代码剥离</h1><p>IL2CPP在打包时会自动对Unity工程的DLL进行裁剪，将代码中没有引用到的类型裁剪掉，以达到减小发布后ipa包的尺寸的目的。然而在实际使用过程中，很多类型有可能会被意外剪裁掉，造成运行时抛出找不到某个类型的异常。特别是通过反射等方式在编译时无法得知的函数调用，在运行时都很有可能遇到问题。</p>
+<p>Unity提供了一个方式来告诉Unity引擎，哪些类型是不能够被剪裁掉的。具体做法就是在Unity工程的Assets目录中建立一个叫link.xml的XML文件，然后按照下面的格式指定你需要保留的类型：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">linker</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">assembly</span> <span class="attr">fullname</span>=<span class="string">"UnityEngine"</span> <span class="attr">preserve</span>=<span class="string">"all"</span>/&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">assembly</span> <span class="attr">fullname</span>=<span class="string">"Assembly-CSharp"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">namespace</span> <span class="attr">fullname</span>=<span class="string">"MyGame.Utils"</span> <span class="attr">preserve</span>=<span class="string">"all"</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">type</span> <span class="attr">fullname</span>=<span class="string">"MyGame.SomeClass"</span> <span class="attr">preserve</span>=<span class="string">"all"</span>/&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">assembly</span>&gt;</span>  </span><br><span class="line"><span class="tag">&lt;/<span class="name">linker</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="IL2CPP限制"><a href="#IL2CPP限制" class="headerlink" title="IL2CPP限制"></a>IL2CPP限制</h2><p>将游戏导出到 iOS 等平台时，Unity 将使用其 IL2CPP 引擎将 IL“转换”为 C++ 代码，然后使用目标平台的本机编译器进行编译。 在此方案中，有几个不支持的 .NET 功能，例如反射的部分内容和使用 <code>dynamic</code> 关键字。 虽然可在自己的代码中使用这些功能，但使用第三方 DLL 和 SDK 时可能会遇到问题，这些 DLL 和 SDK 并非使用 Unity 和 IL2CPP 编写。 有关此主题的详细信息，请参阅 Unity 站点上的<a href="https://docs.unity3d.com/Manual/ScriptingRestrictions.html" target="_blank" rel="noopener">脚本限制</a>文档。</p>
+<p>此外，如之前 Json.NET 示例中所述，Unity 将尝试在 IL2CPP 导出过程中裁剪掉未使用的代码。 虽然这通常不是问题，但对于使用反射的库，它可能会意外地删除在导出时无法确定是否被调用而在运行时可能被调用的属性或方法。 若要解决这些问题，请添加一个 link.xml 文件到项目中，该文件中包含的程序集和命名空间列表不会执行裁剪过程。 有关完整详细信息，请参阅<a href="https://docs.unity3d.com/Manual/IL2CPP-BytecodeStripping.html" target="_blank" rel="noopener">有关字节码裁剪的 Unity 文档</a>。</p>
+<h2 id="编译速度优化"><a href="#编译速度优化" class="headerlink" title="编译速度优化"></a>编译速度优化</h2><ol>
+<li>增量编译</li>
+<li>关闭实时保护</li>
+<li>使用ssd</li>
+</ol>
+<h2 id="相关链接"><a href="#相关链接" class="headerlink" title="相关链接"></a>相关链接</h2><ul>
+<li><a href="https://docs.microsoft.com/en-us/visualstudio/cross-platform/unity-scripting-upgrade?view=vs-2019" target="_blank" rel="noopener">https://docs.microsoft.com/en-us/visualstudio/cross-platform/unity-scripting-upgrade?view=vs-2019</a></li>
+<li><a href="https://docs.unity3d.com/Manual/IL2CPP-OptimizingBuildTimes.html" target="_blank" rel="noopener">https://docs.unity3d.com/Manual/IL2CPP-OptimizingBuildTimes.html</a></li>
+<li><a href="https://docs.unity3d.com/Manual/IL2CPP-BytecodeStripping.html" target="_blank" rel="noopener">https://docs.unity3d.com/Manual/IL2CPP-BytecodeStripping.html</a></li>
+<li><a href="https://docs.unity3d.com/Manual/ScriptingRestrictions.html" target="_blank" rel="noopener">https://docs.unity3d.com/Manual/ScriptingRestrictions.html</a></li>
+<li><a href="https://www.jianshu.com/p/7cfcb7b0cfe7" target="_blank" rel="noopener">https://www.jianshu.com/p/7cfcb7b0cfe7</a></li>
+<li><a href="https://blogs.unity3d.com/cn/2015/05/06/an-introduction-to-ilcpp-internals/" target="_blank" rel="noopener">https://blogs.unity3d.com/cn/2015/05/06/an-introduction-to-ilcpp-internals/</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Win/" rel="tag"># Win</a>
+              <a href="/tags/windows/" rel="tag"># windows</a>
+              <a href="/tags/C/" rel="tag"># C</a>
+              <a href="/tags/C/" rel="tag"># C#</a>
+              <a href="/tags/%E6%B8%B8%E6%88%8F/" rel="tag"># 游戏</a>
+              <a href="/tags/Unity/" rel="tag"># Unity</a>
+              <a href="/tags/UNITY/" rel="tag"># UNITY</a>
+              <a href="/tags/JS/" rel="tag"># JS</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/dotnet-2019-06-05-linux-dotnet-daemon/" rel="prev" title="Linux部署dotnetcore记录">
+      <i class="fa fa-chevron-left"></i> Linux部署dotnetcore记录
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/unity-2019-06-20-unity-android-x64/" rel="next" title="Unity 导出 Android 64-bit 版本">
+      Unity 导出 Android 64-bit 版本 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  
+  <div class="comments">
+  <script src="https://utteranc.es/client.js" repo="zhepama/igiven.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async></script>
+  </div>
+  
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#什么是IL2CPP？"><span class="nav-number">1.</span> <span class="nav-text">什么是IL2CPP？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#一个支持虚拟机的运行时库"><span class="nav-number">2.</span> <span class="nav-text">一个支持虚拟机的运行时库</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AOT编译器"><span class="nav-number">3.</span> <span class="nav-text">AOT编译器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#运行时库"><span class="nav-number">4.</span> <span class="nav-text">运行时库</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#il2cpp是如何执行的？"><span class="nav-number">5.</span> <span class="nav-text">il2cpp是如何执行的？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#IL2CPP没做的事情"><span class="nav-number">6.</span> <span class="nav-text">IL2CPP没做的事情</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#我们如何开发，测试，发布IL2CPP"><span class="nav-number">7.</span> <span class="nav-text">我们如何开发，测试，发布IL2CPP</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#好戏连台"><span class="nav-number">8.</span> <span class="nav-text">好戏连台</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#IL2CPP-脚本限制"><span class="nav-number"></span> <span class="nav-text">IL2CPP 脚本限制</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#System-Reflection-Emit"><span class="nav-number">1.</span> <span class="nav-text">System.Reflection.Emit</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#序列化"><span class="nav-number">2.</span> <span class="nav-text">序列化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#泛型"><span class="nav-number">3.</span> <span class="nav-text">泛型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#泛型方法"><span class="nav-number">3.1.</span> <span class="nav-text">泛型方法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AnimatorController-等"><span class="nav-number">4.</span> <span class="nav-text">AnimatorController 等</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#其他"><span class="nav-number">5.</span> <span class="nav-text">其他</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#托管代码剥离"><span class="nav-number"></span> <span class="nav-text">托管代码剥离</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#IL2CPP限制"><span class="nav-number">1.</span> <span class="nav-text">IL2CPP限制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#编译速度优化"><span class="nav-number">2.</span> <span class="nav-text">编译速度优化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#相关链接"><span class="nav-number">3.</span> <span class="nav-text">相关链接</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhepama"
+      src="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+  <p class="site-author-name" itemprop="name">zhepama</p>
+  <div class="site-description" itemprop="description">一个不专业的程序员,写着专业的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">139</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhepama" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhepama" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhepama@gmail.com" title="E-Mail → mailto:zhepama@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.godgodgame.com/" title="http:&#x2F;&#x2F;www.godgodgame.com" rel="noopener" target="_blank">GODGODGAME</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.igiven.com/" title="https:&#x2F;&#x2F;www.igiven.com">IGIVEN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhepama.github.io/C-Sharp-Playground/zh/" title="https:&#x2F;&#x2F;zhepama.github.io&#x2F;C-Sharp-Playground&#x2F;zh&#x2F;" rel="noopener" target="_blank">数据结构与算法</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhepama</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.igiven.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="国内的网络游戏多是客户端&#x2F;服务器方式，而对于游戏实时性要求比较高的网游，如 果采用客户端发送时间包给服务器，服务器校验后再下发给客户端表现的话，网络延时 和抖动都会恶化游戏体验。对于客户端和服务器的同步问题， 一般有两种算法解决： ① 、客户端和服务器之间进行对时后，客户端发送数据包给服务器，服务器根据收 到的客户端数据包先后进行排序，先到达的服务器端的事件包被判定为先发生，后到达 服务器的事件包">
+<meta property="og:type" content="article">
+<meta property="og:title" content="延迟补偿和对时的相关总结">
+<meta property="og:url" content="http://www.igiven.com/dotnet-2020-02-02-Latency-Compensating-rtt/index.html">
+<meta property="og:site_name" content="IGiven">
+<meta property="og:description" content="国内的网络游戏多是客户端&#x2F;服务器方式，而对于游戏实时性要求比较高的网游，如 果采用客户端发送时间包给服务器，服务器校验后再下发给客户端表现的话，网络延时 和抖动都会恶化游戏体验。对于客户端和服务器的同步问题， 一般有两种算法解决： ① 、客户端和服务器之间进行对时后，客户端发送数据包给服务器，服务器根据收 到的客户端数据包先后进行排序，先到达的服务器端的事件包被判定为先发生，后到达 服务器的事件包">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-02-02-Latency_Compensating-rtt/iyeruicpsm.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-02-02-Latency_Compensating-rtt/image-20200221152318844.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-02-02-Latency_Compensating-rtt/image-20200221164609309.png">
+<meta property="article:published_time" content="2020-02-02T00:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-26T08:36:17.938Z">
+<meta property="article:author" content="zhepama">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="游戏">
+<meta property="article:tag" content="GitHub">
+<meta property="article:tag" content="同步">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.igiven.com/assets/images/2020-02-02-Latency_Compensating-rtt/iyeruicpsm.png">
+
+<link rel="canonical" href="http://www.igiven.com/dotnet-2020-02-02-Latency-Compensating-rtt/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>延迟补偿和对时的相关总结 | IGiven</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="IGiven" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="IGiven" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">IGiven</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">李九仙的博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">139</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">32</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-留言">
+
+    <a href="/guestbook/" rel="section"><i class="fa fa-sticky-note fa-fw"></i>留言</a>
+
+  </li>
+        <li class="menu-item menu-item-rss">
+
+    <a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/dotnet-2020-02-02-Latency-Compensating-rtt/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+      <meta itemprop="name" content="zhepama">
+      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="IGiven">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          延迟补偿和对时的相关总结<a href="https://github.com/zhepama/igiven.github.io/edit/master/source/_posts/dotnet/2020-02-02-Latency_Compensating-rtt.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil-alt"></i></a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-02-02 08:00:00" itemprop="dateCreated datePublished" datetime="2020-02-02T08:00:00+08:00">2020-02-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 16:36:17" itemprop="dateModified" datetime="2021-06-26T16:36:17+08:00">2021-06-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/dotnet/" itemprop="url" rel="index"><span itemprop="name">dotnet</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>国内的网络游戏多是客户端/服务器方式，而对于游戏实时性要求比较高的网游，如 果采用客户端发送时间包给服务器，服务器校验后再下发给客户端表现的话，网络延时 和抖动都会恶化游戏体验。对于客户端和服务器的同步问题， 一般有两种算法解决：</p>
+<p>① 、客户端和服务器之间进行对时后，客户端发送数据包给服务器，服务器根据收 到的客户端数据包先后进行排序，先到达的服务器端的事件包被判定为先发生，后到达 服务器的事件包被判定为后发生。在此情况下，往往网络延时较大的客户端先发送了游 戏事件包，但由于网络延时和抖动的影响，后到达服务器，而被判定为后发生时间，这 样对该客户端就不公平了。</p>
+<p>② 、客户端和服务器进行对时后，客户端预测服务器收到客户端数据包的时间，并 把该时间写入数据包中发送给服务器，在网络抖动比较大的情况下，这种情况可以保证一定的公平性。但是还是出现了上述的情况，网络延时大的数据包预测的到达时间也就 更晚，依然会出现先发生的事件被服务器判定为后发生，同样不能保证游戏的公平性。</p>
+<p>因此，在现有的解决网络实时性较差问题的技术方案中，当采用TimeWarp同步机制 时，则需要保存数量较多的快照，同时也会使回滚的次数较多，导致过多的消耗内存和 CPU资源，以及降低游戏体验；对于国内网络游戏采用的网络时间同步机制，无论服务器 根据客户端数据包到达的时间进行排序，或客户端预测服务器收到客户端数据包的时间 并把该时间写入数据包中发送给服务器，对于网络延时越大的玩家同样会降低游戏体 验。</p>
+<h2 id="网络对时"><a href="#网络对时" class="headerlink" title="网络对时"></a>网络对时</h2><p>大部分的强交互网游会做对时, 使 client 和 server 保持时间基本一致.</p>
+<p><img src="../../assets/images/2020-02-02-Latency_Compensating-rtt/iyeruicpsm.png" alt="img"></p>
+<ol>
+<li>client 带上本地时间 t0 向 server 发送对时请求.</li>
+<li>server 回复当前自己的系统时间 t1.</li>
+<li>client ack 收到 server 回复时的本地时间 t2.</li>
+</ol>
+<p>如果只有 client 关心对时结果, 这时可以优化到<strong>只做1,2步甚至只做第2步</strong>, 相当于 client 主动发起 ping;</p>
+<p>同样, 如果只有 server 关心对时结果, sever 主动发起 ping (第2,3步)即可.</p>
+<p>单次对时往往会受到网络波动的影响, 所以一般还需要做多次统计一个比较合理的时间偏移.</p>
+<p>网络对时, 一般在进游戏之初做. 如果在游戏过程中发现有网络波动过大的情况(在下行协议包中带上 server 的时间, 很容易检查到提前或者滞后), 也需要重新发起对时.</p>
+<p>考虑到反外挂(比如加速齿轮, 或者减速器)的因素, server 端需要对主动发起的client对时请求做一些安全校验, 例如时间递增, 是否满足阈值等等.</p>
+<p>光从对时的角度来看, UDP 协议比 TCP 更合适一些, 不过取决于项目需要.</p>
+<h2 id="服务器和客户端时间差算法-st0-st2-2ct1-2"><a href="#服务器和客户端时间差算法-st0-st2-2ct1-2" class="headerlink" title="服务器和客户端时间差算法 (st0+st2-2ct1)/2"></a>服务器和客户端时间差算法 <strong>(st0+st2-2ct1)/2</strong></h2><p> <img src="../../assets/images/2020-02-02-Latency_Compensating-rtt/image-20200221152318844.png" alt="image-20200221152318844"></p>
+<h3 id="两种理解方式"><a href="#两种理解方式" class="headerlink" title="两种理解方式"></a>两种理解方式</h3><h4 id="第一种方式"><a href="#第一种方式" class="headerlink" title="第一种方式"></a>第一种方式</h4><p><code>ct1-st0 = &amp;0 +(ct1-st1)</code>  延迟+ 时间差(同一时刻下客户端减去服务端的时间差)</p>
+<p><code>st2-ct1 = &amp;1+(st2-ct2)</code>  延迟+ 时间差(同一时刻下服务端减去客户端的时间差)</p>
+<p>我们需要的就是<code>st2-ct2</code> 由上可以转换为<code>-(ct1-st1) = st2-ct2</code>  </p>
+<p>现假设 <code>o = st2-ct2</code>同时假设延迟相等 <code>p = &amp;0 = &amp;1</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">ct1-st0 &#x3D; p - o</span><br><span class="line"></span><br><span class="line">st2-ct1 &#x3D; p + o</span><br><span class="line"></span><br><span class="line">ct1-st0-st2+ct1 &#x3D; -2o</span><br><span class="line"></span><br><span class="line">o &#x3D;(st0+st2-2ct1)&#x2F;2</span><br></pre></td></tr></table></figure>
+
+<h4 id="第二种方式"><a href="#第二种方式" class="headerlink" title="第二种方式"></a>第二种方式</h4><p><code>&amp;0 = &amp;1 = (st2-st0)/2</code>    我们知道<code>(st2-st0)/2</code>是单次延迟 即</p>
+<p><code>st2-ct1 = &amp;1+(st2-ct2)</code>  延迟+ 时间差(同一时刻下服务端减去客户端的时间差)</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">st2-ct1 &#x3D; (st2-st0)&#x2F;2 + o</span><br><span class="line"></span><br><span class="line">2st2-2ct1 &#x3D; st2-st0 + 2o</span><br><span class="line"></span><br><span class="line">o &#x3D; (st0+st2-2ct1)&#x2F;2</span><br></pre></td></tr></table></figure>
+
+
+<p><a href="https://patents.google.com/patent/CN101577715A/zh" target="_blank" rel="noopener">https://patents.google.com/patent/CN101577715A/zh</a></p>
+<p>服务器获得服务器与客户端的时间差值后，与服务器接收到来自客户端的数据包的时间做差值可以获得客户端在游 戏过程中实际向服务器发送数据包的时间，<strong>并通过客户端在游戏过程 中实际向服务器发送数据包的时间来判定在游戏时间中事件发生的实际顺序</strong>， 从而较好的保持了游戏的公平性，提高了游戏玩家的游戏体验。</p>
+<h4 id="检查安全性"><a href="#检查安全性" class="headerlink" title="检查安全性"></a>检查安全性</h4><ol>
+<li><p>第一次连接的对时..时差不该查过三分钟.</p>
+</li>
+<li><p>校验包客户端有没有修改时间,能够求得发包的时间,对比服务器接收到包的时间以及延迟</p>
+</li>
+</ol>
+<h2 id="移动的延迟补偿"><a href="#移动的延迟补偿" class="headerlink" title="移动的延迟补偿."></a>移动的延迟补偿.</h2><p>使用了客户端预测的话,客户端的移动位置要优先于服务端的,因为有来回两次延迟..</p>
+<p>由于状态同步以服务端为准,使用服务器校对不会出什么问题.</p>
+<p>所以这里的补偿是补偿从客户端到服务端这段延迟.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">public class move</span><br><span class="line">&#123;</span><br><span class="line">	DatetimeOffset clientTime</span><br><span class="line">&#125;</span><br><span class="line">var o &#x3D; xxx;&#x2F;&#x2F;服务端和客户端的时间差</span><br><span class="line">var startMoveTime &#x3D;   move.clientTime+o;</span><br><span class="line">var delay &#x3D; DateTimeOffset.Now()-startMoveTime;&#x2F;&#x2F;延迟时间</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F;todo:将延迟时间参与到pos的计算当中</span><br></pre></td></tr></table></figure>
+
+<p>如果使用了服务器校对不补偿也并没有什么太大的问题,因为最终仍然是以服务器为准的.</p>
+<p>但是补偿了之后减少了延迟,会更平缓一点.</p>
+<p><a href="https://patents.google.com/patent/CN102404279A/zh" target="_blank" rel="noopener">https://patents.google.com/patent/CN102404279A/zh</a></p>
+<h2 id="boss攻击的延迟补偿"><a href="#boss攻击的延迟补偿" class="headerlink" title="boss攻击的延迟补偿."></a>boss攻击的延迟补偿.</h2><p><img src="../../assets/images/2020-02-02-Latency_Compensating-rtt/image-20200221164609309.png" alt="image-20200221164609309"></p>
+<p>玩家ct2的时候开始移动,但是服务器收到的时候已经是st4</p>
+<p>而服务器st2的时候boss发动了攻击.这个时候.玩家在服务器的位置是在ct3</p>
+<p>需要boss把攻击作为关键事件…直到客户端有ct4事件出来时再执行st2,</p>
+<p>可以使用时间轮算法触发关键事件</p>
+<h2 id="玩家-的延迟补偿"><a href="#玩家-的延迟补偿" class="headerlink" title="玩家 的延迟补偿"></a>玩家 的延迟补偿</h2><p>这是由于客户端使用了插值算法造成的</p>
+<p>比如fps游戏,玩家看到的敌人的位置永远是过去的,当你开枪的时候,那个人其实已不在那个位置</p>
+<p>所以需要记录游戏的世界状态..找到子弹打出时那一刻的世界状态.然后判定</p>
+<p><a href="https://patents.google.com/patent/CN102739608A/zh" target="_blank" rel="noopener">https://patents.google.com/patent/CN102739608A/zh</a></p>
+<h2 id="一些模拟恶劣网络环境工具"><a href="#一些模拟恶劣网络环境工具" class="headerlink" title="一些模拟恶劣网络环境工具"></a>一些模拟恶劣网络环境工具</h2><ul>
+<li><a href="http://jagt.github.io/clumsy/cn/index.html" target="_blank" rel="noopener">http://jagt.github.io/clumsy/cn/index.html</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C</a>
+              <a href="/tags/%E6%B8%B8%E6%88%8F/" rel="tag"># 游戏</a>
+              <a href="/tags/GitHub/" rel="tag"># GitHub</a>
+              <a href="/tags/%E5%90%8C%E6%AD%A5/" rel="tag"># 同步</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/dotnet-2020-02-02-Latency-Compensating-Methods-in-ClientServer-In-game-Protocol-Design-and-Optimization/" rel="prev" title="延迟补偿在C/S架构游戏协议设计和优化中的应用">
+      <i class="fa fa-chevron-left"></i> 延迟补偿在C/S架构游戏协议设计和优化中的应用
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/dotnet-2020-02-03-orleans-Deployment/" rel="next" title="orleans的部署模式">
+      orleans的部署模式 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  
+  <div class="comments">
+  <script src="https://utteranc.es/client.js" repo="zhepama/igiven.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async></script>
+  </div>
+  
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#网络对时"><span class="nav-number">1.</span> <span class="nav-text">网络对时</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#服务器和客户端时间差算法-st0-st2-2ct1-2"><span class="nav-number">2.</span> <span class="nav-text">服务器和客户端时间差算法 (st0+st2-2ct1)&#x2F;2</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#两种理解方式"><span class="nav-number">2.1.</span> <span class="nav-text">两种理解方式</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#第一种方式"><span class="nav-number">2.1.1.</span> <span class="nav-text">第一种方式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#第二种方式"><span class="nav-number">2.1.2.</span> <span class="nav-text">第二种方式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#检查安全性"><span class="nav-number">2.1.3.</span> <span class="nav-text">检查安全性</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#移动的延迟补偿"><span class="nav-number">3.</span> <span class="nav-text">移动的延迟补偿.</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#boss攻击的延迟补偿"><span class="nav-number">4.</span> <span class="nav-text">boss攻击的延迟补偿.</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#玩家-的延迟补偿"><span class="nav-number">5.</span> <span class="nav-text">玩家 的延迟补偿</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#一些模拟恶劣网络环境工具"><span class="nav-number">6.</span> <span class="nav-text">一些模拟恶劣网络环境工具</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhepama"
+      src="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+  <p class="site-author-name" itemprop="name">zhepama</p>
+  <div class="site-description" itemprop="description">一个不专业的程序员,写着专业的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">139</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhepama" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhepama" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhepama@gmail.com" title="E-Mail → mailto:zhepama@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.godgodgame.com/" title="http:&#x2F;&#x2F;www.godgodgame.com" rel="noopener" target="_blank">GODGODGAME</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.igiven.com/" title="https:&#x2F;&#x2F;www.igiven.com">IGIVEN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhepama.github.io/C-Sharp-Playground/zh/" title="https:&#x2F;&#x2F;zhepama.github.io&#x2F;C-Sharp-Playground&#x2F;zh&#x2F;" rel="noopener" target="_blank">数据结构与算法</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhepama</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

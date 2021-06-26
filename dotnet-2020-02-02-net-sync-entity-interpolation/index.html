@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.igiven.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="PART 1 概述在本系列的「第一篇文章」中，我们介绍了关于权威服务器及其反作弊特性，然而仅仅是最简单的实现可能会导致关于可玩性和响应速度的问题。在「第二篇文章」中，我们提出了「客户端预测」的方案来克服这个困难。 以上两篇文章事实上介绍的是一种在连接到有传输延迟的远程权威服务器的状况下，可以让玩家像单机游戏一样流畅的控制角色移动的一种概念和技术。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="快节奏多人游戏同步(3)-Entity插值">
+<meta property="og:url" content="http://www.igiven.com/dotnet-2020-02-02-net-sync-entity-interpolation/index.html">
+<meta property="og:site_name" content="IGiven">
+<meta property="og:description" content="PART 1 概述在本系列的「第一篇文章」中，我们介绍了关于权威服务器及其反作弊特性，然而仅仅是最简单的实现可能会导致关于可玩性和响应速度的问题。在「第二篇文章」中，我们提出了「客户端预测」的方案来克服这个困难。 以上两篇文章事实上介绍的是一种在连接到有传输延迟的远程权威服务器的状况下，可以让玩家像单机游戏一样流畅的控制角色移动的一种概念和技术。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-02-02-net-sync-entity-interpolation/fpm3-01.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-02-02-net-sync-entity-interpolation/fpm3-02.png">
+<meta property="article:published_time" content="2020-02-02T00:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-26T08:36:17.942Z">
+<meta property="article:author" content="zhepama">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="游戏">
+<meta property="article:tag" content="sync">
+<meta property="article:tag" content="同步">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.igiven.com/assets/images/2020-02-02-net-sync-entity-interpolation/fpm3-01.png">
+
+<link rel="canonical" href="http://www.igiven.com/dotnet-2020-02-02-net-sync-entity-interpolation/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>快节奏多人游戏同步(3)-Entity插值 | IGiven</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="IGiven" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="IGiven" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">IGiven</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">李九仙的博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">139</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">32</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-留言">
+
+    <a href="/guestbook/" rel="section"><i class="fa fa-sticky-note fa-fw"></i>留言</a>
+
+  </li>
+        <li class="menu-item menu-item-rss">
+
+    <a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/dotnet-2020-02-02-net-sync-entity-interpolation/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+      <meta itemprop="name" content="zhepama">
+      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="IGiven">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          快节奏多人游戏同步(3)-Entity插值<a href="https://github.com/zhepama/igiven.github.io/edit/master/source/_posts/dotnet/2020-02-02-net-sync-entity-interpolation.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil-alt"></i></a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-02-02 08:00:00" itemprop="dateCreated datePublished" datetime="2020-02-02T08:00:00+08:00">2020-02-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 16:36:17" itemprop="dateModified" datetime="2021-06-26T16:36:17+08:00">2021-06-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/dotnet/" itemprop="url" rel="index"><span itemprop="name">dotnet</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="PART-1-概述"><a href="#PART-1-概述" class="headerlink" title="PART 1 概述"></a>PART 1 概述</h2><p>在本系列的「第一篇文章」中，我们介绍了关于权威服务器及其反作弊特性，然而仅仅是最简单的实现可能会导致关于可玩性和响应速度的问题。在「第二篇文章」中，我们提出了「客户端预测」的方案来克服这个困难。</p>
+<p>以上两篇文章事实上介绍的是一种在连接到有传输延迟的远程权威服务器的状况下，可以让玩家像单机游戏一样流畅的控制角色移动的一种概念和技术。</p>
+<p>在本文中，我们将会讨论在在同一台服务器上有「其他玩家控制的角色」的情况。</p>
+<h2 id="PART-2-服务器-time-step"><a href="#PART-2-服务器-time-step" class="headerlink" title="PART 2 服务器 time step"></a>PART 2 服务器 time step</h2><p>在之前的文章中，我们的服务器的实现非常简单，它负责处理客户端的输入并更新游戏状态，最后将结果发送回客户端。如果有多个玩家在一起玩，那服务端主循环的逻辑有所不同了。<br>在接下来的场景中，几个客户端玩家会同时发送数据，玩家发出操作指令会非常频繁（高APM的玩家，一秒钟可能发出10个以上的操作指令），如果服务端每收到某个玩家的一条指令，就去执行input逻辑，然后广播游戏状态，这样的性能是非常差的，会消耗很多的cpu和bandwidth。<br>一个更好的办法是，利用一个queue，将客户端的输入信息缓存起来，在服务端，游戏状态以一定的频率(例如100ms一次)进行更新，每次更新的时间间隔(100ms)，就被称之为time step。<br>在每个更新循环迭代中，服务端处理queue里面所有的input，然后逐个进行计算，将最后计算的结果更新到所有客户端。<br>总体来说，整个游戏世界的更新和客户端的输入频率、数量是相对独立的，它的更新频率也是可控的。</p>
+<h2 id="PART-3-低频更新处理"><a href="#PART-3-低频更新处理" class="headerlink" title="PART 3 低频更新处理"></a>PART 3 低频更新处理</h2><p>从客户端来看，这个方法运行的很平滑，客户端的预测行为独立于服务端的更新，所以它依然可以使用预测技术。不过，由于真个游戏世界的状态以一个比较低的频率进行更新，那么本地客户端对其他玩家知道的信息就很少了，信息越少的话，其他玩家的行为动作要模拟的话，就不会很准确。<br>本地客户端收到其他玩家更新坐标的消息，如何进行处理呢，有一个最简单的办法就是，每次直接使用收到的坐标进行更新，但这样看起来会有抖动，每100ms更新一次坐标，就得抖动一次，如下图所示：</p>
+<p><img src="../../assets/images/2020-02-02-net-sync-entity-interpolation/fpm3-01.png" alt="Client 1 as seen by Client 2."></p>
+<p>对Client2来说，Client1的位置最开始再p(10,10)，不一会直接跳到p(11,10)，100ms后又跳到(12,0)，这样的体验是很差的。那么，如何改善游戏体验呢？ 针对不同的游戏，有不同的处理方式，一般来说，客户端的行为越方便预测，就越容易做平滑处理。</p>
+<h2 id="PART-4-航位推测法"><a href="#PART-4-航位推测法" class="headerlink" title="PART 4 航位推测法"></a>PART 4 航位推测法</h2><p>假设你在玩赛车游戏。一辆速度非常快的汽车是可以预测的——例如，如果它以每秒100米的速度行驶，一秒钟后，它将比它开始行驶的地方提前大约100米。</p>
+<p>为什么是大约呢？在那一秒内，汽车可能加速或减速了一点，或者向右或向左转了一点——这里的关键词是“一点”。汽车的机动性是这样的：在高速行驶时，无论玩家实际做什么，其在任何时间点的位置都高度依赖于其先前的位置、速度和方向。换句话说，赛车不能立即进行180度转弯。</p>
+<p>对于每100毫秒发送一次更新的服务器，这是如何工作的？客户端接收到服务器发送来的每个其他车的速度和行驶方向；在接下来的100毫秒内，它不会接收到任何新信息，但仍需要显示它们的运行情况。要做的最简单的事情是假设汽车的航向和加速度在100毫秒内保持不变，并使用该参数在本地运行汽车物理。然后，100毫秒后，当服务器更新到达时，汽车的位置被修正。</p>
+<p>根据许多因素，校正可以是大的或相对小的。如果玩家把车保持在直线上，并且不改变车速，那么预测的位置将与修正的位置完全相同。另一方面，如果玩家撞到什么东西，预测的位置将是非常错误的。</p>
+<p>请注意，推算定位可以应用于低速情况，例如战列舰。实际上，“dead reckoning”一词起源于航海。</p>
+<h2 id="PART-5-实体插值"><a href="#PART-5-实体插值" class="headerlink" title="PART 5 实体插值"></a>PART 5 实体插值</h2><p>有许多情况航位推是没法处理的 - 对于玩家的方向和速度可以瞬间改变的都不行，比如3D射击，玩家经常快速跑动，停下，快速转向等，在这种情况下，航位推算法就非常无力了。因为位置和速度和前面的数据无关。</p>
+<p>你可以选择在接到服务器的请求的时候直接更新玩家的位置，而客户端看到的就是网上其他的玩家每100ms跳一下，感觉会非常奇怪。</p>
+<p>你现在拥有的是每100ms由服务器传送过来的权威数据，现在要做的是如何在这100ms内让网络角色看起来非常自然，解决问题的关键就是将网络玩家显示在过去的某个时刻。</p>
+<p>假设你在t=1000收到位置信息，你已经在t=900收到了一次位置信息，所以你知道玩家在t=900和t=1000的位置，所以在t=1000到t=1100之间，你只要显示玩家t=900到t=1000的位置。这种方法，你所显示的都是玩家的真实数据，只是有100ms的延迟。</p>
+<p><img src="../../assets/images/2020-02-02-net-sync-entity-interpolation/fpm3-02.png" alt="Client 2 renders Client 1 in the past, interpolating last known positions."></p>
+<p>用来插值的t=900和t=1000的数据依赖于游戏。插值通常都可以处理得很好。如果不是这种方法，你可能需要服务器发送更加详细的移动信息了 - 比如更多的位置采样点，或者每10ms发送一次(你不必发十倍的数据 - 因为你发的微小的位移数据，在这种情况下数据的格式可以很好的优化一下)。</p>
+<p>当使用这种技术的时候，每一个玩家都和游戏世界有一点点不同步，因为每个玩家看到自己的世界是当前的，但是其他的玩家都是过去的。但即使是快速的游戏，这100ms的延迟都不是那么明显。</p>
+<p>有一种情况除外 - 当你需要时间和空间的准确性的时候，比如一个玩家射击另一个玩家的时候，因为其他的玩家都是存在于过去的某个时候，你的瞄准其实是有100ms的延迟的 - 也就是说，你设计的目标是100ms的某个目标！ 这个问题我们下一篇会进行讨论。</p>
+<h2 id="PART-6-总结"><a href="#PART-6-总结" class="headerlink" title="PART 6 总结"></a>PART 6 总结</h2><p>在权威服务器的环境中，有着不确定的服务器更新和网络延迟，在这种情况下你还要给玩家平滑的移动。在第二篇中，我们展示了一种客户端预测和服务器调和的技术，来实现实时的角色控制，这样的方案让玩家能够得到即时的反馈，移除了致命的延迟。</p>
+<p>其他玩家的同步还是一个问题，但是，在这篇文章中，我们提出了两种解决方案。</p>
+<p>第一种是航位推技术，这种模拟需要entity的位置能够通过前一个时候的位置，速度，加速度来推算出来，当不满足这种情况的时候，航位推就没用了。</p>
+<p>第二种是插值技术，不预测将来的位置，只是使用服务器传来的数据，这种就会造成显示的entity总是过去的某个时刻。最后的结果就是玩家的角色总是当前时刻，而其他看到的entity都是过去的某个时刻，这种情况可以产生一种难以置信的无缝体验。</p>
+<p>但是，当游戏需要高速离散的准确性的时候，比如射击或者移动物体，美景就破灭了：你看其他玩家的位置和服务器的位置不一致，别的玩家看你的位置也不是正确的，这样爆头就不可能发生了！很多游戏都有爆头这一说，我们将在下面的文章中来讨论这个问题。</p>
+<ul>
+<li><a href="http://www.gabrielgambetta.com/entity-interpolation.html" target="_blank" rel="noopener">http://www.gabrielgambetta.com/entity-interpolation.html</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C</a>
+              <a href="/tags/%E6%B8%B8%E6%88%8F/" rel="tag"># 游戏</a>
+              <a href="/tags/sync/" rel="tag"># sync</a>
+              <a href="/tags/%E5%90%8C%E6%AD%A5/" rel="tag"># 同步</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/dotnet-2020-02-02-net-sync-lag-compensation/" rel="prev" title="快节奏多人游戏同步(4)-延时补偿">
+      <i class="fa fa-chevron-left"></i> 快节奏多人游戏同步(4)-延时补偿
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/dotnet-2020-02-02-net-sync-client-side-prediction-and-server-reconciliation/" rel="next" title="快节奏多人游戏同步(2)-客户端预测与服务器校对">
+      快节奏多人游戏同步(2)-客户端预测与服务器校对 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  
+  <div class="comments">
+  <script src="https://utteranc.es/client.js" repo="zhepama/igiven.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async></script>
+  </div>
+  
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#PART-1-概述"><span class="nav-number">1.</span> <span class="nav-text">PART 1 概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PART-2-服务器-time-step"><span class="nav-number">2.</span> <span class="nav-text">PART 2 服务器 time step</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PART-3-低频更新处理"><span class="nav-number">3.</span> <span class="nav-text">PART 3 低频更新处理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PART-4-航位推测法"><span class="nav-number">4.</span> <span class="nav-text">PART 4 航位推测法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PART-5-实体插值"><span class="nav-number">5.</span> <span class="nav-text">PART 5 实体插值</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PART-6-总结"><span class="nav-number">6.</span> <span class="nav-text">PART 6 总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhepama"
+      src="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+  <p class="site-author-name" itemprop="name">zhepama</p>
+  <div class="site-description" itemprop="description">一个不专业的程序员,写着专业的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">139</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhepama" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhepama" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhepama@gmail.com" title="E-Mail → mailto:zhepama@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.godgodgame.com/" title="http:&#x2F;&#x2F;www.godgodgame.com" rel="noopener" target="_blank">GODGODGAME</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.igiven.com/" title="https:&#x2F;&#x2F;www.igiven.com">IGIVEN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhepama.github.io/C-Sharp-Playground/zh/" title="https:&#x2F;&#x2F;zhepama.github.io&#x2F;C-Sharp-Playground&#x2F;zh&#x2F;" rel="noopener" target="_blank">数据结构与算法</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhepama</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

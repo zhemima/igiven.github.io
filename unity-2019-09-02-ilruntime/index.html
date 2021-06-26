@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.igiven.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="C#代码在编写后，是需要执行编译的，才能起效，这样如果在手机端，没有对应的编译环境，那么对应的c#代码就无法实现热更。ILRuntime实现的基础，也是基于AssetBundle的资源热更新方式，将需要热更新的c#代码打包成DLL，在每次完成资源打包后，对应的DLL会被作为资源热更新出去。这样就规避了编译相关的环节，实现了热更。 AppDomain我们运行一个.NET应用程序或者一个运行库宿主时，">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ilruntime的研究">
+<meta property="og:url" content="http://www.igiven.com/unity-2019-09-02-ilruntime/index.html">
+<meta property="og:site_name" content="IGiven">
+<meta property="og:description" content="C#代码在编写后，是需要执行编译的，才能起效，这样如果在手机端，没有对应的编译环境，那么对应的c#代码就无法实现热更。ILRuntime实现的基础，也是基于AssetBundle的资源热更新方式，将需要热更新的c#代码打包成DLL，在每次完成资源打包后，对应的DLL会被作为资源热更新出去。这样就规避了编译相关的环节，实现了热更。 AppDomain我们运行一个.NET应用程序或者一个运行库宿主时，">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/656520-20180525160300209-2123986426.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/20160504151602702.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/656520-20180525160707418-392942905.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/656520-20180525183908084-111024744.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/656520-20180525183929820-235902445.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/656520-20180525183948767-1521954007.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/656520-20180525184006047-408828631.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/656520-20180525184022207-1494733614.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/656520-20180525184038682-930110102.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/656520-20180525184056941-656677137.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/656520-20180525184110212-726126206.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/656520-20180525184136211-1306602825.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/656520-20180525184150898-1035213362.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/656520-20180525184214923-1218850507.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/v2-07369c744923a79035a3729bbc488943_hd.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/v2-0a604dfba776c9c99f2e72627724c340_hd.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/v2-b252bba4e6d01e512c2305c5c7b355c5_hd.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/v2-32399e9573a7779ecbf82743b30fc184_hd.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/656520-20180528144431337-1618869539.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/656520-20180528144453022-436088052.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/656520-20180528144501605-1680011964.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/656520-20180528144515817-1301453461.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/656520-20180528144530095-1073548484.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/656520-20180528144543549-1339229040.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/656520-20180528144611448-160157189.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/656520-20180528144626456-2070945940.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/656520-20180528144639749-1842647497.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/656520-20180528144651716-2020934616.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/656520-20180528144705308-507336274.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/656520-20180528144743649-1121461434.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/656520-20180528144758068-1015276210.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/656520-20180528144811489-2012923950.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/656520-20180528144823104-1803890663.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/656520-20180528144840373-1429288247.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/656520-20180528144900607-89436059.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/656520-20180528144913680-316348813.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/656520-20180528144932643-1419524295.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/656520-20180528144946464-1425100319.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/656520-20180528145001101-1886163550.png">
+<meta property="article:published_time" content="2019-09-02T00:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-26T08:36:17.946Z">
+<meta property="article:author" content="zhepama">
+<meta property="article:tag" content="Win">
+<meta property="article:tag" content="windows">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="C#">
+<meta property="article:tag" content="GitHub">
+<meta property="article:tag" content="Unity">
+<meta property="article:tag" content="UNITY">
+<meta property="article:tag" content="proxy">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.igiven.com/assets/images/2019-09-02-ilruntime/656520-20180525160300209-2123986426.png">
+
+<link rel="canonical" href="http://www.igiven.com/unity-2019-09-02-ilruntime/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>ilruntime的研究 | IGiven</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="IGiven" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="IGiven" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">IGiven</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">李九仙的博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">139</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">32</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-留言">
+
+    <a href="/guestbook/" rel="section"><i class="fa fa-sticky-note fa-fw"></i>留言</a>
+
+  </li>
+        <li class="menu-item menu-item-rss">
+
+    <a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/unity-2019-09-02-ilruntime/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+      <meta itemprop="name" content="zhepama">
+      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="IGiven">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          ilruntime的研究<a href="https://github.com/zhepama/igiven.github.io/edit/master/source/_posts/unity/2019-09-02-ilruntime.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil-alt"></i></a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-09-02 08:00:00" itemprop="dateCreated datePublished" datetime="2019-09-02T08:00:00+08:00">2019-09-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 16:36:17" itemprop="dateModified" datetime="2021-06-26T16:36:17+08:00">2021-06-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/unity/" itemprop="url" rel="index"><span itemprop="name">unity</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>C#代码在编写后，是需要执行编译的，才能起效，这样如果在手机端，没有对应的编译环境，那么对应的c#代码就无法实现热更。ILRuntime实现的基础，也是基于AssetBundle的资源热更新方式，将需要热更新的c#代码打包成DLL，在每次完成资源打包后，对应的DLL会被作为资源热更新出去。这样就规避了编译相关的环节，实现了热更。</p>
+<h1 id="AppDomain"><a href="#AppDomain" class="headerlink" title="AppDomain"></a>AppDomain</h1><p>我们运行一个.NET应用程序或者一个运行库宿主时，OS会首先建立一个进程，然后会在进程中加载CLR(这个加载一般是通过调用_CorExeMain或者_CorBindToRuntimeEx方法来实现)，在加载CLR时会创建一个默认的AppDomain，它是CLR的运行单元，程序的Main方法就是在这里执行，这个默认的AppDomain是唯一且不能被卸载的，当该进程消灭时，默认AppDomain才会随之消失。</p>
+<p>一个进程中可以有多个AppDomain，且它们直接是相互隔离的，我们的Assembly是不能单独执行的，它必须被加载到某个AppDomain中，要想<strong>卸载一个Assembly</strong>就只能卸载其AppDomain。</p>
+<blockquote>
+<p>无法删除WindowsApplication1: 访问被拒绝<br>请确定磁盘末被写保护<br>而且文件末被使用  </p>
+</blockquote>
+<p>除非你关掉作业管理服务器，然后再操作，显然这样做是很不合理的。</p>
+<p>并且默认AppDomain是不能被卸载的，那么我们该怎么办呢，我想到的方法是动态的加载Assembly，新建一个AppDomain，让Assembly加载到这个新AppDomain中然后执行，当执行完后卸载这个新的AppDomain即可。核心思想就是：<strong>如果程序集被加载到默认应用程序域中，则当进程运行时将无法从内存中卸载该程序集。但是，如果打开另一个应用程序域来加载和执行程序集，则卸载该应用程序域时也会同时卸载程序集。使用此技术最小化长时间运行的进程的工作集</strong>。</p>
+<p><img src="../../assets/images/2019-09-02-ilruntime/656520-20180525160300209-2123986426.png" alt="img"></p>
+<ol>
+<li><p>AppDomain vs 进程<br>AppDomain被创建在进程中，一个进程内可以有多个AppDomain。一个AppDomain只能属于一个进程。</p>
+</li>
+<li><p>AppDomain vs 线程<br>其实两者本来没什么好对比的。AppDomain是个静态概念，只是限定了对象的边界；线程是个动态概念，它可以运行在不同的AppDomain。一个AppDomain内可以创建多个线程，但是不能限定这些线程只能在本AppDomain内执行代码。CLR中的System.Threading.Thread对象其实是个soft thread，它并不能被操作系统识别；操作系统能识别的是hard thread。一个soft thread只属于一个AppDomain，穿越AppDomain的是hard thread。当hard thread访问到某个AppDomain时,一个AppDomain就会为之产生一个soft thread。<br>hard thread有thread local storage(TLS)，这个存储区被CLR用来存储这个hard thread当前对应AppDomain引用以及softthread引用。当一个hard thread穿越到另外一个AppDomain时，TLS中的这些引用也会改变。<br>当然这个说法很可能是和CLR的实现相关的。</p>
+</li>
+<li><p>AppDomain vs Assembly<br>Assembly是.Net程序的基本部署单元，它可以为CLR提供用于识别类型的元数据等等。Assembly不能单独执行，它必须被加载到AppDomain中，然后由AppDomain创建程序集中的对象。一个Assembly可以被多个AppDomain加载，一个AppDomain可以加载多个Assembly。每个AppDomain引用到某个类型的时候需要把相应的assembly在各自的AppDomain中初始化。因此，每个AppDomain会单独保持一个类的静态变量。</p>
+</li>
+<li><p>AppDomain vs 对象<br>任何对象只能属于一个AppDomain。AppDomain用来隔离对象，不同AppDomain之间的对象必须通过Proxy(reference type)或者Clone(value type)通信。引用类型需要继承System.MarshalByRefObject才能被Marshal/UnMarshal(Proxy)。值类型需要设置Serializable属性才能被Marshal/UnMarshal(Clone)。</p>
+</li>
+<li><p>AppDomain vs Assembly Code<br>AppDomain和程序集的源代码是什么关系呢？每个程序集的代码会分别装载到各个AppDomain中？<br>首先我们要把程序集分3类<br>1.mscorlib，这是每个.net程序都要引用到的程序集。<br>2.GAC，这个是强命名的公用程序集，可以被所有的.net程序引用。<br>3.Assembly not in GAC，这是普通的assembly，可以不是强命名，不放到GAC中。<br>启动CLR，进入entry point时可以设置LoaderOptimization属性：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[LoaderOptimization(LoaderOptimization.MultiDomain]</span><br><span class="line">static void Main()</span><br><span class="line">&#123;...&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="../../assets/images/2019-09-02-ilruntime/20160504151602702.png" alt="img"></p>
+<p>LoaderOptimization属性可以设置三个不同的枚举值，来设置针对前面说的三种程序集的代码存放以及访问方式。</p>
+<ul>
+<li><p>SingleDomain，由于只启动一个AppDomain，那么code就被直接装载到了AppDomain中，访问静态变量更快捷。</p>
+</li>
+<li><p>MultiDomain，所有的Assembly代码是进程级别的，因此所有的AppDomain只访问一份代码。这大大减少了程序占用的内存，但是由于程序集的静态变量仍然在各个AppDomain中，因此代码访问静态变量需要先得到AppDomain的引用再进行转换，速度会受到影响。</p>
+</li>
+<li><p>MultiDomainHost，只有GAC代码是共享的，非GAC的Assembly依然会加载到被使用的AppDomain中，这样提高了静态变量的访问速度，当然也增加了程序占用的内存。 </p>
+<p>不管是哪种方式，mscorlib始终是process级别的，即只有一份mscorlib代码在内存中。</p>
+</li>
+</ul>
+</li>
+</ol>
+<h1 id="使用dll进行热更"><a href="#使用dll进行热更" class="headerlink" title="使用dll进行热更"></a>使用dll进行热更</h1><p>文章并不是完全的实现热更新,实现的是windows和android平台下，对于dll文件的热更新。对于IOS为什么不能热更新，我们后续会讨论到，先看看安卓和windows下 dll的热更新步骤。</p>
+<ul>
+<li><p>新建一个ClassLibrary（类库）的工程，在其中实现对应的类和方法；</p>
+</li>
+<li><p>将该工程导出为DLL；</p>
+</li>
+<li><p>将DLL改为bytes文件，存入Unity工程中的StreamingAssets文件夹下；</p>
+</li>
+<li><p>在工程运行的时候，读取StreamingAssets下的Dll文件，用Assembly.Load(byte[] bytes )的方法，将DLL文件读取出来，进而执行相关的操作。这一步的代码为：</p>
+</li>
+</ul>
+<p><img src="../../assets/images/2019-09-02-ilruntime/656520-20180525160707418-392942905.png" alt="img"></p>
+<p>unity工程在执行的时候，会构建一个默认的appDomain，Assembly.Load，其实就是在这个程序域上加载Dll,所以相关的实质和前面一个部分相差不大，这就是c#热更新在unity中的应用(IOS不包括)。</p>
+<h3 id="ios不能基于以上热更的原因"><a href="#ios不能基于以上热更的原因" class="headerlink" title="ios不能基于以上热更的原因"></a>ios不能基于以上热更的原因</h3><p>只要我们设定mono的编译模式为full-aot（比如打IOS安装包的时候），则在运行时试图使用JIT编译时，mono自身的JIT编译器就会禁止<strong><em>生成新的代码</em></strong>(不要混淆Reflection.Emit和反射)这种行为进而报告这个异常。JIT编译的过程根本还没开始，就被自己扼杀了。</p>
+<p><strong>JIT——just in time，即时编译。</strong></p>
+<blockquote>
+<p>一个程序在它运行的时候创建并且运行了全新的代码，而并非那些最初作为这个程序的一部分保存在硬盘上的固有的代码。就叫JIT。</p>
+</blockquote>
+<p>IOS并非把JIT禁止了。或者换个句式讲，IOS封了内存（或者堆）的可执行权限，相当于变相的封锁了JIT这种编译方式。</p>
+<h1 id="ILRuntime"><a href="#ILRuntime" class="headerlink" title="ILRuntime"></a>ILRuntime</h1><blockquote>
+<p>ILRuntime借助Mono.Cecil库来读取DLL的PE信息，以及当中类型的所有信息，最终得到方法的IL汇编码，然后通过内置的IL解译执行虚拟机来执行DLL中的代码</p>
+</blockquote>
+<h3 id="借助Mono-Ceil库来读取DLL的PE信息以及当中类型的所有信息"><a href="#借助Mono-Ceil库来读取DLL的PE信息以及当中类型的所有信息" class="headerlink" title="借助Mono.Ceil库来读取DLL的PE信息以及当中类型的所有信息"></a>借助Mono.Ceil库来读取DLL的PE信息以及当中类型的所有信息</h3><p>这一步是如何实现的，跟随源代码做一个详细的跟踪。</p>
+<p>首先，是构建一个全局的appDomain(这儿不是程序域的意思，只是取其名字意思来表示)</p>
+<p><img src="../../assets/images/2019-09-02-ilruntime/656520-20180525183908084-111024744.png" alt="img"></p>
+<p> 基于WWW的方式加载AssetBundle或者DLL/PDB后，接下来是将其封入到MemoryStream中，将dll和pdb的bytes都存入到内存流中后，执行其内部实现的LoadAssembly方法。</p>
+<p><img src="../../assets/images/2019-09-02-ilruntime/656520-20180525183929820-235902445.png" alt="img"></p>
+<p>关键的是第一行，从Mono中加载模块：</p>
+<p> <img src="../../assets/images/2019-09-02-ilruntime/656520-20180525183948767-1521954007.png" alt="img"></p>
+<p>进一步跟踪：</p>
+<p>ReadImageFrom的操作：</p>
+<p><img src="../../assets/images/2019-09-02-ilruntime/656520-20180525184006047-408828631.png" alt="img"></p>
+<p> 其中ImageReader最终来自BinaryReader:</p>
+<p> <img src="../../assets/images/2019-09-02-ilruntime/656520-20180525184022207-1494733614.png" alt="img"></p>
+<p>那么接下来的ReadImage操作：</p>
+<p><img src="../../assets/images/2019-09-02-ilruntime/656520-20180525184038682-930110102.png" alt="img"></p>
+<p>这四个操作，是最核心的操作，分别读取DLL的PE的各个信息，这样我们就进入下一个步骤。</p>
+<h3 id="最终得到方法的IL汇编码"><a href="#最终得到方法的IL汇编码" class="headerlink" title="最终得到方法的IL汇编码"></a>最终得到方法的IL汇编码</h3><p>让我们分拆来看看这几个读取函数的实现</p>
+<p>1）ReadOptionalHeaders</p>
+<p>主要读取PE的相关信息，不做过多解释，可以参看源码阅读理解；</p>
+<p>2）ReadSections</p>
+<p>读取分块数据</p>
+<p><img src="../../assets/images/2019-09-02-ilruntime/656520-20180525184056941-656677137.png" alt="img"></p>
+<p>封装一个Section，然后去执行读取，然后赋值给section的Data，注意回退了Index</p>
+<h3 id="ReadCLIHeader"><a href="#ReadCLIHeader" class="headerlink" title="ReadCLIHeader"></a>ReadCLIHeader</h3><p>这步比较简单</p>
+<p> <img src="../../assets/images/2019-09-02-ilruntime/656520-20180525184110212-726126206.png" alt="img"></p>
+<p>4) ReadMetadata</p>
+<p><img src="../../assets/images/2019-09-02-ilruntime/656520-20180525184136211-1306602825.png" alt="img"></p>
+<p>核心是两个操作，一个是ReadMetadataStream，就是根据不同的标识符来新建不同的存储结构；一个是ReadTableHeap:</p>
+<p><img src="../../assets/images/2019-09-02-ilruntime/656520-20180525184150898-1035213362.png" alt="img"></p>
+<p>初始化heap中的Table后，进行一次Compute，获取size:</p>
+<p><img src="../../assets/images/2019-09-02-ilruntime/656520-20180525184214923-1218850507.png" alt="img"></p>
+<p>然后填充size:</p>
+<p><img src="../../assets/images/2019-09-02-ilruntime/v2-07369c744923a79035a3729bbc488943_hd.jpg" alt="img"></p>
+<p>基于这四步操作，我们可以将IL的汇编码存储到Image中，然后进一步执行后续的CreateModule操作:</p>
+<p><img src="../../assets/images/2019-09-02-ilruntime/v2-0a604dfba776c9c99f2e72627724c340_hd.jpg" alt="img"></p>
+<p>具体到，就是：</p>
+<p> <img src="../../assets/images/2019-09-02-ilruntime/v2-b252bba4e6d01e512c2305c5c7b355c5_hd.jpg" alt="img"></p>
+<p>其中的ReadModule为：</p>
+<p><img src="../../assets/images/2019-09-02-ilruntime/v2-32399e9573a7779ecbf82743b30fc184_hd.jpg" alt="img"></p>
+<p>具体的读取manifest和Module内部数据，可以参看源码。</p>
+<h3 id="基于LoadedTypes来实现反射方法的调用"><a href="#基于LoadedTypes来实现反射方法的调用" class="headerlink" title="基于LoadedTypes来实现反射方法的调用"></a>基于LoadedTypes来实现反射方法的调用</h3><p>在ILRuntime中，不能基于System.Type来直接获取热更新DLL中的类，只有基于唯一的appDomain实例，基于LoadedTypes这种来获取热更新中的DLL，基于代码来分析，更为详细：</p>
+<p>首先，加载获取该DLL中的指定类：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">var it &#x3D; appDomain.LoadedTypes[&quot;HotFix_Project.InstanceClass&quot;]</span><br></pre></td></tr></table></figure>
+
+<p>跟踪LoadedTypes：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">public Dictionary&lt;string, IType&gt; LoadedTypes&#123;get&#123;return mapType.InnerDictionary;&#125;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>跟踪看mapType.InnerDictionary:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ThreadSafeDictionary&lt;string, IType&gt; mapType &#x3D; new ThreadSafeDictionary&lt;string, IType&gt;();</span><br></pre></td></tr></table></figure>
+
+<p>这个mapType是什么时候装配的？</p>
+<p>来自于文章二中的LoadAssembly的后续操作：</p>
+<p><img src="../../assets/images/2019-09-02-ilruntime/656520-20180528144431337-1618869539.png" alt="img"></p>
+<p>那么这个module.GetTypes是如何操作的？</p>
+<p><img src="../../assets/images/2019-09-02-ilruntime/656520-20180528144453022-436088052.png" alt="img"></p>
+<p><img src="../../assets/images/2019-09-02-ilruntime/656520-20180528144501605-1680011964.png" alt="img"></p>
+<p>分别基于协程来return type以及其nestedTypes，关键是看Types是怎么获取的：</p>
+<p><img src="../../assets/images/2019-09-02-ilruntime/656520-20180528144515817-1301453461.png" alt="img"></p>
+<p>关键是read操作：</p>
+<p><img src="../../assets/images/2019-09-02-ilruntime/656520-20180528144530095-1073548484.png" alt="img"></p>
+<p>继续跟进Read操作：</p>
+<p><img src="../../assets/images/2019-09-02-ilruntime/656520-20180528144543549-1339229040.png" alt="img"></p>
+<p>关键是：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">var mtypes &#x3D; metadata.Types</span><br></pre></td></tr></table></figure>
+
+<p>后续都是对其的封装和填充，对于metadata的填充，来自于InitializeTypeDefinitions这个操作：</p>
+<p><img src="../../assets/images/2019-09-02-ilruntime/656520-20180528144611448-160157189.png" alt="img"></p>
+<p>关键操作是ReadType这个操作：</p>
+<p><img src="../../assets/images/2019-09-02-ilruntime/656520-20180528144626456-2070945940.png" alt="img"></p>
+<p>构建一个内部定义的类，然后做数据填充，看看关键的几个属性的设置：BaseType ,设置其父类型，fields<em>range/methods_range</em> 是对属性范围和方法范围的设置：</p>
+<p><img src="../../assets/images/2019-09-02-ilruntime/656520-20180528144639749-1842647497.png" alt="img"></p>
+<p>所以基本方法还是ReadListRange:</p>
+<p><img src="../../assets/images/2019-09-02-ilruntime/656520-20180528144651716-2020934616.png" alt="img"></p>
+<p>在这儿，我们最终回到了文章二中对于IL虚拟机中的tableHeap的引用，最后实现了和文章二的首尾呼应。</p>
+<p>好了，收起思绪，回到最开始的，获取类，这样获得的一个类，这样得到的一个类，继承自IType，在Unity主工程中，则需要System.Type才能继续使用反射接口，其对于的封装来自昱这个ILType封装的ReflectionType， 其中的ILRuntimeType继承自Type类：</p>
+<p><img src="../../assets/images/2019-09-02-ilruntime/656520-20180528144705308-507336274.png" alt="img"></p>
+<p>基于其，可以直接调用System.Type的GetConstructor方法，构建实例，归并几个代码，可以表示为（直接使用的实例源代码）：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">var it &#x3D; appDomain.LoadedTypes[&quot;HotFix_Project.InstanceClass&quot;];</span><br><span class="line">var type &#x3D; it.ReflectionType;</span><br><span class="line">var ctor &#x3D; type.GetConstructor(new System.Type[0]);</span><br><span class="line">var obj &#x3D; ctor.Invoke(null);</span><br></pre></td></tr></table></figure>
+
+<p>对应可以得到DLL中该类的构造函数的调用：</p>
+<p><img src="../../assets/images/2019-09-02-ilruntime/656520-20180528144743649-1121461434.png" alt="img"></p>
+<h3 id="基于appDomain内嵌的Invoke来实现反射"><a href="#基于appDomain内嵌的Invoke来实现反射" class="headerlink" title="基于appDomain内嵌的Invoke来实现反射"></a>基于appDomain内嵌的Invoke来实现反射</h3><p>在ILRuntime中，在appDomain中内嵌了一套Invoke的实现，可以在Unity工程中直接调用来实现对热更新DLL中类的方法的调用：</p>
+<p><img src="../../assets/images/2019-09-02-ilruntime/656520-20180528144758068-1015276210.png" alt="img"></p>
+<p>关键操作就是2步： GetType和 GetMethod，获取类型的过程，和前面有点类似，就是对mapType中存储的获取，如果没有，则进行查找和填充，这儿重点说说方法是如何获取的：</p>
+<p><img src="../../assets/images/2019-09-02-ilruntime/656520-20180528144811489-2012923950.png" alt="img"></p>
+<p>粗看就是从methods中取出来，做相应的检查，如果通过则返回，那么初始化操作看看：</p>
+<p> <img src="../../assets/images/2019-09-02-ilruntime/656520-20180528144823104-1803890663.png" alt="img"></p>
+<p>最后还是从definition.Methods中取出，逐个遍历其中的方法做一个分类存储，如果有静态构造函数，且满足对于的参数条件，则执行一次静态构造。</p>
+<p>回到开始，在获取到类和方法的相关信息后，就可以执行对于的参数检验，然后执行反射：</p>
+<p><img src="../../assets/images/2019-09-02-ilruntime/656520-20180528144840373-1429288247.png" alt="img"></p>
+<p>可见，就是获取到一个IL的解释器，然后执行相应的反射，具体Run怎么执行，就不继续深入贴图了，有兴趣的可以持续跟踪（基本思路就是对stack的操作，塞入各个参数，然后执行一次操作，塞入结果，然后退回）</p>
+<p>对于ILRuntime的反射基本就先研究到这儿，如果要应用到自己的项目中，可以继续深入研究一下代码，看看实现的具体细节。这儿附上开源的相关文档：</p>
+<p><a href="https://link.zhihu.com/?target=https%3A//ourpalm.github.io/ILRuntime/public/v1/guide/reflection.html">ILRuntime中的反射</a></p>
+<h3 id="热更新DLL和Unity主工程的相互调用"><a href="#热更新DLL和Unity主工程的相互调用" class="headerlink" title="热更新DLL和Unity主工程的相互调用"></a>热更新DLL和Unity主工程的相互调用</h3><p>基于前面的反射，我们可以基本理出热更DLL和unity主工程的交互本质: 基于IL虚拟机或者.net本身反射来实现交互，对于热更新DLL，其调用unity主工程，则主要是在热更新工程中添加对于unity工程的Assembly-CSharp的引用：</p>
+<p><img src="../../assets/images/2019-09-02-ilruntime/656520-20180528144900607-89436059.png" alt="img"></p>
+<p>基于这个引用，可以调用其中类的各自方法，举两个类来测试：</p>
+<p>一个不继承自MonoBehaviour：</p>
+<p><img src="../../assets/images/2019-09-02-ilruntime/656520-20180528144913680-316348813.png" alt="img"></p>
+<p>一个继承自MonoBehaviour:</p>
+<p><img src="../../assets/images/2019-09-02-ilruntime/656520-20180528144932643-1419524295.png" alt="img"></p>
+<p>这两个Unity主工程中的类以及其中的方法，在热更新DLL中调用：</p>
+<p><img src="../../assets/images/2019-09-02-ilruntime/656520-20180528144946464-1425100319.png" alt="img"></p>
+<p>可以在Unity主工程中得到输出：</p>
+<p><img src="../../assets/images/2019-09-02-ilruntime/656520-20180528145001101-1886163550.png" alt="img"></p>
+<p>看一下track可以大概了解整个反射的执行过程。</p>
+<p>对于Unity执行热更DLL中的调用，就是第一部分的反射实例。</p>
+<h1 id="热修复HOTFIX"><a href="#热修复HOTFIX" class="headerlink" title="热修复HOTFIX"></a>热修复HOTFIX</h1><p>腾讯开源的Unity热更解决方案xLua有一个非常吸引人的特性就是Hotfix，其原理是使用Mono.Cecil库对进行C#层编译出来的dll程序集进行IL代码注入。其作者也在知乎的回答中简单说明了原理：<a href="https://link.jianshu.com/?t=https://www.zhihu.com/question/54344452/answer/139413144" target="_blank" rel="noopener">如何评价腾讯在Unity下的xLua（开源）热更方案？ - 车雄生的回答 - 知乎</a></p>
+<blockquote>
+<p><strong>Mono.Ceil</strong></p>
+<p>一个可加载并浏览现有程序集并进行动态修改并保存的.NET框架。可以静态注入程序集（注入后生成新的程序集）和动态注入程序集（注入后不改变目标程序集，只在运行时改变程序集行为。可以通过其实现AOP等高级功能</p>
+</blockquote>
+<p>Unity的代码在修改之后会自动编译到Library\ScriptAssemblies下的两个Assembly中，所以我会尝试着将代码注入到其中。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">public class Test : MonoBehaviour&#123;</span><br><span class="line"></span><br><span class="line">    void Start()</span><br><span class="line">    &#123;</span><br><span class="line">       InjectMod();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    void InjectMod () &#123;</span><br><span class="line">       Debug.Log(&quot;Heihei asdasd&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>将Test绑定到场景物体上，运行后我们会发现输出<code>Heihei asdasd</code>，就像我们预期的一样。 然后我们尝试着将代码注入到该函数中。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">private static bool hasGen &#x3D; false;</span><br><span class="line">[PostProcessBuild(1000)]</span><br><span class="line">private static void OnPostprocessBuildPlayer(BuildTarget buildTarget, string buildPath)</span><br><span class="line">&#123;</span><br><span class="line">   hasGen &#x3D; false;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">[PostProcessScene]</span><br><span class="line">public static void TestInjectMothodOnPost()</span><br><span class="line">&#123;</span><br><span class="line">   if (hasGen &#x3D;&#x3D; true) return;</span><br><span class="line">   hasGen &#x3D; true;</span><br><span class="line"></span><br><span class="line">   TestInjectMothod();</span><br><span class="line">&#125;</span><br><span class="line">[InitializeOnLoadMethod]</span><br><span class="line">public static void TestInjectMothod()</span><br><span class="line">&#123;</span><br><span class="line">   var assembly &#x3D; AssemblyDefinition.ReadAssembly(@&quot;D:\Documents\Unity5Projects\UnityDllInjector\Library\ScriptAssemblies\Assembly-CSharp.dll&quot;);</span><br><span class="line">   var types &#x3D; assembly.MainModule.GetTypes();</span><br><span class="line">   foreach(var type in types)</span><br><span class="line">   &#123;</span><br><span class="line">      foreach(var Method in type.Methods)</span><br><span class="line">      &#123;</span><br><span class="line">         if(Method.Name &#x3D;&#x3D; &quot;InjectMod&quot;)</span><br><span class="line">         &#123;</span><br><span class="line">            InjectMethod(Method, assembly);</span><br><span class="line">         &#125;</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">   var writerParameters &#x3D; new WriterParameters &#123; WriteSymbols &#x3D; true &#125;;</span><br><span class="line">   assembly.Write(@&quot;D:\Documents\Unity5Projects\UnityDllInjector\Library\ScriptAssemblies\Assembly-CSharp.dll&quot;, new WriterParameters());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们首先看<code>TestInjectMothod</code>,这是我们在编辑器下进行注入的函数，这里我们需要注意的是，每当我们修改代码之后我们注入的结果会被覆盖掉，所以我们在每次修改代码之后都需要进行注入，所以我们这里添加了标签：<code>InitializeOnLoadMethod</code>这个标签的意思是，当初始化的时候都进行执行，所以编译完成之后就会自动执行。</p>
+<p>然后我们看前面两个函数，这两个函数是为了在打包时进行注入而存在的，其中hasGen是为了防止重复注入而定义的flag。</p>
+<p>然后我们查看一下我们的注入方法<code>InjectMethod</code>,在这个函数中我们可以看到，我们首先将我们所需要的函数导入，然后插入到方法的最前端：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">private static void InjectMethod(MethodDefinition method, AssemblyDefinition assembly)</span><br><span class="line">&#123;</span><br><span class="line">   var firstIns &#x3D; method.Body.Instructions.First();</span><br><span class="line">   var worker &#x3D; method.Body.GetILProcessor();</span><br><span class="line"></span><br><span class="line">   &#x2F;&#x2F;获取Debug.Log方法引用</span><br><span class="line">   var hasPatchRef &#x3D; assembly.MainModule.Import(</span><br><span class="line">   typeof(Debug).GetMethod(&quot;Log&quot;, new Type[] &#123; typeof(string) &#125;));</span><br><span class="line">   &#x2F;&#x2F;插入函数</span><br><span class="line">   var current &#x3D; InsertBefore(worker, firstIns, worker.Create(OpCodes.Ldstr, &quot;Inject&quot;));</span><br><span class="line">   current &#x3D; InsertBefore(worker, firstIns, worker.Create(OpCodes.Call, hasPatchRef));</span><br><span class="line">   &#x2F;&#x2F;计算Offset</span><br><span class="line">   ComputeOffsets(method.Body);</span><br><span class="line">&#125;</span><br><span class="line">&#x2F;&#x2F;&#x2F; &lt;summary&gt;</span><br><span class="line">&#x2F;&#x2F;&#x2F; 语句前插入Instruction, 并返回当前语句</span><br><span class="line">&#x2F;&#x2F;&#x2F; &lt;&#x2F;summary&gt;</span><br><span class="line">private static Instruction InsertBefore(ILProcessor worker, Instruction target, Instruction instruction)</span><br><span class="line">&#123;</span><br><span class="line">   worker.InsertBefore(target, instruction);</span><br><span class="line">   return instruction;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F;&#x2F; &lt;summary&gt;</span><br><span class="line">&#x2F;&#x2F;&#x2F; 语句后插入Instruction, 并返回当前语句</span><br><span class="line">&#x2F;&#x2F;&#x2F; &lt;&#x2F;summary&gt;</span><br><span class="line">private static Instruction InsertAfter(ILProcessor worker, Instruction target, Instruction instruction)</span><br><span class="line">&#123;</span><br><span class="line">   worker.InsertAfter(target, instruction);</span><br><span class="line">   return instruction;</span><br><span class="line">&#125;</span><br><span class="line">&#x2F;&#x2F;计算注入后的函数偏移值</span><br><span class="line">private static void ComputeOffsets(MethodBody body)</span><br><span class="line">&#123;</span><br><span class="line">   var offset &#x3D; 0;</span><br><span class="line">   foreach (var instruction in body.Instructions)</span><br><span class="line">   &#123;</span><br><span class="line">      instruction.Offset &#x3D; offset;</span><br><span class="line">      offset +&#x3D; instruction.GetSize();</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>等待编译完成，并且运行程序，我们发现在输出原来的语句之前多了一句“Inject”<br>可是我们在查看代码的时候并没有发生任何改变，这是因为我们只修改了dll而并非修改源代码。 </p>
+<h1 id="注意"><a href="#注意" class="headerlink" title="注意"></a>注意</h1><ul>
+<li><p>ILRuntime并没有创建一个Appdomain,只是取其名字意思.始终工作在默认的AppDomain</p>
+</li>
+<li><p>ILRuntime中使用Unity项目的委托,需要创建<strong>DelegateAdapter</strong></p>
+</li>
+<li><p>ILRuntime中继承Unity项目中的类,需要实现<strong>继承适配器</strong></p>
+</li>
+<li><p>通常情况下，如果要从热更DLL中调用Unity主工程或者Unity的接口，是需要通过反射接口来调用的，包括市面上不少其他热更方案，也是通过这种方式来对CLR方接口进行调用的。(反射一个类,然后创建对象,然后保存到runtime中,调用方法也是通过反射)</p>
+<p>但是这种方式有着明显的弊端，最突出的一点就是通过反射来调用接口调用效率会比直接调用低很多，再加上反射传递函数参数时需要使用<code>object[]</code>数组，这样不可避免的每次调用都会产生不少GC Alloc。众所周知GC Alloc高意味着在Unity中执行会存在较大的性能问题。</p>
+<p>ILRuntime通过CLR方法绑定机制，可以<code>选择性</code>的对经常使用的CLR接口进行直接调用，从而尽可能的消除反射调用开销以及额外的<code>GC Alloc</code></p>
+<p>CLR绑定借助了ILRuntime的CLR重定向机制来实现，因为实质上也是将对CLR方法的反射调用重定向到我们自己定义的方法里面来。</p>
+</li>
+</ul>
+<h1 id="相关链接"><a href="#相关链接" class="headerlink" title="相关链接"></a>相关链接</h1><ul>
+<li><a href="https://docs.microsoft.com/zh-cn/dotnet/framework/app-domains/use" target="_blank" rel="noopener">https://docs.microsoft.com/zh-cn/dotnet/framework/app-domains/use</a></li>
+<li><a href="https://www.cnblogs.com/murongxiaopifu/p/4278947.html" target="_blank" rel="noopener">https://www.cnblogs.com/murongxiaopifu/p/4278947.html</a></li>
+<li><a href="https://www.cnblogs.com/murongxiaopifu/p/4211964.html" target="_blank" rel="noopener">https://www.cnblogs.com/murongxiaopifu/p/4211964.html</a></li>
+<li><a href="https://www.cnblogs.com/zblade/p/9100146.html" target="_blank" rel="noopener">https://www.cnblogs.com/zblade/p/9100146.html</a></li>
+<li><a href="http://ourpalm.github.io/ILRuntime/public/v1/guide/bind.html" target="_blank" rel="noopener">http://ourpalm.github.io/ILRuntime/public/v1/guide/bind.html</a></li>
+<li><a href="https://www.jianshu.com/p/4bef7f66aefd" target="_blank" rel="noopener">https://www.jianshu.com/p/4bef7f66aefd</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Win/" rel="tag"># Win</a>
+              <a href="/tags/windows/" rel="tag"># windows</a>
+              <a href="/tags/C/" rel="tag"># C</a>
+              <a href="/tags/C/" rel="tag"># C#</a>
+              <a href="/tags/GitHub/" rel="tag"># GitHub</a>
+              <a href="/tags/Unity/" rel="tag"># Unity</a>
+              <a href="/tags/UNITY/" rel="tag"># UNITY</a>
+              <a href="/tags/proxy/" rel="tag"># proxy</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/unity-2019-09-02-unity-reference-dll/" rel="prev" title="unity的宏以及添加net框架中未引用的dll">
+      <i class="fa fa-chevron-left"></i> unity的宏以及添加net框架中未引用的dll
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/tool-2019-09-02-redis-aof-rdb/" rel="next" title="Redis的两种持久化RDB和AOF">
+      Redis的两种持久化RDB和AOF <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  
+  <div class="comments">
+  <script src="https://utteranc.es/client.js" repo="zhepama/igiven.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async></script>
+  </div>
+  
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#AppDomain"><span class="nav-number">1.</span> <span class="nav-text">AppDomain</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#使用dll进行热更"><span class="nav-number">2.</span> <span class="nav-text">使用dll进行热更</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ios不能基于以上热更的原因"><span class="nav-number">2.0.1.</span> <span class="nav-text">ios不能基于以上热更的原因</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ILRuntime"><span class="nav-number">3.</span> <span class="nav-text">ILRuntime</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#借助Mono-Ceil库来读取DLL的PE信息以及当中类型的所有信息"><span class="nav-number">3.0.1.</span> <span class="nav-text">借助Mono.Ceil库来读取DLL的PE信息以及当中类型的所有信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#最终得到方法的IL汇编码"><span class="nav-number">3.0.2.</span> <span class="nav-text">最终得到方法的IL汇编码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ReadCLIHeader"><span class="nav-number">3.0.3.</span> <span class="nav-text">ReadCLIHeader</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#基于LoadedTypes来实现反射方法的调用"><span class="nav-number">3.0.4.</span> <span class="nav-text">基于LoadedTypes来实现反射方法的调用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#基于appDomain内嵌的Invoke来实现反射"><span class="nav-number">3.0.5.</span> <span class="nav-text">基于appDomain内嵌的Invoke来实现反射</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#热更新DLL和Unity主工程的相互调用"><span class="nav-number">3.0.6.</span> <span class="nav-text">热更新DLL和Unity主工程的相互调用</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#热修复HOTFIX"><span class="nav-number">4.</span> <span class="nav-text">热修复HOTFIX</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#注意"><span class="nav-number">5.</span> <span class="nav-text">注意</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#相关链接"><span class="nav-number">6.</span> <span class="nav-text">相关链接</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhepama"
+      src="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+  <p class="site-author-name" itemprop="name">zhepama</p>
+  <div class="site-description" itemprop="description">一个不专业的程序员,写着专业的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">139</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhepama" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhepama" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhepama@gmail.com" title="E-Mail → mailto:zhepama@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.godgodgame.com/" title="http:&#x2F;&#x2F;www.godgodgame.com" rel="noopener" target="_blank">GODGODGAME</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.igiven.com/" title="https:&#x2F;&#x2F;www.igiven.com">IGIVEN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhepama.github.io/C-Sharp-Playground/zh/" title="https:&#x2F;&#x2F;zhepama.github.io&#x2F;C-Sharp-Playground&#x2F;zh&#x2F;" rel="noopener" target="_blank">数据结构与算法</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhepama</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

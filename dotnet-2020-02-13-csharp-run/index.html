@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.igiven.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="用C#编写的源代码被编译为一种符合CLI规范的中间语言（IL）。IL代码与资源（例如位图和字符串）一起作为一种称为程序集的可执行文件存储在磁盘上，通常具有的扩展名为.exe（应用程序）或.dll（库）。程序集包含清单，它提供有关程序集的类型、版本、区域性和安全要求等信息。 执行C#程序时，程序集将加载到CLR中，它可能会根据清单中的信息执行不同的操作。然后，如果符合安全要求，CLR就会执行实时（J">
+<meta property="og:type" content="article">
+<meta property="og:title" content="c#编译和运行启动原理">
+<meta property="og:url" content="http://www.igiven.com/dotnet-2020-02-13-csharp-run/index.html">
+<meta property="og:site_name" content="IGiven">
+<meta property="og:description" content="用C#编写的源代码被编译为一种符合CLI规范的中间语言（IL）。IL代码与资源（例如位图和字符串）一起作为一种称为程序集的可执行文件存储在磁盘上，通常具有的扩展名为.exe（应用程序）或.dll（库）。程序集包含清单，它提供有关程序集的类型、版本、区域性和安全要求等信息。 执行C#程序时，程序集将加载到CLR中，它可能会根据清单中的信息执行不同的操作。然后，如果符合安全要求，CLR就会执行实时（J">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-02-13-csharp-run/094920_15170513.gif">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-02-13-csharp-run/v2-757e0e6e8813e7441cd758121e564729_1440w.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-02-13-csharp-run/884430-20160313213206835-2135598609.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-02-13-csharp-run/884430-20160313222148397-1732805152.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-02-13-csharp-run/884430-20160313222410850-1585024295.png">
+<meta property="article:published_time" content="2020-02-13T00:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-26T08:36:17.942Z">
+<meta property="article:author" content="zhepama">
+<meta property="article:tag" content="Win">
+<meta property="article:tag" content="windows">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="C#">
+<meta property="article:tag" content="同步">
+<meta property="article:tag" content="Java">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.igiven.com/assets/images/2020-02-13-csharp-run/094920_15170513.gif">
+
+<link rel="canonical" href="http://www.igiven.com/dotnet-2020-02-13-csharp-run/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>c#编译和运行启动原理 | IGiven</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="IGiven" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="IGiven" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">IGiven</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">李九仙的博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">139</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">32</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-留言">
+
+    <a href="/guestbook/" rel="section"><i class="fa fa-sticky-note fa-fw"></i>留言</a>
+
+  </li>
+        <li class="menu-item menu-item-rss">
+
+    <a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/dotnet-2020-02-13-csharp-run/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+      <meta itemprop="name" content="zhepama">
+      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="IGiven">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          c#编译和运行启动原理<a href="https://github.com/zhepama/igiven.github.io/edit/master/source/_posts/dotnet/2020-02-13-csharp-run.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil-alt"></i></a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-02-13 08:00:00" itemprop="dateCreated datePublished" datetime="2020-02-13T08:00:00+08:00">2020-02-13</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 16:36:17" itemprop="dateModified" datetime="2021-06-26T16:36:17+08:00">2021-06-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/dotnet/" itemprop="url" rel="index"><span itemprop="name">dotnet</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>用C#编写的源代码被编译为一种符合CLI规范的中间语言（IL）。IL代码与资源（例如位图和字符串）一起作为一种称为程序集的可执行文件存储在磁盘上，通常具有的扩展名为.exe（应用程序）或.dll（库）。程序集包含清单，它提供有关程序集的类型、版本、区域性和安全要求等信息。</p>
+<p>执行C#程序时，程序集将加载到CLR中，它可能会根据清单中的信息执行不同的操作。然后，如果符合安全要求，CLR就会执行实时（JIT）编译以将IL代码转换为本机机器指令。CLR还提供与自动垃圾回收、异常处理和资源管理有关的其他服务。由CLR执行的代码有时会称为“托管代码”。</p>
+<p>[<img src="../../assets/images/2020-02-13-csharp-run/094920_15170513.gif" alt="什么是C#语言？作用有哪些？">]</p>
+<p><img src="../../assets/images/2020-02-13-csharp-run/v2-757e0e6e8813e7441cd758121e564729_1440w.jpg" alt="img"></p>
+<h2 id="编译器"><a href="#编译器" class="headerlink" title="编译器"></a>编译器</h2><p><a href="https://docs.microsoft.com/zh-cn/dotnet/csharp/language-reference/compiler-options/" target="_blank" rel="noopener">CSC.exe</a>是C＃编译器，可以编译您的C＃代码并生成可执行（.exe）文件，动态链接库（.dll）或代码模块（.netmodule）。</p>
+<p><a href="https://docs.microsoft.com/zh-cn/visualstudio/msbuild/msbuild" target="_blank" rel="noopener">MSBuild</a>是Microsoft Build Engine，可用于从Visual Studio生成<a href="https://docs.microsoft.com/zh-cn/visualstudio/ide/solutions-and-projects-in-visual-studio" target="_blank" rel="noopener">项目和解决方案</a> 。 此外，即使我编写了一些.cs文件和一个自定义项目文件（.xxproj）来构建它们，我们也可以使用msbuild.exe并使用<code>msbuild xxx.xxproj</code>类的命令来构建它们。 请参阅<a href="https://docs.microsoft.com/zh-cn/visualstudio/msbuild/walkthrough-creating-an-msbuild-project-file-from-scratch" target="_blank" rel="noopener">本文档</a> 。</p>
+<p><strong>它们之间的关系：</strong></p>
+<ol>
+<li>如果我只有几个.cs文件，并且想要编译它们以输出.exe及其它内容，那么csc.exe就足够了。 <a href="https://docs.microsoft.com/zh-cn/dotnet/csharp/language-reference/compiler-options/command-line-building-with-csc-exe" target="_blank" rel="noopener">在命令行中</a> （ <code>by cmd.exe or other things</code> ） 使用它来编译代码。</li>
+<li>如果创建项目文件（.xxproj）以更好地控制资源，.cs文件和其他文件，则可以<a href="https://docs.microsoft.com/zh-cn/visualstudio/msbuild/msbuild-command-line-reference" target="_blank" rel="noopener">在命令行中使用msbuild</a>来构建它们以输出.exe或其他内容。 我们应该知道的一点是，msbuild.exe不仅可以构建C＃代码，而且还可以构建<code>VB.net, C++, F#</code> …当我使用msbuild使用<code>msbuild xx.csproj</code>类的命令来构建C＃代码时，它将<code>call csc.exe to compile C# code and pass parameters read from the .csproj file to it</code> 。</li>
+<li>尽管msbuild是Visual Studio中的构建系统，但它并不依赖于Visual Studio。</li>
+</ol>
+<p>您可能想知道msbuild传递给特定构建的csc的信息。 在这种情况下，只需使用msbuild的详细程度开关即可：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">msbuild MyProject.csproj &#x2F;target:rebuild &#x2F;verbosity:diag</span><br></pre></td></tr></table></figure>
+
+<p>请参阅<a href="https://docs.microsoft.com/zh-cn/visualstudio/msbuild/obtaining-build-logs-with-msbuild?view=vs-2015&redirectedfrom=MSDN" target="_blank" rel="noopener">使用MSBuild获取构建日志</a> 。</p>
+<h3 id="mono系列"><a href="#mono系列" class="headerlink" title="mono系列"></a>mono系列</h3><p>Mono C＃编译器被认为是C＃1.0，C＃2.0，C＃3.0，C＃4.0，C＃5.0和C＃6.0（ECMA）的完整功能，并且部分支持C＃7。<a href="https://www.mono-project.com/docs/about-mono/languages/csharp/" target="_blank" rel="noopener">https://www.mono-project.com/docs/about-mono/languages/csharp/</a></p>
+<p>从历史上看，存在相同编译器的各种版本。</p>
+<ul>
+<li><p>gmcs：编译器以2.0 mscorlib为目标。引用2.0概要文件库（在.NET 2.0和.NET 3.5中定义的API）并公开完整的C＃3.0语言。</p>
+</li>
+<li><p>smcs：以2.1 mscorlib为目标的编译器，以构建Moonlight应用程序。 引用2.1概要文件库（为Silverlight定义的API）并公开完整的C＃3.0语言。这是用于创建Silverlight / Moonlight应用程序的编译器。</p>
+</li>
+<li><p>dmcs：编译器针对4.0 mscorlib。引用4.0概要文件库（.NET 4.0中定义的API）并支持C＃4.0。</p>
+</li>
+</ul>
+<h2 id="编译为-MSIL"><a href="#编译为-MSIL" class="headerlink" title="编译为 MSIL"></a>编译为 MSIL</h2><p>编译为托管代码时，编译器将源代码转换为 Microsoft 中间语言 (MSIL)，这是一组独立于 CPU 且可以有效地转换为本机代码的说明。 MSIL 包括有关加载、存储、初始化和调用对象方法的说明，以及有关算术和逻辑运算、控制流、直接内存访问、异常处理和其他操作的说明。 代码可以运行之前，必须将 MSIL 转换为特定于 CPU 的代码，通常通过 <a href="https://docs.microsoft.com/zh-cn/dotnet/standard/managed-execution-process?redirectedfrom=MSDN#compiling_msil_to_native_code" target="_blank" rel="noopener">实时 (JIT) 编译器</a>实现。 由于公共语言运行时为其支持的每个计算机基础结构提供一个或多个 JIT 编译器，同一组的 MSIL 可以在任何受支持的基础结构上进行 JIT 编译和运行。</p>
+<p>当编译器生成 MSIL 时，它还生成元数据。 元数据描述代码中的类型，包括每种类型的定义、每种类型的成员的签名、代码引用的成员以及运行时在执行时间使用的其他数据。 MSIL 和元数据包含在一个可移植的可执行 (PE) 文件中，该文件基于且扩展已发布的 Microsoft PE 和历来用于可执行内容的通用对象文件格式 (COFF)。 容纳 MSIL 或本机代码以及元数据的这种文件格式使操作系统能够识别公共语言运行时映像。 文件中元数据的存在以及 MSIL 使代码能够描述自身，这意味着将不需要类型库或接口定义语言 (IDL)。 运行时在执行期间会根据需要从文件中查找并提取元数据。</p>
+<blockquote>
+<p><strong>什么是非托管代码(unmanaged code)？</strong>　　</p>
+<p>　　<strong>非托管代码，直接编译成目标计算机码，在</strong><a href="http://baike.baidu.com/view/159628.htm" target="_blank" rel="noopener"><strong>公共语言运行库</strong></a><strong>环境的外部，由操作系统直接执行的代码，代码必须自己提供垃圾回收，类型检查，安全支持等服务。如需要内存管理等服务，必须显示调用操作系统的接口，通常调用Windows SDK所提供的API来实现内存管理。</strong></p>
+<p> 当项目选择名字以MFC，ATL，Win32开头的项目类型，那么这个项目所产生的就是非托管程序。</p>
+<p> 非托管代码就是在Visual Studio .NET 2002发布之前所创建的代码。例如Visual Basic 6, Visual C++ 6, 最糟糕的是，连那些依然残存在你的硬盘中、拥有超过15年历史的陈旧C编译器所产生的代码都是非托管代码。托管代码直接编译成目标计算机的机械码，这些代码只能运行在编译出它们的计算机上，或者是其它相同处理器或者几乎一样处理器的计算机上。非托管代码不能享受一些运行库所提供的服务，例如安全和内存管理等。如果非托管代码需要进行内存管理等服务，就必须显式地调用操作系统的接口，通常来说，它们会调用Windows SDK所提供的API来实现。就最近的情况来看，非托管程序会通过COM接口来获取操作系统服务。</p>
+<p> 跟Visual Studio平台的其他编程语言不一样，Visual C++可以创建非托管程序。当你创建一个项目，并且选择名字以M FC，ATL或者Win32开头的项目类型，那么这个项目所产生的就是非托管程序。</p>
+</blockquote>
+<h2 id="将-MSIL-编译为本机代码"><a href="#将-MSIL-编译为本机代码" class="headerlink" title="将 MSIL 编译为本机代码"></a>将 MSIL 编译为本机代码</h2><p>运行 Microsoft 中间语言 (MSIL) 前，必须根据CLR公共语言运行时将其编译为目标计算机基础结构的本机代码。 .NET Framework 提供两种方法来执行此转换：</p>
+<ul>
+<li>.NET Framework 实时 (JIT) 编译器。</li>
+<li>.NET Framework <a href="https://docs.microsoft.com/zh-cn/dotnet/framework/tools/ngen-exe-native-image-generator" target="_blank" rel="noopener">Ngen.exe（本机映像生成器）</a>。</li>
+</ul>
+<h3 id="由-JIT-编译器编译"><a href="#由-JIT-编译器编译" class="headerlink" title="由 JIT 编译器编译"></a>由 JIT 编译器编译</h3><p>在加载和执行程序集的内容时，JIT 编译在应用程序运行时按需将 MSIL 转换为本机代码。 由于公共语言运行时为每个受支持的 CPU 基础结构提供 JIT 编译器，开发人员可以构建一组 MSIL 程序集，这些程序集可以进行 JIT 编译并可在具有不同计算机基础结构的不同计算机上运行。 但是，如果你的托管代码调用特定于平台的本机 API 或特定于平台的类库，它将仅在该操作系统上运行。</p>
+<p>JIT 编译将执行期间可能永远不会调用的某些代码的可能性考虑在内。 它根据需要在执行期间转换 MSIL，而不是使用时间和内存来将 PE 文件中所有 MSIL 转换为本机代码，并在内存中存储生成的本机代码，以便该进程上下文中的后续调用可以对其进行访问。 加载类型并将其初始化时，加载程序创建并将存根附加到类型中的每个方法。 第一次调用某个方法时，存根将控件传递给 JIT 编译器，后者将该方法的 MSIL 转换为本机代码，并将存根修改为直接指向生成的本机代码。 因此，对 JIT 编译的方法的后续调用会直接转到本机代码。</p>
+<h3 id="使用-NGen-exe-的安装时代码生成"><a href="#使用-NGen-exe-的安装时代码生成" class="headerlink" title="使用 NGen.exe 的安装时代码生成"></a>使用 NGen.exe 的安装时代码生成</h3><p>由于在调用该程序集中定义的各个方法时，JIT 编译器将程序集的 MSIL 转换为本机代码，因此它在运行时中对性能产生负面影响。 在大多数情况下，这种性能降低的程度是可以接受的。 更为重要的是，由 JIT 编译器生成的代码会绑定到触发编译的进程上。 它无法在多个进程之间进行共享。 若要允许生成的代码跨应用程序的多个调用或跨共享一组程序集的多个进程进行共享，则公共语言运行时支持预编译模式。 这种预编译模式使用 <a href="https://docs.microsoft.com/zh-cn/dotnet/framework/tools/ngen-exe-native-image-generator" target="_blank" rel="noopener">Ngen.exe（本机映像生成器）</a>将 MSIL 程序集转换为本机代码，非常类似 JIT 编译器执行的操作。 但是，Ngen.exe 的操作在三个方面不同于 JIT 编译器的操作：</p>
+<ul>
+<li>它在运行应用程序之前而非运行该应用程序时，将 MSIL 转换为本机代码。</li>
+<li>它一次编译整个程序集，而不是一次编译一种方法。</li>
+<li>它将本机映像缓存中生成的代码作为磁盘上的文件保存。</li>
+</ul>
+<blockquote>
+<p>基本上每个人都知道的是，所有.Net语言都将被编译成为一个叫做IL汇编的中间语言。但是计算机是如何执行这个中间代码的，却是很多人不知道，甚至理解错误了的。JIT是.NET程序运行的重要部件之一，全称是即时编译器。很多人都以为JIT其实就是跟Java VM差不多的东西，是一个Interpreter，在运行时读取IL汇编代码，然后模拟成x86代码（也就是俗称的虚拟机）。但是事实上，.NET使用的是更为高级的技术。 .Net程序被加载入内存以后，当某段IL代码被第一次运行的时候，JIT编译器就会将这段IL代码，全部编译成本地代码，然后再执行。这也就是为什么.NET程序第一次运行都启动很慢的原因！ 随.NET库，微软还附带了一个工具，可以事先将.NET程序所有的IL代码都编译成本地代码并保存在缓存区中，这样一来，这个程序就跟c++编译的一模一样了，没有任何区别，运行时也可以脱离JIT了（这里不要混淆了，这里不是说可以脱离.NET库，而是说不需要在进行即时编译这个过程了）。所以，请不要将.NET和Java混为一谈，两个的运行效率根本不是一个等级的！</p>
+<p> JIT的优化指的是可以针对本地CPU，在编译时进行优化。传统程序在编译时，为了保证兼容性，通常使用最通用的指令集（比如古老的386指令集）来编译。而JIT知道CPU的具体类型，可以充分利用这些附加指令集进行编译，这样的性能提升是很可观的。</p>
+</blockquote>
+<h1 id="运行"><a href="#运行" class="headerlink" title="运行"></a>运行</h1><p>PE（Portable Execute）文件是Windows下可执行文件的总称，常见的有DLL，EXE，OCX，SYS等，事实上，一个文件是否是PE文件与其扩展名无关，PE文件可以是任何扩展名。那Windows是怎么区分可执行文件和非可执行文件的呢？我们调用LoadLibrary传递了一个文件名，系统是如何判断这个文件是一个合法的动态库呢？这就涉及到PE文件结构了</p>
+<p>C#生成的exe既然是window下可执行文件，那也就是标准的PE文件，和普通win32的exe文件格式一样。我们来看下exe文件的格式：</p>
+<blockquote>
+<p>dll文件本质上和exe一样，只是少了入口函数。</p>
+</blockquote>
+<p><img src="../../assets/images/2020-02-13-csharp-run/884430-20160313213206835-2135598609.png" alt="img"></p>
+<p>MS-DOC MZ Header和MS-DOS Stub是为了兼容DOS系统存在的，目的是使这个exe在DOS下执行时弹出一个提示”This program cannot be run in DOS mode”。</p>
+<p>PE Header包含了这个文件的一些信息，如：文件创建日期，文件类型，Section的数量，Optional Header的大小等等。详细可以参考Winnt.h里的结构_IMAGE_FILE_HEADER。</p>
+<p>PE Optional Header则包含了文件的版本号以及重要的基地址和AddressOfEntryPoint（RVA-Relative Virtual Address)，这是程序执行的入口地址，双击exe后就从这里开始执行。对C#程序来说，这里指向的是.net的核心库MsCorEE.dll的_CorExeMain()函数。当然这是针对XP系统的，XP以后的系统，OS Loader已经可以判断出这个PE是否包含CLR头来决定是否运行MsCorEE.dll的_CorExeMain()函数。</p>
+<p>Section有很多，包括代码节，数据节等，C#程序会把CLR头，元数据，IL放在这里面。</p>
+<blockquote>
+<p>CLR是什么呢，全称Common Language Runtime，公共语言运行时，CLR主要是管理程序集，托管堆内存，异常处理和线程同步等等。</p>
+</blockquote>
+<p>CLR头具体可以参考CorHdr.h中的IMAGE_COR20_HEADER结构，如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">typedef struct IMAGE_COR20_HEADER</span><br><span class="line">    &#123;</span><br><span class="line">        &#x2F;&#x2F; CLR版本信息</span><br><span class="line">        ULONG cb;</span><br><span class="line">        USHORT MajorRuntimeVersion;</span><br><span class="line">        USHORT MinorRuntimeVersion;</span><br><span class="line"></span><br><span class="line">        IMAGE_DATA_DIRECTORY MetaData; &#x2F;&#x2F;元数据</span><br><span class="line">        ULONG Flags;</span><br><span class="line">        ULONG EntryPointToken;  &#x2F;&#x2F;入口函数Main的标识</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        IMAGE_DATA_DIRECTORY Resources;  &#x2F;&#x2F;资源</span><br><span class="line">        IMAGE_DATA_DIRECTORY StrongNameSignature;  &#x2F;&#x2F;强名称标识</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        &#x2F;&#x2F; Regular fixup and binding information</span><br><span class="line">        IMAGE_DATA_DIRECTORY CodeManagerTable;</span><br><span class="line">        IMAGE_DATA_DIRECTORY VTableFixups;</span><br><span class="line">        IMAGE_DATA_DIRECTORY ExportAddressTableJumps;</span><br><span class="line"></span><br><span class="line">        &#x2F;&#x2F; Precompiled image info (internal use only - set to zero)</span><br><span class="line">        IMAGE_DATA_DIRECTORY ManagedNativeHeader;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">    IMAGE_COR20_HEADER;</span><br></pre></td></tr></table></figure>
+
+<p>元数据很重要，验证代码类型安全，GC的对象引用跟踪还有我们常用的反射都需要用到元数据。</p>
+<p>元数据主要由定义表，引用表，清单表组成。</p>
+<p>定义表包括应用所有的类型，方法，字段，属性，参数，事件的定义,代码里任何的定义项都可以在这个表里找到，反射就是靠这个表只要一个名字就能得到属性或函数。运行时的类型安全检查也离不开它。</p>
+<p>引用表包括程序集，类型和成员的引用，我们知道GC在回收内存时先默认认为所有对象都是垃圾，然后通过线程栈上的根（cpu寄存器，局部变量，参数，静态变量）找引用的对象，能找到的说明还在使用就去掉垃圾标记，这个表可以让GC在回收内存时方便从根找到所有引用。</p>
+<p>清单表主要是程序集，文件，资源的定义。</p>
+<p>现在来看看双击后是怎样运行的：</p>
+<p><img src="../../assets/images/2020-02-13-csharp-run/884430-20160313222148397-1732805152.png" alt="img"></p>
+<p>双击文件后OS Loader加载PE文件并解析，在PE Optional Header里找到基地址和RVA，通过这两个确定了程序的入口地址，这个地址指向MsCorEE.dll的_CorExeMain()，执行它。_CorExeMain()开始执行，选择加载合适版本的CLR，CLR开始运行，CLR运行时会分配一个连续的地址空间用作托管堆，并用一个指针NextObjPtr指到开始位置，下次分配内存时就从指针指的位置开始。</p>
+<p>CLR运行后从CLR头里找到应用程序入口标识，也就是Main()方法的MethodDefToken，通过这个标识在元数据表MethodDef里找到Main方法的偏移位置，这样就可以找到Main()的IL代码。</p>
+<p>CLR检查Main方法里面是否有没加载的类型，没有的话就加载进来并在托管堆上建一个类型对象，类型对象包含静态字段，方法，基类的引用。然后给类型的方法表里每个方法一个存根，存根是用于标识是否被JIT编译过。</p>
+<blockquote>
+<p>JIT: just-in-time Compiler，即时编译器。</p>
+</blockquote>
+<p>JIT编译之前CLR会对Main方法的代码进行验证，确保类型安全且元数据正确，一切没问题后先检查类型方法表里这个方法的存根，不为空的话表示已经编译过就不需要再次编译，没有的话JIT把这段IL代码编译成本地代码保存到内存中并方法表的存根做上标记，然后JIT返回编译前的位置并把原来CLR指向JIT的地址修改为指向本地代码的地址，这样函数的本地代码开始执行。程序执行到哪里就编译到哪里，没有执行到的就不会加载和编译，同样的代码再次执行的话就直接在内存里拿了，这也是为什么第一次运行C#时比较慢而后面就快的原因。这样就开始陆续执行所有的代码，程序也就跑起来了。</p>
+<p>在内存上，运行线程会把函数的参数和局部变量压入线程栈上，栈上的空间默认是1M，方法的参数和局部变量都会压到函数的栈帧上，方法里的对象在托管堆NextObjPtr指向的位置分配内存并把内存地址存到栈上的局部变量里。CLR会给托管堆上的每个对象包括对象类型都添加两个字段，一个对象类型指针，一个同步块索引。</p>
+<blockquote>
+<p>说起栈帧，大家在调试代码时应该都喜欢用CallStack吧，这可以通过看调用栈很方便来定位出问题的具体原因，这个CallStack也就是方法的栈帧的具体显示，一级一级的。</p>
+</blockquote>
+<p>对象类型指针从字面上就很容易知道跟类型有关。CLR刚开始运行时就分配了一个Type的对象类型，他的对象类型指针指向自己，后面创建的对象类型的对象类型指针指针就指向这个Type，而new出来的对象的对象类型指针就指向它的类型，这样所有对象都能找到自己的类型使CLR在运行时能确保类型安全。</p>
+<p>同步块索引的格式是前6个标志位加后面26位内容（32位系统），作用则有好几个。</p>
+<p>\1. 调用对象的gethashcode()后标志位改变一位，后26位会存储对象的hashcode，保证对象生命周期内hashcode的唯一；</p>
+<p>\2. lock时用到，CLR会维护一个同步块数组，每项由一个指向同步块的指针和对象指针组成，lock时同样改变标识位，然后去同步块数组找一个闲置项，后26则变成这项在数组中的索引，有人要问了，刚才hashcode不是用了这26位吗，现在变了，hashcode岂不是丢了。确实，hashcode在lock之后不能直接存到索引了，不过同步块中专门准备了一个字段用来存hashcode，所以可以转移到同步块中，这样设计是为了节省内存，因为大部分情况下是不用lock的，也就不需要增加多余的同步块。</p>
+<p>另外为什么是索引而不是地址呢，因为同步块数组的大小不是固定的，随着对象的增多而变大，在内存上的位置可能会发生变化，所以用索引就不用管数组在哪个位置了。</p>
+<p>当线程进入lock后检查同步块的m_motion，发现没有标识则进入lock区域并把标识改变，如果已经有同一个线程进去则把计数器加1，如果已经有其他线程则等待。</p>
+<p>\3. 垃圾回收时的标识，GC触发时首先认为所有的对象都是垃圾，由局部变量，寄存器，静态变量这些根向上找，凡是包含的对象都认为还有引用，在同步块索引上修改一位标识，当所有对象都遍历过后没有标识的对象就会被清掉，然后再是整理内存、修改引用地址等。</p>
+<p>看个简单的例子，只用于演示，不考虑合理性：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line">using System;</span><br><span class="line"></span><br><span class="line">namespace Test</span><br><span class="line">&#123;</span><br><span class="line">    class Program</span><br><span class="line">    &#123;</span><br><span class="line">        static void Main(string[] args)</span><br><span class="line">        &#123;</span><br><span class="line">            int height &#x3D; 170;</span><br><span class="line">            int weight &#x3D; 60;</span><br><span class="line">            People.Find();</span><br><span class="line">            People developer &#x3D; new Developer()(height, weight);</span><br><span class="line">            bool isHealthyWeight &#x3D; developer.IsHealthyWeight();</span><br><span class="line">            bool isRich &#x3D; developer.IsRich();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    class People</span><br><span class="line">    &#123;</span><br><span class="line">        int _height;</span><br><span class="line">        int _weight;</span><br><span class="line"></span><br><span class="line">        public People(int height, int weight)</span><br><span class="line">        &#123;</span><br><span class="line">            _height &#x3D; height;</span><br><span class="line">            _weight &#x3D; weight;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        public virtual bool IsRich();</span><br><span class="line"></span><br><span class="line">        public bool IsHealthyWeight()</span><br><span class="line">        &#123;</span><br><span class="line">            var healthyWeight &#x3D; (Height - 80) * 0.7;</span><br><span class="line">            return Weight &lt;&#x3D; healthyWeight * 1.1 &amp;&amp; Weight &gt;&#x3D; healthyWeight * 0.9;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        public static string Find(string id) &#123; return &quot;&quot;; &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    class Developer : People</span><br><span class="line">    &#123;</span><br><span class="line">        public Developer(int height, int weight) : base(height, weight)</span><br><span class="line">        &#123; &#125;</span><br><span class="line"></span><br><span class="line">        public override bool IsRich()</span><br><span class="line">        &#123;</span><br><span class="line">            return false;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><img src="../../assets/images/2020-02-13-csharp-run/884430-20160313222410850-1585024295.png" alt="img"></p>
+<p><em>*图片不清楚可以放大看</em></p>
+<p>首先判断类型是否都加载，用到了int，bool，string，这些是在mscorlib.dll程序集的system命名空间下，所以先加载mscorlib.dll程序集，再把int，bool，string加到类型对象里。另外还有我们自己定义的Developer和People，也把类型对象创建好，另外也别忘了基类object，也要加载进来。（实际上还有double啊，这里就没画了）另外继承类的类型对象里面都有个字段指向基类，所以才能往上执行到基类方法表里的方法。</p>
+<p>局部变量都在线程栈上，Find()方法是静态方法，直接去People类型对象的方法表里去找，找到后看是否有存根标识，没有的话做JIT编译，有的话直接运行。</p>
+<p>developer的实例化虽然是用People定义的，但实例还是Developer，所以developer的类型对象指针指向Developer，对象里除了类型对象指针还有实例字段，包括基类的。内存分配在托管堆上，并把地址给到线程栈上的变量中。</p>
+<p>虚函数也一样，在运行时已经确定是Developer，所以会调用Developer方法表里的IsRich方法，一样先JIT，再运行。</p>
+<p>以上就是一个简单的C#程序的运行过程和在内存上的表现，本篇主要内容来自CLR via C#这本书</p>
+<ul>
+<li><a href="https://www.cnblogs.com/brookshi/p/5273281.html" target="_blank" rel="noopener">https://www.cnblogs.com/brookshi/p/5273281.html</a></li>
+<li><a href="https://docs.microsoft.com/zh-cn/dotnet/standard/managed-execution-process?redirectedfrom=MSDN#compiling_to_msil" target="_blank" rel="noopener">https://docs.microsoft.com/zh-cn/dotnet/standard/managed-execution-process?redirectedfrom=MSDN#compiling_to_msil</a></li>
+<li><a href="https://docs.microsoft.com/zh-cn/dotnet/standard/clr" target="_blank" rel="noopener">https://docs.microsoft.com/zh-cn/dotnet/standard/clr</a></li>
+<li><a href="https://www.cnblogs.com/qtiger/p/11176575.html" target="_blank" rel="noopener">https://www.cnblogs.com/qtiger/p/11176575.html</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Win/" rel="tag"># Win</a>
+              <a href="/tags/windows/" rel="tag"># windows</a>
+              <a href="/tags/C/" rel="tag"># C</a>
+              <a href="/tags/C/" rel="tag"># C#</a>
+              <a href="/tags/%E5%90%8C%E6%AD%A5/" rel="tag"># 同步</a>
+              <a href="/tags/Java/" rel="tag"># Java</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/dotnet-2020-02-12-netcore-mono-netframework/" rel="prev" title="扒一扒.net、.net framework、mono和Unity">
+      <i class="fa fa-chevron-left"></i> 扒一扒.net、.net framework、mono和Unity
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/unity-2020-02-15-skill-system/" rel="next" title="技能系统">
+      技能系统 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  
+  <div class="comments">
+  <script src="https://utteranc.es/client.js" repo="zhepama/igiven.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async></script>
+  </div>
+  
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#编译器"><span class="nav-number">1.</span> <span class="nav-text">编译器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#mono系列"><span class="nav-number">1.1.</span> <span class="nav-text">mono系列</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#编译为-MSIL"><span class="nav-number">2.</span> <span class="nav-text">编译为 MSIL</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#将-MSIL-编译为本机代码"><span class="nav-number">3.</span> <span class="nav-text">将 MSIL 编译为本机代码</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#由-JIT-编译器编译"><span class="nav-number">3.1.</span> <span class="nav-text">由 JIT 编译器编译</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用-NGen-exe-的安装时代码生成"><span class="nav-number">3.2.</span> <span class="nav-text">使用 NGen.exe 的安装时代码生成</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#运行"><span class="nav-number"></span> <span class="nav-text">运行</span></a></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhepama"
+      src="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+  <p class="site-author-name" itemprop="name">zhepama</p>
+  <div class="site-description" itemprop="description">一个不专业的程序员,写着专业的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">139</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhepama" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhepama" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhepama@gmail.com" title="E-Mail → mailto:zhepama@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.godgodgame.com/" title="http:&#x2F;&#x2F;www.godgodgame.com" rel="noopener" target="_blank">GODGODGAME</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.igiven.com/" title="https:&#x2F;&#x2F;www.igiven.com">IGIVEN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhepama.github.io/C-Sharp-Playground/zh/" title="https:&#x2F;&#x2F;zhepama.github.io&#x2F;C-Sharp-Playground&#x2F;zh&#x2F;" rel="noopener" target="_blank">数据结构与算法</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhepama</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.igiven.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="NetworkStreamReceiveSystem 客户端连接服务端  ,服务端创建NetworkIdComponent  客户端添加NetworkStreamInGame组件,并通过rpc 发送GoInGameRequest请求  服务端接收到请求后,实例化player  为player添加GhostOwnerComponent 初始化player添加一些其他不需要同步的组件 为connect">
+<meta property="og:type" content="article">
+<meta property="og:title" content="netcode源代码解读">
+<meta property="og:url" content="http://www.igiven.com/unity-2020-11-18-netcode-sourcecode/index.html">
+<meta property="og:site_name" content="IGiven">
+<meta property="og:description" content="NetworkStreamReceiveSystem 客户端连接服务端  ,服务端创建NetworkIdComponent  客户端添加NetworkStreamInGame组件,并通过rpc 发送GoInGameRequest请求  服务端接收到请求后,实例化player  为player添加GhostOwnerComponent 初始化player添加一些其他不需要同步的组件 为connect">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-11-18-netcode-sourcecode/image-20201206011918426.png">
+<meta property="article:published_time" content="2020-11-18T00:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-26T08:36:17.950Z">
+<meta property="article:author" content="zhepama">
+<meta property="article:tag" content="Win">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="Unity">
+<meta property="article:tag" content="同步">
+<meta property="article:tag" content="UNITY">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.igiven.com/assets/images/2020-11-18-netcode-sourcecode/image-20201206011918426.png">
+
+<link rel="canonical" href="http://www.igiven.com/unity-2020-11-18-netcode-sourcecode/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>netcode源代码解读 | IGiven</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="IGiven" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="IGiven" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">IGiven</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">李九仙的博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">139</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">32</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-留言">
+
+    <a href="/guestbook/" rel="section"><i class="fa fa-sticky-note fa-fw"></i>留言</a>
+
+  </li>
+        <li class="menu-item menu-item-rss">
+
+    <a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/unity-2020-11-18-netcode-sourcecode/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+      <meta itemprop="name" content="zhepama">
+      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="IGiven">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          netcode源代码解读<a href="https://github.com/zhepama/igiven.github.io/edit/master/source/_posts/unity/2020-11-18-netcode-sourcecode.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil-alt"></i></a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-11-18 08:00:00" itemprop="dateCreated datePublished" datetime="2020-11-18T08:00:00+08:00">2020-11-18</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 16:36:17" itemprop="dateModified" datetime="2021-06-26T16:36:17+08:00">2021-06-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/unity/" itemprop="url" rel="index"><span itemprop="name">unity</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="NetworkStreamReceiveSystem"><a href="#NetworkStreamReceiveSystem" class="headerlink" title="NetworkStreamReceiveSystem"></a>NetworkStreamReceiveSystem</h1><ol>
+<li><p>客户端连接服务端  ,服务端创建NetworkIdComponent</p>
+</li>
+<li><p>客户端添加NetworkStreamInGame组件,并通过rpc 发送GoInGameRequest请求</p>
+</li>
+<li><p>服务端接收到请求后,实例化player</p>
+<ul>
+<li>为player添加GhostOwnerComponent</li>
+<li>初始化player添加一些其他不需要同步的组件</li>
+<li>为connection添加NetworkStreamInGame组件</li>
+<li>为connection设置CommandTargetComponent</li>
+</ul>
+</li>
+<li><p>客户端根据player独有的组件特性,查找已经被ghost同步过来的实体</p>
+<ul>
+<li>比对NetworkIdComponent和GhostOwnerComponent的id,判断是否是localPlayer</li>
+<li>对localplayer进行初始化</li>
+<li>为connection设置CommandTargetComponent为localplayer</li>
+</ul>
+</li>
+<li><p>客户端使用CommandTargetComponent的targetEntity进行command发送</p>
+</li>
+<li><p>客户端和服务端对传送的command同时使用PredictedGhostComponent进行预测????</p>
+<ul>
+<li><p>预测不是发生在客户端的吗???貌似netcode服务端也做了预测</p>
+<p>在服务器上，预测循环始终仅运行一次，并且不会更新TimeData结构，因为它已经正确。它仍然设置GhostPredictionSystemGroup.PredictingTick以确保可以在客户端和服务器上运行完全相同的代码。</p>
+</li>
+</ul>
+</li>
+</ol>
+<p>插值 是针对其他玩家的本地显示…预测是针对自己操作的角色,最后从服务器校正</p>
+<p>延迟补偿是服务器在做的一件事情..</p>
+<p>GhostReceiveSystem  接收快照</p>
+<p>GhostUpdateSystem  应用快照     设置了predictionStartTick和AppliedTick</p>
+<p> GhostPredictionSystemGroup   设置了 PredictingTick ,服务端永远为ServerSimulationSystemGroup.servertick</p>
+<p>=======================================================================</p>
+<p> 客户端的servertick在不同的两帧之间可能是相同的</p>
+<p><img src="../../assets/images/2020-11-18-netcode-sourcecode/image-20201206011918426.png" alt="image-20201206011918426"></p>
+<p>servertick    235</p>
+<p>PredictingTick    230</p>
+<p>PredictingTick    231</p>
+<p>PredictingTick    232</p>
+<p>PredictingTick    233</p>
+<p>PredictingTick    234</p>
+<p>PredictingTick    235</p>
+<p>servertick    240  因为跑预测所以这里可能过了好几帧servertick这里不是236</p>
+<p>PredictingTick    240  //自己先跑一下</p>
+<p>servertick    240 //又可能tick增长时间还没有过</p>
+<p>PredictingTick    238</p>
+<p>PredictingTick    239</p>
+<p>PredictingTick    240</p>
+<p>实际上没多大复杂的事情..客户端发送命令给服务端,服务端处理后将tick和数据同步给客户端…</p>
+<p>客户端拿到数据..该预测的预测..该插值的插值…</p>
+<p>然后还需要处理这帧的自己的命令…</p>
+<p>客户端:</p>
+<p>Ghost数据(服务端传送的同步)–预测—输入命令–发送命令给服务端—处理命令—-覆盖同步数据(一般是覆盖自己的)–应用数据(位移,动画等)</p>
+<p>服务端:</p>
+<p>服务端接收到命令—处理命令—-写入Ghost数据(同步)–应用数据(位移,动画等)</p>
+<h2 id="预测"><a href="#预测" class="headerlink" title="预测"></a>预测</h2><p>输入的时候, 添加发送给服务器时的servertick , </p>
+<p>注意这个servertick和ServerSimulationSystemGroup.servertick没有多大关系.</p>
+<p>m_ClientSimulationSystemGroup.ServerTick标记发送给服务器的命令所在的tick,以及用来接收服务器快照后(快照会包含该tick),丢弃执行过的命令,以及预测未执行的命令使用</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">var input &#x3D; default(CubeInput);</span><br><span class="line">input.Tick &#x3D; m_ClientSimulationSystemGroup.ServerTick;</span><br><span class="line">if (Input.GetKey(&quot;a&quot;))</span><br><span class="line">    input.horizontal -&#x3D; 1;</span><br><span class="line">if (Input.GetKey(&quot;d&quot;))</span><br><span class="line">    input.horizontal +&#x3D; 1;</span><br><span class="line">if (Input.GetKey(&quot;s&quot;))</span><br><span class="line">    input.vertical -&#x3D; 1;</span><br><span class="line">if (Input.GetKey(&quot;w&quot;))</span><br><span class="line">    input.vertical +&#x3D; 1;</span><br><span class="line">var inputBuffer &#x3D; EntityManager.GetBuffer&lt;CubeInput&gt;(localInput);</span><br><span class="line">inputBuffer.AddCommandData(input);</span><br></pre></td></tr></table></figure>
+
+<p>客户端使用服务端的快照时,将更新PredictedGhostComponent,可以看到他有两个tick,一个是应用tick,一个是预测开始的tick</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">public struct PredictedGhostComponent : IComponentData</span><br><span class="line">&#123;</span><br><span class="line">    public uint AppliedTick;</span><br><span class="line">    public uint PredictionStartTick;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>服务端PredictedGhostComponent其中AppliedTick和PredictionStartTick永远为0</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">[UpdateInGroup(typeof(GhostPredictionSystemGroup))]</span><br><span class="line">public class MoveCubeSystem : ComponentSystem</span><br><span class="line">&#123;</span><br><span class="line">    protected override void OnUpdate()</span><br><span class="line">    &#123;</span><br><span class="line">        var group &#x3D; World.GetExistingSystem&lt;GhostPredictionSystemGroup&gt;();</span><br><span class="line">        var tick &#x3D; group.PredictingTick;</span><br><span class="line">        var deltaTime &#x3D; Time.DeltaTime;</span><br><span class="line">        Entities.ForEach((DynamicBuffer&lt;CubeInput&gt; inputBuffer, ref Translation trans, ref PredictedGhostComponent prediction) &#x3D;&gt;</span><br><span class="line">        &#123;</span><br><span class="line">            if (!GhostPredictionSystemGroup.ShouldPredict(tick, prediction))</span><br><span class="line">                return;</span><br><span class="line">            CubeInput input;</span><br><span class="line">            inputBuffer.GetDataAtTick(tick, out input);</span><br><span class="line">            if (input.horizontal &gt; 0)</span><br><span class="line">                trans.Value.x +&#x3D; deltaTime;</span><br><span class="line">            if (input.horizontal &lt; 0)</span><br><span class="line">                trans.Value.x -&#x3D; deltaTime;</span><br><span class="line">            if (input.vertical &gt; 0)</span><br><span class="line">                trans.Value.z +&#x3D; deltaTime;</span><br><span class="line">            if (input.vertical &lt; 0)</span><br><span class="line">                trans.Value.z -&#x3D; deltaTime;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>让我们看下GhostPredictionSystemGroup的源代码:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br></pre></td><td class="code"><pre><span class="line">protected override void OnUpdate()</span><br><span class="line">     &#123;</span><br><span class="line">         &#x2F;&#x2F; If client, go from oldest applied predicted tick to target tick, apply. Allow filtering on latest received tick somehow</span><br><span class="line">         if (isServer)</span><br><span class="line">         &#123;</span><br><span class="line">             &#x2F;&#x2F; If server, apply once</span><br><span class="line">             var simulationSystemGroup &#x3D; World.GetExistingSystem&lt;ServerSimulationSystemGroup&gt;();</span><br><span class="line">             PredictingTick &#x3D; simulationSystemGroup.ServerTick;</span><br><span class="line">             IsFinalPredictionTick &#x3D; true;</span><br><span class="line">             base.OnUpdate();</span><br><span class="line">         &#125;</span><br><span class="line">         else</span><br><span class="line">         &#123;</span><br><span class="line">             if (predictedTickWriters.Length &gt; 1)</span><br><span class="line">             &#123;</span><br><span class="line">                 predictedTickWriters[0] &#x3D; JobHandle.CombineDependencies(predictedTickWriters);</span><br><span class="line">                 predictedTickWriters.ResizeUninitialized(1);</span><br><span class="line">             &#125;</span><br><span class="line"></span><br><span class="line">             if (predictedTickWriters.Length &gt; 0)</span><br><span class="line">                 predictedTickWriters[0].Complete();</span><br><span class="line">             predictedTickWriters.Clear();</span><br><span class="line">             uint oldestAppliedTick &#x3D; 0;</span><br><span class="line">             for (int i &#x3D; 0; i &lt; OldestPredictedTick.Length; ++i)</span><br><span class="line">             &#123;</span><br><span class="line">                 if (OldestPredictedTick[i] !&#x3D; 0)</span><br><span class="line">                 &#123;</span><br><span class="line">                     if (oldestAppliedTick &#x3D;&#x3D; 0 ||</span><br><span class="line">                         SequenceHelpers.IsNewer(oldestAppliedTick, OldestPredictedTick[i]))</span><br><span class="line">                         oldestAppliedTick &#x3D; OldestPredictedTick[i];</span><br><span class="line">                     OldestPredictedTick[i] &#x3D; 0;</span><br><span class="line">                 &#125;</span><br><span class="line">             &#125;</span><br><span class="line"></span><br><span class="line">             var simulationSystemGroup &#x3D; World.GetExistingSystem&lt;ClientSimulationSystemGroup&gt;();</span><br><span class="line">             var serverTick &#x3D; simulationSystemGroup.ServerTick;</span><br><span class="line">             var targetTick &#x3D; serverTick;</span><br><span class="line"></span><br><span class="line">             if (oldestAppliedTick &#x3D;&#x3D; 0 ||</span><br><span class="line">                 !SequenceHelpers.IsNewer(targetTick, oldestAppliedTick))</span><br><span class="line">                 &#x2F;&#x2F;oldestAppliedTick &#x3D; targetTick - 1;</span><br><span class="line">                 return; &#x2F;&#x2F; Nothing rolled back - nothing to predict</span><br><span class="line">             &#x2F;&#x2F; Do not try to predict more frames than we can have input for</span><br><span class="line">             if (targetTick - oldestAppliedTick &gt; CommandDataUtility.k_CommandDataMaxSize)</span><br><span class="line">                 oldestAppliedTick &#x3D; targetTick - CommandDataUtility.k_CommandDataMaxSize;</span><br><span class="line"></span><br><span class="line">             var previousTime &#x3D; Time;</span><br><span class="line">             var elapsedTime &#x3D; previousTime.ElapsedTime;</span><br><span class="line">             if (simulationSystemGroup.ServerTickFraction &lt; 1)</span><br><span class="line">             &#123;</span><br><span class="line">                 --targetTick;</span><br><span class="line">                 elapsedTime -&#x3D; simulationSystemGroup.ServerTickDeltaTime * simulationSystemGroup.ServerTickFraction;</span><br><span class="line">             &#125;</span><br><span class="line"></span><br><span class="line">             for (uint i &#x3D; oldestAppliedTick + 1; i !&#x3D; targetTick+1; ++i)</span><br><span class="line">             &#123;</span><br><span class="line">                 uint tickAge &#x3D; targetTick - i;</span><br><span class="line">                 World.SetTime(new TimeData(elapsedTime - simulationSystemGroup.ServerTickDeltaTime*tickAge, simulationSystemGroup.ServerTickDeltaTime));</span><br><span class="line">                 PredictingTick &#x3D; i;</span><br><span class="line">                 IsFinalPredictionTick &#x3D; (i &#x3D;&#x3D; serverTick);</span><br><span class="line">                 base.OnUpdate();</span><br><span class="line">             &#125;</span><br><span class="line"></span><br><span class="line">             if (simulationSystemGroup.ServerTickFraction &lt; 1)</span><br><span class="line">             &#123;</span><br><span class="line">                 PredictingTick &#x3D; targetTick + 1;</span><br><span class="line">                 IsFinalPredictionTick &#x3D; true;</span><br><span class="line">                 World.SetTime(new TimeData(previousTime.ElapsedTime, simulationSystemGroup.ServerTickDeltaTime *</span><br><span class="line">                                                                     simulationSystemGroup.ServerTickFraction));</span><br><span class="line">                 base.OnUpdate();</span><br><span class="line">             &#125;</span><br><span class="line">             World.SetTime(previousTime);</span><br><span class="line">         &#125;</span><br><span class="line">     &#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到从开始值不断的改变PredictingTick进行预测,然后执行了base.OnUpdate()</p>
+<h1 id="插值"><a href="#插值" class="headerlink" title="插值"></a>插值</h1><p>插值就是将网络玩家显示在过去的某个时刻</p>
+<p>假设你在t=1000收到位置信息，你已经在t=900收到了一次位置信息，所以你知道玩家在t=900和t=1000的位置，所以在t=1000到t=1100之间，你只要显示玩家t=900到t=1000的位置。这种方法，你所显示的都是玩家的真实数据，只是有100ms的延迟。</p>
+<h3 id="Translation和Rotation的转换"><a href="#Translation和Rotation的转换" class="headerlink" title="Translation和Rotation的转换"></a>Translation和Rotation的转换</h3><p>Unity.NetCode.Editor.GhostAuthoringComponentEditor</p>
+<p>中添加了Translation和Rotation的转换,只有被转换的才会被传输..如果不想转换可以在code gen window中勾掉Unity.Transforms..auto compile也勾掉</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">public static void InitDefaultOverrides()</span><br><span class="line">    &#123;</span><br><span class="line">        GhostDefaultOverrides &#x3D; new Dictionary&lt;string, GhostComponent&gt;();</span><br><span class="line">        AssembliesDefaultOverrides &#x3D; new HashSet&lt;string&gt;(new []&#123;</span><br><span class="line">            &quot;Unity.NetCode&quot;,</span><br><span class="line">            &quot;Unity.Transforms&quot;,</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        var comp &#x3D; new GhostComponent</span><br><span class="line">        &#123;</span><br><span class="line">            name &#x3D; &quot;Unity.Transforms.Translation&quot;,</span><br><span class="line">            attribute &#x3D; new GhostComponentAttribute&#123;PrefabType &#x3D; GhostPrefabType.All, OwnerPredictedSendType &#x3D; GhostSendType.All, SendDataForChildEntity &#x3D; false&#125;,</span><br><span class="line">            fields &#x3D; new GhostComponentField[]</span><br><span class="line">            &#123;</span><br><span class="line">                new GhostComponentField</span><br><span class="line">                &#123;</span><br><span class="line">                    name &#x3D; &quot;Value&quot;,</span><br><span class="line">                    attribute &#x3D; new GhostFieldAttribute&#123;Quantization &#x3D; 100, Interpolate &#x3D; true&#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;,</span><br><span class="line">            entityIndex &#x3D; 0</span><br><span class="line">        &#125;;</span><br><span class="line">        GhostDefaultOverrides.Add(comp.name, comp);</span><br><span class="line">        comp &#x3D; new GhostComponent</span><br><span class="line">        &#123;</span><br><span class="line">            name &#x3D; &quot;Unity.Transforms.Rotation&quot;,</span><br><span class="line">            attribute &#x3D; new GhostComponentAttribute&#123;PrefabType &#x3D; GhostPrefabType.All, OwnerPredictedSendType &#x3D; GhostSendType.All, SendDataForChildEntity &#x3D; false&#125;,</span><br><span class="line">            fields &#x3D; new GhostComponentField[]</span><br><span class="line">            &#123;</span><br><span class="line">                new GhostComponentField</span><br><span class="line">                &#123;</span><br><span class="line">                    name &#x3D; &quot;Value&quot;,</span><br><span class="line">                    attribute &#x3D; new GhostFieldAttribute&#123;Quantization &#x3D; 1000, Interpolate &#x3D; true&#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;,</span><br><span class="line">            entityIndex &#x3D; 0</span><br><span class="line">        &#125;;</span><br><span class="line">        GhostDefaultOverrides.Add(comp.name, comp);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们可以看到这里使用了GhostFiled并且将其设置为Interpolate..我们在看下他生成的code</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">[BurstCompile]</span><br><span class="line">[MonoPInvokeCallback(typeof(GhostComponentSerializer.CopyToFromSnapshotDelegate))]</span><br><span class="line">private static void CopyFromSnapshot(IntPtr stateData, IntPtr snapshotData, int snapshotOffset, int snapshotStride, IntPtr componentData, int componentStride, int count)</span><br><span class="line">&#123;</span><br><span class="line">    for (int i &#x3D; 0; i &lt; count; ++i)</span><br><span class="line">    &#123;</span><br><span class="line">        ref var snapshotInterpolationData &#x3D; ref GhostComponentSerializer.TypeCast&lt;SnapshotData.DataAtTick&gt;(snapshotData, snapshotStride*i);</span><br><span class="line">        ref var snapshotBefore &#x3D; ref GhostComponentSerializer.TypeCast&lt;Snapshot&gt;(snapshotInterpolationData.SnapshotBefore, snapshotOffset);</span><br><span class="line">        ref var snapshotAfter &#x3D; ref GhostComponentSerializer.TypeCast&lt;Snapshot&gt;(snapshotInterpolationData.SnapshotAfter, snapshotOffset);</span><br><span class="line">        float snapshotInterpolationFactor &#x3D; snapshotInterpolationData.InterpolationFactor;</span><br><span class="line">        ref var component &#x3D; ref GhostComponentSerializer.TypeCast&lt;Unity.Transforms.Translation&gt;(componentData, componentStride*i);</span><br><span class="line">        var deserializerState &#x3D; GhostComponentSerializer.TypeCast&lt;GhostDeserializerState&gt;(stateData, 0);</span><br><span class="line">        deserializerState.SnapshotTick &#x3D; snapshotInterpolationData.Tick;</span><br><span class="line">        component.Value &#x3D; math.lerp(</span><br><span class="line">            new float3(snapshotBefore.Value_x * 0.01f, snapshotBefore.Value_y * 0.01f, snapshotBefore.Value_z * 0.01f),</span><br><span class="line">            new float3(snapshotAfter.Value_x * 0.01f, snapshotAfter.Value_y * 0.01f, snapshotAfter.Value_z * 0.01f),</span><br><span class="line">            snapshotInterpolationFactor);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们看到在读取快照的时候使用了snapshotInterpolationFactor进行插值,SnapshotData类中</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">public unsafe bool GetDataAtTick(uint targetTick, float targetTickFraction, in DynamicBuffer&lt;SnapshotDataBuffer&gt; buffer, out DataAtTick data)</span><br><span class="line">      &#123;</span><br><span class="line">          data &#x3D; default;</span><br><span class="line">          if (buffer.Length &#x3D;&#x3D; 0)</span><br><span class="line">              return false;</span><br><span class="line">          var numBuffers &#x3D; buffer.Length &#x2F; SnapshotSize;</span><br><span class="line">          int beforeIdx &#x3D; 0;</span><br><span class="line">          uint beforeTick &#x3D; 0;</span><br><span class="line">          int afterIdx &#x3D; 0;</span><br><span class="line">          uint afterTick &#x3D; 0;</span><br><span class="line">          &#x2F;&#x2F; If last tick is fractional before should not include the tick we are targeting, it should instead be included in after</span><br><span class="line">          if (targetTickFraction &lt; 1)</span><br><span class="line">              --targetTick;</span><br><span class="line">          byte* snapshotData;</span><br><span class="line">          &#x2F;&#x2F; Loop from latest available to oldest available snapshot</span><br><span class="line">          for (int slot &#x3D; 0; slot &lt; numBuffers; ++slot)</span><br><span class="line">          &#123;</span><br><span class="line">              var curIndex &#x3D; (LatestIndex + GhostSystemConstants.SnapshotHistorySize - slot) % GhostSystemConstants.SnapshotHistorySize;</span><br><span class="line">              snapshotData &#x3D; (byte*)buffer.GetUnsafePtr() + curIndex * SnapshotSize;</span><br><span class="line">              uint tick &#x3D; *(uint*)snapshotData;</span><br><span class="line">              if (tick &#x3D;&#x3D; 0)</span><br><span class="line">                  continue;</span><br><span class="line">              if (SequenceHelpers.IsNewer(tick, targetTick))</span><br><span class="line">              &#123;</span><br><span class="line">                  afterTick &#x3D; tick;</span><br><span class="line">                  afterIdx &#x3D; curIndex;</span><br><span class="line">              &#125;</span><br><span class="line">              else</span><br><span class="line">              &#123;</span><br><span class="line">                  beforeTick &#x3D; tick;</span><br><span class="line">                  beforeIdx &#x3D; curIndex;</span><br><span class="line">                  break;</span><br><span class="line">              &#125;</span><br><span class="line">          &#125;</span><br><span class="line"></span><br><span class="line">          if (beforeTick &#x3D;&#x3D; 0)</span><br><span class="line">          &#123;</span><br><span class="line">              return false;</span><br><span class="line">          &#125;</span><br><span class="line"></span><br><span class="line">          data.SnapshotBefore &#x3D; (System.IntPtr)((byte*)buffer.GetUnsafePtr() + beforeIdx * SnapshotSize);</span><br><span class="line">          data.Tick &#x3D; beforeTick;</span><br><span class="line">          if (afterTick &#x3D;&#x3D; 0)</span><br><span class="line">          &#123;</span><br><span class="line">              data.SnapshotAfter &#x3D; data.SnapshotBefore;</span><br><span class="line">              data.InterpolationFactor &#x3D; 0;</span><br><span class="line">          &#125;</span><br><span class="line">          else</span><br><span class="line">          &#123;</span><br><span class="line">              data.SnapshotAfter &#x3D; (System.IntPtr)((byte*)buffer.GetUnsafePtr() + afterIdx * SnapshotSize);</span><br><span class="line">              data.InterpolationFactor &#x3D; (float) (targetTick - beforeTick) &#x2F; (float) (afterTick - beforeTick);</span><br><span class="line">              if (targetTickFraction &lt; 1)</span><br><span class="line">                  data.InterpolationFactor +&#x3D; targetTickFraction &#x2F; (float) (afterTick - beforeTick);</span><br><span class="line">          &#125;</span><br><span class="line"></span><br><span class="line">          return true;</span><br><span class="line">      &#125;</span><br></pre></td></tr></table></figure>
+
+<p>在其中计算了InterpolationFactor.</p>
+<p>无论是插值和预测都是先读取快照.我们看下GhostUpdateSystem</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">public void Execute(ArchetypeChunk chunk, int chunkIndex, int firstEntityIndex, DynamicComponentTypeHandle* ghostChunkComponentTypesPtr, int ghostChunkComponentTypesLength)</span><br><span class="line">           &#123;</span><br><span class="line">               bool predicted &#x3D; chunk.Has(predictedGhostComponentType);</span><br><span class="line">               uint targetTick &#x3D; predicted ? predictedTargetTick : interpolatedTargetTick;</span><br><span class="line">               float targetTickFraction &#x3D; predicted ? 1.0f : interpolatedTargetTickFraction;</span><br></pre></td></tr></table></figure>
+
+<p>预测使用的是predictedTargetTick,插值使用的是interpolatedTargetTick</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">interpolatedTargetTick &#x3D; m_ClientSimulationSystemGroup.InterpolationTick,</span><br><span class="line">               interpolatedTargetTickFraction &#x3D; m_ClientSimulationSystemGroup.InterpolationTickFraction,</span><br><span class="line"></span><br><span class="line">               predictedTargetTick &#x3D; m_ClientSimulationSystemGroup.ServerTick,</span><br></pre></td></tr></table></figure>
+
+<p>而他们又都来自m_ClientSimulationSystemGroup,m_ClientSimulationSystemGroup的tick又来自NetworkTimeSystem</p>
+<h3 id="ClientServerTickRate"><a href="#ClientServerTickRate" class="headerlink" title="ClientServerTickRate"></a>ClientServerTickRate</h3><p>RpcSetNetworkId</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">[BurstCompile]</span><br><span class="line">       [AOT.MonoPInvokeCallback(typeof(RpcExecutor.ExecuteDelegate))]</span><br><span class="line">       private static void InvokeExecute(ref RpcExecutor.Parameters parameters)</span><br><span class="line">       &#123;</span><br><span class="line">           var rpcData &#x3D; default(RpcSetNetworkId);</span><br><span class="line">           var rpcSerializer &#x3D; default(RpcSetNetworkId);</span><br><span class="line">           rpcSerializer.Deserialize(ref parameters.Reader, parameters.DeserializerState, ref rpcData);</span><br><span class="line"></span><br><span class="line">           parameters.CommandBuffer.AddComponent(parameters.JobIndex, parameters.Connection, new NetworkIdComponent &#123;Value &#x3D; rpcData.nid&#125;);</span><br><span class="line">           var ent &#x3D; parameters.CommandBuffer.CreateEntity(parameters.JobIndex);</span><br><span class="line">           parameters.CommandBuffer.AddComponent(parameters.JobIndex, ent, new ClientServerTickRateRefreshRequest</span><br><span class="line">           &#123;</span><br><span class="line">               MaxSimulationStepsPerFrame &#x3D; rpcData.simMaxSteps,</span><br><span class="line">               NetworkTickRate &#x3D; rpcData.netTickRate,</span><br><span class="line">               SimulationTickRate &#x3D; rpcData.simTickRate</span><br><span class="line">           &#125;);</span><br><span class="line">       &#125;</span><br></pre></td></tr></table></figure>
+
+<p>服务端在同步networkid的时候会一起同步ClientServerTickRate</p>
+<p>客户端会比服务端多一个NetworkTimeSystem根据往返时间和最近从服务器收到的快照来计算服务器时间的初始估计</p>
+<p>来看下插值tick的计算..他首先是算出predictTargetTick然后减去一个插值</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">var idiff &#x3D; (uint)currentInterpolationFrames;</span><br><span class="line">           interpolateTargetTick &#x3D; predictTargetTick - idiff;</span><br><span class="line">           var subidiff &#x3D; currentInterpolationFrames - idiff;</span><br><span class="line">           subidiff -&#x3D; subInterpolateTargetTick+subPredictTargetTick;</span><br><span class="line">           if (subidiff &lt; 0)</span><br><span class="line">           &#123;</span><br><span class="line">               ++interpolateTargetTick;</span><br><span class="line">               subidiff &#x3D; -subidiff;</span><br><span class="line">           &#125;</span><br><span class="line">           else if (subidiff &gt; 0)</span><br><span class="line">           &#123;</span><br><span class="line">               idiff &#x3D; (uint)subidiff;</span><br><span class="line">               subidiff -&#x3D; idiff;</span><br><span class="line">               interpolateTargetTick -&#x3D; idiff;</span><br><span class="line">               subidiff &#x3D; 1f-subidiff;</span><br><span class="line">           &#125;</span><br><span class="line">           subInterpolateTargetTick &#x3D; subidiff;</span><br></pre></td></tr></table></figure>
+
+<p>它是根据网络延迟算出一个tick,然后从快照中取出…</p>
+<h1 id="补偿"><a href="#补偿" class="headerlink" title="补偿"></a>补偿</h1><h1 id="GhostSendSystem"><a href="#GhostSendSystem" class="headerlink" title="GhostSendSystem"></a>GhostSendSystem</h1><p>以下皆为脑补:</p>
+<p>发送的时候根据ghost的设置,来判断发送给该用户的数据(ghosts),其中谁是插值,谁是预测..因为插值和预测的包应该是有区别的..</p>
+<p>接收的时候再根据是否预测,还是插值.进行PredictedGhostComponent的设置</p>
+<h2 id="GHOST"><a href="#GHOST" class="headerlink" title="GHOST"></a>GHOST</h2><p>GhostAuthoringComponent验证的时候会生成prefabId</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">    if (gameObject.transform.parent &#x3D;&#x3D; null)</span><br><span class="line">            &#123;</span><br><span class="line">                &#x2F;&#x2F; The common case is a root object in a prefab, in this case we always validate the guid to detect cloned files</span><br><span class="line">                var prefabStage &#x3D; UnityEditor.Experimental.SceneManagement.PrefabStageUtility.GetPrefabStage(gameObject);</span><br><span class="line">                if (prefabStage !&#x3D; null)</span><br><span class="line">                &#123;</span><br><span class="line">#if UNITY_2020_1_OR_NEWER</span><br><span class="line">                    var assetPath &#x3D; prefabStage.assetPath;</span><br><span class="line">#else</span><br><span class="line">                    var assetPath &#x3D; prefabStage.prefabAssetPath;</span><br><span class="line">#endif</span><br><span class="line">                    guid &#x3D; UnityEditor.AssetDatabase.AssetPathToGUID(assetPath);</span><br><span class="line">                &#125;</span><br><span class="line">                else if (UnityEditor.PrefabUtility.GetPrefabAssetType(gameObject) !&#x3D; UnityEditor.PrefabAssetType.NotAPrefab)</span><br><span class="line">                &#123;</span><br><span class="line">                    var path &#x3D; UnityEditor.AssetDatabase.GetAssetPath(gameObject);</span><br><span class="line">                    if (String.IsNullOrEmpty(path))</span><br><span class="line">                        return;</span><br><span class="line">                    guid &#x3D; UnityEditor.AssetDatabase.AssetPathToGUID(path);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            if (guid !&#x3D; prefabId)</span><br><span class="line">            &#123;</span><br><span class="line">                UnityEditor.Undo.RecordObject(this, &quot;&quot;);</span><br><span class="line">                prefabId &#x3D; guid;</span><br><span class="line">            &#125;</span><br></pre></td></tr></table></figure>
+
+<p>GhostAuthoringConversion,会为prefab根据client和server添加各种组件ghost, Snapshot</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">  var ghostType &#x3D; new GhostTypeComponent();</span><br><span class="line">  ghostType.guid0 &#x3D; Convert.ToUInt32(ghostAuthoring.prefabId.Substring(0, 8), 16);</span><br><span class="line">  ghostType.guid1 &#x3D; Convert.ToUInt32(ghostAuthoring.prefabId.Substring(8, 8), 16);</span><br><span class="line">  ghostType.guid2 &#x3D; Convert.ToUInt32(ghostAuthoring.prefabId.Substring(16, 8), 16);</span><br><span class="line">  ghostType.guid3 &#x3D; Convert.ToUInt32(ghostAuthoring.prefabId.Substring(24, 8), 16);</span><br><span class="line">  DstEntityManager.AddComponentData(entity, ghostType);</span><br><span class="line">                  </span><br><span class="line">                  </span><br><span class="line">                  </span><br><span class="line">                  </span><br><span class="line">DstEntityManager.AddComponentData(entity, new GhostComponent());</span><br></pre></td></tr></table></figure>
+
+<p>默认一定会添加的组件:</p>
+<p>客户端会添加 snapshotData和snapshotDataBuffer</p>
+<p>服务端会添加PredictedGhostComponent,GhostSystemStateComponent,sharedGhostTypeComponent</p>
+<p>[GhostComponent(PrefabType=GhostPrefabType.Client)] 可以控制服务端和客户端是否添加该组件</p>
+<p>他会同步ghost prefab..根据ghostid..然后客户端.根据ghostid实例化ghost</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">public struct SpawnedGhost : IEquatable&lt;SpawnedGhost&gt;</span><br><span class="line">&#123;</span><br><span class="line">    public int ghostId;</span><br><span class="line">    public uint spawnTick;</span><br><span class="line">    public override int GetHashCode()</span><br><span class="line">    &#123;</span><br><span class="line">        return ghostId;</span><br><span class="line">    &#125;</span><br><span class="line">    public bool Equals(SpawnedGhost ghost)</span><br><span class="line">    &#123;</span><br><span class="line">        return ghost.ghostId &#x3D;&#x3D; ghostId &amp;&amp; ghost.spawnTick &#x3D;&#x3D; spawnTick;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Win/" rel="tag"># Win</a>
+              <a href="/tags/C/" rel="tag"># C</a>
+              <a href="/tags/Unity/" rel="tag"># Unity</a>
+              <a href="/tags/%E5%90%8C%E6%AD%A5/" rel="tag"># 同步</a>
+              <a href="/tags/UNITY/" rel="tag"># UNITY</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/unity-2020-11-17-unity-ecs-worldtime/" rel="prev" title="unity world time system">
+      <i class="fa fa-chevron-left"></i> unity world time system
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/dotnet-2020-11-24-flags/" rel="next" title="C＃枚举中使用Flags特性">
+      C＃枚举中使用Flags特性 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  
+  <div class="comments">
+  <script src="https://utteranc.es/client.js" repo="zhepama/igiven.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async></script>
+  </div>
+  
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#NetworkStreamReceiveSystem"><span class="nav-number">1.</span> <span class="nav-text">NetworkStreamReceiveSystem</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#预测"><span class="nav-number">1.1.</span> <span class="nav-text">预测</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#插值"><span class="nav-number">2.</span> <span class="nav-text">插值</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Translation和Rotation的转换"><span class="nav-number">2.0.1.</span> <span class="nav-text">Translation和Rotation的转换</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ClientServerTickRate"><span class="nav-number">2.0.2.</span> <span class="nav-text">ClientServerTickRate</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#补偿"><span class="nav-number">3.</span> <span class="nav-text">补偿</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#GhostSendSystem"><span class="nav-number">4.</span> <span class="nav-text">GhostSendSystem</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#GHOST"><span class="nav-number">4.1.</span> <span class="nav-text">GHOST</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhepama"
+      src="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+  <p class="site-author-name" itemprop="name">zhepama</p>
+  <div class="site-description" itemprop="description">一个不专业的程序员,写着专业的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">139</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhepama" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhepama" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhepama@gmail.com" title="E-Mail → mailto:zhepama@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.godgodgame.com/" title="http:&#x2F;&#x2F;www.godgodgame.com" rel="noopener" target="_blank">GODGODGAME</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.igiven.com/" title="https:&#x2F;&#x2F;www.igiven.com">IGIVEN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhepama.github.io/C-Sharp-Playground/zh/" title="https:&#x2F;&#x2F;zhepama.github.io&#x2F;C-Sharp-Playground&#x2F;zh&#x2F;" rel="noopener" target="_blank">数据结构与算法</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhepama</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.igiven.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="PART 1 概述在第一篇文章中，我们介绍了一种权威服务器的C-S模型，在这种模型中，客户端只将输入发送到服务器中，当收到来自服务器的游戏状态更新的时候再将结果渲染出来。 单纯地依赖这种模型会导致玩家输入命令和画面更新之间的延迟感，比如，当玩家按下向右的按钮，然后玩家等了半秒钟才开始移动，因为首先客户端需要把输入传给服务器，然后服务器处理了出入之后计算出新的游戏状态，然后再将新的游戏状态传回给客户">
+<meta property="og:type" content="article">
+<meta property="og:title" content="快节奏多人游戏同步(2)-客户端预测与服务器校对">
+<meta property="og:url" content="http://www.igiven.com/dotnet-2020-02-02-net-sync-client-side-prediction-and-server-reconciliation/index.html">
+<meta property="og:site_name" content="IGiven">
+<meta property="og:description" content="PART 1 概述在第一篇文章中，我们介绍了一种权威服务器的C-S模型，在这种模型中，客户端只将输入发送到服务器中，当收到来自服务器的游戏状态更新的时候再将结果渲染出来。 单纯地依赖这种模型会导致玩家输入命令和画面更新之间的延迟感，比如，当玩家按下向右的按钮，然后玩家等了半秒钟才开始移动，因为首先客户端需要把输入传给服务器，然后服务器处理了出入之后计算出新的游戏状态，然后再将新的游戏状态传回给客户">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-02-02-net-sync-client-side-prediction-and-server-reconciliation/fpm2-01.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-02-02-net-sync-client-side-prediction-and-server-reconciliation/fpm2-02.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-02-02-net-sync-client-side-prediction-and-server-reconciliation/fpm2-03.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-02-02-net-sync-client-side-prediction-and-server-reconciliation/fpm2-04.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-02-02-net-sync-client-side-prediction-and-server-reconciliation/fpm2-05.png">
+<meta property="article:published_time" content="2020-02-02T00:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-26T08:36:17.938Z">
+<meta property="article:author" content="zhepama">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="游戏">
+<meta property="article:tag" content="sync">
+<meta property="article:tag" content="同步">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.igiven.com/assets/images/2020-02-02-net-sync-client-side-prediction-and-server-reconciliation/fpm2-01.png">
+
+<link rel="canonical" href="http://www.igiven.com/dotnet-2020-02-02-net-sync-client-side-prediction-and-server-reconciliation/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>快节奏多人游戏同步(2)-客户端预测与服务器校对 | IGiven</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="IGiven" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="IGiven" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">IGiven</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">李九仙的博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">139</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">32</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-留言">
+
+    <a href="/guestbook/" rel="section"><i class="fa fa-sticky-note fa-fw"></i>留言</a>
+
+  </li>
+        <li class="menu-item menu-item-rss">
+
+    <a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/dotnet-2020-02-02-net-sync-client-side-prediction-and-server-reconciliation/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+      <meta itemprop="name" content="zhepama">
+      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="IGiven">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          快节奏多人游戏同步(2)-客户端预测与服务器校对<a href="https://github.com/zhepama/igiven.github.io/edit/master/source/_posts/dotnet/2020-02-02-net-sync-client-side-prediction-and-server-reconciliation.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil-alt"></i></a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-02-02 08:00:00" itemprop="dateCreated datePublished" datetime="2020-02-02T08:00:00+08:00">2020-02-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 16:36:17" itemprop="dateModified" datetime="2021-06-26T16:36:17+08:00">2021-06-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/dotnet/" itemprop="url" rel="index"><span itemprop="name">dotnet</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="PART-1-概述"><a href="#PART-1-概述" class="headerlink" title="PART 1 概述"></a>PART 1 概述</h2><p>在第一篇文章中，我们介绍了一种权威服务器的C-S模型，在这种模型中，客户端只将输入发送到服务器中，当收到来自服务器的游戏状态更新的时候再将结果渲染出来。</p>
+<p>单纯地依赖这种模型会导致玩家输入命令和画面更新之间的延迟感，比如，当玩家按下向右的按钮，然后玩家等了半秒钟才开始移动，因为首先客户端需要把输入传给服务器，然后服务器处理了出入之后计算出新的游戏状态，然后再将新的游戏状态传回给客户端。</p>
+<p><img src="../../assets/images/2020-02-02-net-sync-client-side-prediction-and-server-reconciliation/fpm2-01.png" alt="Effect of network delays."></p>
+<p>在实际的网络环境中，延迟可能会达到零点几秒，这时游戏就有点感觉延迟了，最坏的情况是直接没法玩了。在这篇文章中，我们将找到减小这种延迟感的方法，甚至能够消除这种延迟。</p>
+<h2 id="PART-2-客户端预测"><a href="#PART-2-客户端预测" class="headerlink" title="PART 2 客户端预测"></a>PART 2 客户端预测</h2><p>虽然存在着作弊的玩家，但是大部分时候服务器是处理有效访问的（来自非作弊玩家的），这也意味着服务器收到大部分的输入都是有效的，而且游戏状态的更新也是按照预期的，也即是说：如果你的角色在（10，10），然后方向键右被按下了，那么你的角色就会移动到（11，10）。</p>
+<p>我们可以利用这一点，如果游戏世界的确定性足够（给定一个游戏状态和一些列的输入，得到的结果是完全可预测的）。</p>
+<p>现在假设有100ms的延迟，角色移动一格需要花费100ms，使用之前说的实现方式，那么整个动作完成需要花费200ms:</p>
+<p><img src="../../assets/images/2020-02-02-net-sync-client-side-prediction-and-server-reconciliation/fpm2-02.png" alt="Network delay + animation."></p>
+<p>因为游戏世界是确定的，我们假设传送到服务器的输入都能够成功执行。在这种假设下，客户端能够预测游戏世界在接受输入后的状态，并且绝大部分情况下，结果是正确的。</p>
+<p>与之前说的将客户端的输入发送到客户端然后等待服务器的响应再在客户端做出反应，我们可以将两者同时进行，即当在发送输入信息的时候，就当作它们已经正确执行，通常服务器返回的结果和客户端的执行的结果是一致的:</p>
+<p><img src="../../assets/images/2020-02-02-net-sync-client-side-prediction-and-server-reconciliation/fpm2-03.png" alt="Animation plays while the server confirms the action."></p>
+<p>现在玩家输入和运行结果之间就没有任何延迟存在了，同时服务器还是权威服务器。（如果有作弊的客户端发送无用的消息，他可以把角色放在他想要的任何地方，但这并不会影响到服务器，也就是其他玩家也不会受到他的影响）。</p>
+<h2 id="PART-3-同步问题"><a href="#PART-3-同步问题" class="headerlink" title="PART 3 同步问题"></a>PART 3 同步问题</h2><p>在上面的例子里，我选用了一些比较特例的数字来让所有事情看起都很完美，现在假设另一种情况，假设现在服务器延时250ms，移动一格花费100ms，现在玩家按了两下方向键右，想要往右移动两格。</p>
+<p>使用之前我们说的技术，情况如下图所示</p>
+<p><img src="../../assets/images/2020-02-02-net-sync-client-side-prediction-and-server-reconciliation/fpm2-04.png" alt="Predicted state and authoritative state mismatch."></p>
+<p>于是我们在 <strong>t = 250 ms</strong> 的时候就会面临一个非常 interesting 的问题，当接收到新的游戏状态时，客户端预测的位置已经到达 <strong>x = 12</strong>，但是服务器认为最新的坐标是 <strong>x = 11</strong>，因为权威服务器的缘故，客户端必须将角色移回 <strong>x = 11</strong>，但是紧接着，新的 <strong>x = 12</strong> 的状态在 <strong>t = 350</strong> 的时间到达，因此角色的位置又顺移回去了。。</p>
+<p>从玩家的角度来看，他按下两次向右按钮后，角色向右移动两格，原地停留50ms后，向左顺移一格，又原地停留100ms再向右顺移一格，很明显这种情况令人难以接受。</p>
+<h2 id="PART-4-服务器校对"><a href="#PART-4-服务器校对" class="headerlink" title="PART 4 服务器校对"></a>PART 4 服务器校对</h2><p>解决上面说的问题的办法就是你得意识到，客户端所看到的世界是当前的，但是因为延迟，客户端得到的游戏状态都是过去的，当服务器在发送更新的时候，它并没有把客户端发来的所有的命令都处理掉。</p>
+<p>这并不是一个非常严重的问题，首先，客户端在每次请求的时候加上一个编号，在我们的例子中，第一次按键请求编号为 #1，第二次按键的请求编号为 #2。服务器回复的时候将其处理过最后一个请求的编号包含在消息中。</p>
+<p><img src="../../assets/images/2020-02-02-net-sync-client-side-prediction-and-server-reconciliation/fpm2-05.png" alt="Client-side prediction + server reconciliation."></p>
+<p>当t = 250的时候，服务器说“基于#1的输入请求，你的位置是11”.因为服务器是权威的，所以角色的位置是x=11， 现在假设客户端保存了一份发送到服务器的请求，基于新的游戏状态，它知道服务器已经处理了请求 #1，所以他将这个备份丢弃掉，但是客户端知道服务器还需要将#2请求的回复发过来，所以再一次进行客户端预测，客户端可以基于上次服务器发来的状态和#2输入来计算当前的状态。</p>
+<p>所以当t=250ms的时候，客户端得到“经过#1的输入之后，x=11”，它将#1输入的拷贝丢弃掉，但是还有一份并没有得到服务器返回的#2的拷贝，客户端将内部游戏状态更新为服务器所发来的游戏状态，也就是x=11，然后将所有未收到回复但已经发送给服务器的输入用于预测，在上面的例子，输入就是向右移动，最终状态就是x=12，这是正确的。当t=350的时候，一个新的游戏状态从服务器获得；这种情况它说“基于#2输入，x=12”。在这是，客户端将#2请求之前的请求都丢弃，然后将游戏状态更新为x=12，没有需要预测的输入，所以不需要预测，现在得到的结果都是正确的。</p>
+<p>客户端具体如何处理，这里有一个统一的处理方式：</p>
+<ul>
+<li>根据server的new state更新#1里的缓存状态</li>
+<li>回滚input到#1，将#1之后的所有缓存的操作都应用到#1的new state中进行计算，得到最新的结果</li>
+<li>客户端根据最新的结果进行更新</li>
+<li>将#1的状态和input 从缓存buffer里删除</li>
+</ul>
+<h2 id="PART-5-误差"><a href="#PART-5-误差" class="headerlink" title="PART 5 误差"></a>PART 5 误差</h2><p>上面讨论的例子里只讨论了移动，但是这个方法在其他方面也可以使用。比如，在一个回合制的游戏里，当玩家攻击其他玩家的时候，你可以播放飙血的特效和伤害值，但是你不应该在收到服务器回复之前直接更新玩家的血量。</p>
+<p>因为游戏状态的复杂性，它并不能保证是绝对可逆的，你也许希望只有再收到服务器确认的时候才将一个玩家杀死，即使这个玩家的血量降到负的了。（但假象一种情况，一个玩家实际上已经死了，但是在没有收到服务器确认之前他使用了药包，这个时候你该怎么处理？）</p>
+<p>这又带来了一个有趣的问题，即使世界是绝对的确定的，并且没有玩家在作弊，还是有客户端的预测和服务器不吻合的情况。上面说的情况在单人游戏中不会出现，但是在多人接入同一个服务器的时候就会发生，这个问题会在下面的文章中进行讨论。</p>
+<h2 id="PART-6-总结"><a href="#PART-6-总结" class="headerlink" title="PART 6 总结"></a>PART 6 总结</h2><p>当使用权威服务器的时候，你需要给玩家即时的响应，即使是当在等待服务器处理出入。为了达到这样的目的，客户端模拟出输入的结果，当收到服务器的回复时，客户端的游戏状态需要通过服务器的回复和还未处理的输入进行重新计算。</p>
+<ul>
+<li><a href="http://www.gabrielgambetta.com/client-side-prediction-server-reconciliation.html" target="_blank" rel="noopener">http://www.gabrielgambetta.com/client-side-prediction-server-reconciliation.html</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C</a>
+              <a href="/tags/%E6%B8%B8%E6%88%8F/" rel="tag"># 游戏</a>
+              <a href="/tags/sync/" rel="tag"># sync</a>
+              <a href="/tags/%E5%90%8C%E6%AD%A5/" rel="tag"># 同步</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/dotnet-2020-02-02-net-sync-entity-interpolation/" rel="prev" title="快节奏多人游戏同步(3)-Entity插值">
+      <i class="fa fa-chevron-left"></i> 快节奏多人游戏同步(3)-Entity插值
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/dotnet-2020-02-02-net-sync-client-server-game-architecture/" rel="next" title="快节奏多人游戏同步(1)-ClientServer架构">
+      快节奏多人游戏同步(1)-ClientServer架构 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  
+  <div class="comments">
+  <script src="https://utteranc.es/client.js" repo="zhepama/igiven.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async></script>
+  </div>
+  
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#PART-1-概述"><span class="nav-number">1.</span> <span class="nav-text">PART 1 概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PART-2-客户端预测"><span class="nav-number">2.</span> <span class="nav-text">PART 2 客户端预测</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PART-3-同步问题"><span class="nav-number">3.</span> <span class="nav-text">PART 3 同步问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PART-4-服务器校对"><span class="nav-number">4.</span> <span class="nav-text">PART 4 服务器校对</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PART-5-误差"><span class="nav-number">5.</span> <span class="nav-text">PART 5 误差</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PART-6-总结"><span class="nav-number">6.</span> <span class="nav-text">PART 6 总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhepama"
+      src="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+  <p class="site-author-name" itemprop="name">zhepama</p>
+  <div class="site-description" itemprop="description">一个不专业的程序员,写着专业的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">139</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhepama" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhepama" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhepama@gmail.com" title="E-Mail → mailto:zhepama@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.godgodgame.com/" title="http:&#x2F;&#x2F;www.godgodgame.com" rel="noopener" target="_blank">GODGODGAME</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.igiven.com/" title="https:&#x2F;&#x2F;www.igiven.com">IGIVEN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhepama.github.io/C-Sharp-Playground/zh/" title="https:&#x2F;&#x2F;zhepama.github.io&#x2F;C-Sharp-Playground&#x2F;zh&#x2F;" rel="noopener" target="_blank">数据结构与算法</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhepama</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.igiven.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="在本文中将详细的描述Addressable对于内存的管理，如果正确的卸载资源 镜像资源的加载与卸载Addressables是否能够正确的清理内存主要的取决于是否正确的进行镜像资源的加载与卸载，而如何做到这点又取决于加载的资源的类型与使用加载的方法。Addressables.Release方法可以接受加载到的对象，也可以接受加载时返回的操作句柄(AsyncOperationHandle).比如，进行">
+<meta property="og:type" content="article">
+<meta property="og:title" content="关于addressable那些事">
+<meta property="og:url" content="http://www.igiven.com/unity-2019-09-01-addressable/index.html">
+<meta property="og:site_name" content="IGiven">
+<meta property="og:description" content="在本文中将详细的描述Addressable对于内存的管理，如果正确的卸载资源 镜像资源的加载与卸载Addressables是否能够正确的清理内存主要的取决于是否正确的进行镜像资源的加载与卸载，而如何做到这点又取决于加载的资源的类型与使用加载的方法。Addressables.Release方法可以接受加载到的对象，也可以接受加载时返回的操作句柄(AsyncOperationHandle).比如，进行">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-01-addressable/sendprofilerevent.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-01-addressable/profiler.png">
+<meta property="article:published_time" content="2019-09-01T00:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-26T08:36:17.946Z">
+<meta property="article:author" content="zhepama">
+<meta property="article:tag" content="Win">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="Unity">
+<meta property="article:tag" content="sync">
+<meta property="article:tag" content="UNITY">
+<meta property="article:tag" content="addressable">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.igiven.com/assets/images/2019-09-01-addressable/sendprofilerevent.png">
+
+<link rel="canonical" href="http://www.igiven.com/unity-2019-09-01-addressable/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>关于addressable那些事 | IGiven</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="IGiven" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="IGiven" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">IGiven</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">李九仙的博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">139</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">32</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-留言">
+
+    <a href="/guestbook/" rel="section"><i class="fa fa-sticky-note fa-fw"></i>留言</a>
+
+  </li>
+        <li class="menu-item menu-item-rss">
+
+    <a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/unity-2019-09-01-addressable/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+      <meta itemprop="name" content="zhepama">
+      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="IGiven">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          关于addressable那些事<a href="https://github.com/zhepama/igiven.github.io/edit/master/source/_posts/unity/2019-09-01-addressable.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil-alt"></i></a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-09-01 08:00:00" itemprop="dateCreated datePublished" datetime="2019-09-01T08:00:00+08:00">2019-09-01</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 16:36:17" itemprop="dateModified" datetime="2021-06-26T16:36:17+08:00">2021-06-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/unity/" itemprop="url" rel="index"><span itemprop="name">unity</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>在本文中将详细的描述Addressable对于内存的管理，如果正确的卸载资源</p>
+<h2 id="镜像资源的加载与卸载"><a href="#镜像资源的加载与卸载" class="headerlink" title="镜像资源的加载与卸载"></a>镜像资源的加载与卸载</h2><p>Addressables是否能够正确的清理内存主要的取决于是否正确的进行镜像资源的加载与卸载，而如何做到这点又取决于加载的资源的类型与使用加载的方法。<code>Addressables.Release</code>方法可以接受加载到的对象，也可以接受加载时返回的操作句柄(<code>AsyncOperationHandle</code>).比如，进行场景创建时，加载后返回一个<code>AsyncOperationHandle&lt;SceneInstance&gt;</code>，你可以通过返回的句柄或者<code>handle.Result</code>(在这种情况下返回的Result为<code>SceneInstance</code>对象)进行场景的的释放。</p>
+<p>接下来将详细的描述一下不同资源的释放方式及规则。</p>
+<h2 id="资源加载"><a href="#资源加载" class="headerlink" title="资源加载"></a>资源加载</h2><p>此处的资源指的是使用<code>Addressables.LoadAssetAsync</code> 或者 <code>Addressables.LoadAssetsAsync</code>加载的资源。<br>使用上述的两个方法会将资源加载到内存中，但是并不实例化它，每次调用后对应的资源的引用记数都会增加1。如果您使用<code>LoadAssetAsync</code>对同一个“地址”的资源调用了3次，您将会得到三个不同的<code>AsyncOperationHandle</code>的实例，同时这些实例均引用相同的底层操作，对就应的底层操作的引用记数会变成3。如果资源加载成功，加载到的资源将会被存储到<code>AsyncOperationHandle.Result</code>中，您可以使用Unity的方法进行实例化<code>Object.instantite</code>，但是这种操作方式不会造成Adressables的引用记数发生变化。</p>
+<p>使用<code>Addressables.Release</code>方法可以进行卸载，调用后引用记数会减1，一旦资源的引用记数为0，那么它会被彻底的卸载掉。</p>
+<h2 id="场景加载"><a href="#场景加载" class="headerlink" title="场景加载"></a>场景加载</h2><p>可以使用<code>Addressables.LoadSceneAsync</code>进行场景的加载，同时可以在参数中指定使用<code>Single</code>或者<code>Additive</code>模式，如果指定使用<code>Single</code>模式，那么当前所在打开的场景都会被关闭。</p>
+<p>可以使用<code>Addressables.UnloadSceneAsync</code>进行场景的卸载，或者打开新场景时使用<code>Single</code>模式。</p>
+<p>当想要打开一个新场景时可以使用上述Addressables提供的方法或者使用 <code>SceneManager.LoadScene</code>/<code>SceneManager.LoadSceneAsync</code>，一个新场景的打开会关闭当前的场景，那么对应的引用记数也会正确的减少。</p>
+<h2 id="GameObject的实例化"><a href="#GameObject的实例化" class="headerlink" title="GameObject的实例化"></a>GameObject的实例化</h2><p>GameObject的实例化相对其它的资源有些特殊，在Unity中使用<code>Resources.Load</code>其实只是将Prefab的数据加载到了内存中，并未真正的实例化，所以需要再次调用<code>Object.instantite</code>才能正确的得到需要的GameObject，在Addressables中也是这样的，不过Addressable提供了一些便利的方法<code>Addressables.InstantiateAsync</code>可以直接得到对应的GameObject。</p>
+<p>当使用<code>Addressables.InstantiateAsync</code>加载一个Prefab时，Addressable会自动实例化，同时在加载的过程中Addressable在加载Prefab的同时也会加载其依赖，将所有的引用记数全部增加。对同一“地址”的资源调用<code>InstantiateAsync</code>三次，将会使其依赖的所有资源的引用记数均增加为3.但是与三次调用<code>LoadAssetAsync</code>不同的是每次调用<code>InstantiateAsync</code>将会得到一个指向同一个操作的<code>AsyncOperationHandle</code>,这是因为每一个<code>InstantiateAsync</code>都将得到一个唯一的实例。与其它调用方法的另外一个区别在于<code>InstantiateAsync</code>有一个可选参数<code>trackHandle</code>，如果将其设置为false，在<code>AsyncOperationHandle</code>释放前，您必须自己保管着此对象，在此期间您可以执行一些操作。这种方法可以提高效率但是需要更多格外的代码来实现。</p>
+<p>关闭实例所在场景或者使用<code>Addressables.ReleaseInstance</code>可以卸载掉实例化的对象。</p>
+<p>如果您在加载时将<code>trackHandle</code>设置为false,那么您只能通过调用<code>Addressables.ReleaseInstance</code>并将返回的句柄做为参数，而不能再使用真实的GameObject做为参数进行释放了。</p>
+<p>关于<code>Addressables.ReleaseInstance</code>格外的说明：如果调用<code>Addressables.ReleaseInstance</code>方法来释放一个实例,但是此实例不是由Addressable创建或者说在使用Addressable创建时设置了<code>trackHandle=false</code>，此方法调用后将会返回false，以表示Addressable无法释放此实例</p>
+<p>使用<code>Addressables.InstantiateAsync</code>方法本身会有一些格外的开销，如果您需要实例化同一个对象很多次，比如说一帧内实例化100个，使用此方法就不再合适，可以考虑使用<code>Addressables.LoadAssetAsync</code>进行资源的加载，同时自己保存返回的结果，然后再使用<code>GameObject.Instantiate()</code>进行实例化，同时当所有的GameObject不再使用后，再通过<code>Addessables.Release</code>方法将保存的结果进行释放。使用此种方法虽然可以提高部分性能，但是需要对其增加格外的管理。</p>
+<p>使用<code>Addressables.InstantiateAsync</code>方法本身会有一些格外的开销，如果您需要实例化同一个对象很多次，比如说一帧内实例化100个，可以考虑使用Addressable进行资源的加载</p>
+<h2 id="Addressable分析工具"><a href="#Addressable分析工具" class="headerlink" title="Addressable分析工具"></a>Addressable分析工具</h2><p>通过<em>Window-&gt;Asset Management-&gt;Addressable Profiler</em>可以打开Addressable的分析工具，在使用此工具前需要将配置中的<em>Send Profiler Events</em>打开（默认情况下配置文件为Assets/AddressableAssetsData/AddressableAssetSettings)</p>
+<p><img src="../../assets/images/2019-09-01-addressable/sendprofilerevent.png" alt="Send Profiler Events"></p>
+<p>窗口中显示了Addressable操作的引用记数，包括加载的AssetBundle及加载的资源等等。</p>
+<ul>
+<li>白色的竖线表示选择的当前的帧</li>
+<li>蓝色的背景当前加载的资源</li>
+<li>绿色的部分表示引用记数</li>
+</ul>
+<p><img src="../../assets/images/2019-09-01-addressable/profiler.png" alt="Profiler"></p>
+<h2 id="内存清理时机"><a href="#内存清理时机" class="headerlink" title="内存清理时机"></a>内存清理时机</h2><p>即使一个资源的不再被引用也不代表此资源被卸载了，因为一个AssetBundle中可能包含有多个资源，比如：一个名称”stuff”的AssetBundle中包含有三个资源”tree”,“tank”,“cow”，当资源”tree”被加载后，能够看到”tree”的引用记录会是1，同时”stuff”的引用记数也是1，接着如果加载了”tank”资源，此时”tree”与”tank”的引用记数均为1，同时”stuff”的记数会是2。接下来卸载资源”tree”，则”tree”的引用记数将会减少为0，在”Addressable Profiler”中对应于”tree”的记录将会被删除，但是此时由于AssetBundle对应的”stuff”并未被卸载，因为还有其它的在使用此AssetBundle。使用AssetBundle时可以从AssetBundle中加载部分内容，但是不能部分卸载AssetBundle，只有AssetBundle中的任何资源都不再被使用时，此AssetBundle才会被卸载</p>
+<p>当使用Unity的<code>Resources.UnloadUnusedAssets</code> (查看<a href="https://docs.unity3d.com/ScriptReference/Resources.UnloadUnusedAssets.html)时，上述描述中的&quot;tree&quot;将会被卸载掉，但是由于我们无法检测到此操作，所以我们只能反映引用记数的变化，而不是真正内存中内容的变化。" target="_blank" rel="noopener">https://docs.unity3d.com/ScriptReference/Resources.UnloadUnusedAssets.html)时，上述描述中的&quot;tree&quot;将会被卸载掉，但是由于我们无法检测到此操作，所以我们只能反映引用记数的变化，而不是真正内存中内容的变化。</a></p>
+<p>需要注意的是：使用<code>Resources.UnloadUnusedAssets</code>是一个很费时的操作，一般情况下不建议频繁使用，只有在场景切换时进行调用</p>
+<p>此段文字有些绕口，简单来说就是由于一个AssetBundle中包含有多个资源，其中的多个资源被加载出来后，只有所有的资源均不再使用时才会正确的卸载掉AssetBundle，同时对于加载出来的资源一般情况下，即使不再使用后也不是立即卸载的，依赖于引擎底层的实现。在Unity中通过使用<code>Resources.UnloadUnusedAssets</code>可以将不再使用的资源给卸载掉，但是由于此接口过于耗时，并不推荐频繁使用。可以使用的情况一般有：1 进行场景切换时，2 在某些大资源被销毁时，比如说：某此UI界面占用资源特别多，当此UI界面关闭时可以调用。</p>
+<h3 id="一些注意点"><a href="#一些注意点" class="headerlink" title="一些注意点"></a>一些注意点</h3><ul>
+<li>不要想着用异步加载ui..那会很卡..会出现莫名其妙的事情</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Win/" rel="tag"># Win</a>
+              <a href="/tags/C/" rel="tag"># C</a>
+              <a href="/tags/Unity/" rel="tag"># Unity</a>
+              <a href="/tags/sync/" rel="tag"># sync</a>
+              <a href="/tags/UNITY/" rel="tag"># UNITY</a>
+              <a href="/tags/addressable/" rel="tag"># addressable</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/unity-2019-09-01-spriteAtlas/" rel="prev" title="关于spriteAtlas打包那些事">
+      <i class="fa fa-chevron-left"></i> 关于spriteAtlas打包那些事
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/unity-2019-09-02-unity-reference-dll/" rel="next" title="unity的宏以及添加net框架中未引用的dll">
+      unity的宏以及添加net框架中未引用的dll <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  
+  <div class="comments">
+  <script src="https://utteranc.es/client.js" repo="zhepama/igiven.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async></script>
+  </div>
+  
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#镜像资源的加载与卸载"><span class="nav-number">1.</span> <span class="nav-text">镜像资源的加载与卸载</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#资源加载"><span class="nav-number">2.</span> <span class="nav-text">资源加载</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#场景加载"><span class="nav-number">3.</span> <span class="nav-text">场景加载</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GameObject的实例化"><span class="nav-number">4.</span> <span class="nav-text">GameObject的实例化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Addressable分析工具"><span class="nav-number">5.</span> <span class="nav-text">Addressable分析工具</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内存清理时机"><span class="nav-number">6.</span> <span class="nav-text">内存清理时机</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#一些注意点"><span class="nav-number">6.1.</span> <span class="nav-text">一些注意点</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhepama"
+      src="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+  <p class="site-author-name" itemprop="name">zhepama</p>
+  <div class="site-description" itemprop="description">一个不专业的程序员,写着专业的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">139</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhepama" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhepama" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhepama@gmail.com" title="E-Mail → mailto:zhepama@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.godgodgame.com/" title="http:&#x2F;&#x2F;www.godgodgame.com" rel="noopener" target="_blank">GODGODGAME</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.igiven.com/" title="https:&#x2F;&#x2F;www.igiven.com">IGIVEN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhepama.github.io/C-Sharp-Playground/zh/" title="https:&#x2F;&#x2F;zhepama.github.io&#x2F;C-Sharp-Playground&#x2F;zh&#x2F;" rel="noopener" target="_blank">数据结构与算法</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhepama</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

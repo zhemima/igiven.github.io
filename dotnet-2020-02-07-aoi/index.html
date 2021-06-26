@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.igiven.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="为什么要进行视野管理？1.如果不进行视野管理，流量上来看，假设平均每秒5个移动包（80字节），1个技能包（160字节），单人每秒多少？500kb。 2.客户端表现来看，客户端受屏幕大小影响，离得远的玩家看不见，没有必要发给客户端。客户端性能所限，玩家多，放各种 技能，当然会看。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="地图的aoi">
+<meta property="og:url" content="http://www.igiven.com/dotnet-2020-02-07-aoi/index.html">
+<meta property="og:site_name" content="IGiven">
+<meta property="og:description" content="为什么要进行视野管理？1.如果不进行视野管理，流量上来看，假设平均每秒5个移动包（80字节），1个技能包（160字节），单人每秒多少？500kb。 2.客户端表现来看，客户端受屏幕大小影响，离得远的玩家看不见，没有必要发给客户端。客户端性能所限，玩家多，放各种 技能，当然会看。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-02-07-aoi/IncServer-Scene-RealScene.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-02-07-aoi/IncServer-Scene.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-02-07-aoi/IncServer-Scene-Patch.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-02-07-aoi/IncServer-Scene-ObjectLink.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-02-07-aoi/IncServer-Scene-ViewRange.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-02-07-aoi/3276b001c9ca66df2fd93650fc75bc3d.jpeg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-02-07-aoi/1430365886_455802.jpg">
+<meta property="article:published_time" content="2020-02-07T00:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-26T08:36:17.942Z">
+<meta property="article:author" content="zhepama">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="游戏">
+<meta property="article:tag" content="GitHub">
+<meta property="article:tag" content="同步">
+<meta property="article:tag" content="地图">
+<meta property="article:tag" content="aoi">
+<meta property="article:tag" content="JS">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.igiven.com/assets/images/2020-02-07-aoi/IncServer-Scene-RealScene.png">
+
+<link rel="canonical" href="http://www.igiven.com/dotnet-2020-02-07-aoi/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>地图的aoi | IGiven</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="IGiven" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="IGiven" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">IGiven</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">李九仙的博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">139</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">32</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-留言">
+
+    <a href="/guestbook/" rel="section"><i class="fa fa-sticky-note fa-fw"></i>留言</a>
+
+  </li>
+        <li class="menu-item menu-item-rss">
+
+    <a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/dotnet-2020-02-07-aoi/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+      <meta itemprop="name" content="zhepama">
+      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="IGiven">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          地图的aoi<a href="https://github.com/zhepama/igiven.github.io/edit/master/source/_posts/dotnet/2020-02-07-aoi.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil-alt"></i></a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-02-07 08:00:00" itemprop="dateCreated datePublished" datetime="2020-02-07T08:00:00+08:00">2020-02-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 16:36:17" itemprop="dateModified" datetime="2021-06-26T16:36:17+08:00">2021-06-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/dotnet/" itemprop="url" rel="index"><span itemprop="name">dotnet</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="为什么要进行视野管理？"><a href="#为什么要进行视野管理？" class="headerlink" title="为什么要进行视野管理？"></a>为什么要进行视野管理？</h2><p>1.如果不进行视野管理，流量上来看，假设平均每秒5个移动包（80字节），1个技能包（160字节），单人每秒多少？500kb。</p>
+<p>2.客户端表现来看，客户端受屏幕大小影响，离得远的玩家看不见，没有必要发给客户端。客户端性能所限，玩家多，放各种 技能，当然会看。</p>
+<p>3.从性能上考虑，服务端不用遍历全场景对象…也会大大减少性能消耗。</p>
+<h1 id="格子"><a href="#格子" class="headerlink" title="格子"></a>格子</h1><h2 id="Land"><a href="#Land" class="headerlink" title="Land"></a>Land</h2><p>IncServer将每个场景看做是由n个land（块）组成，每个land就是一个大小固定的正方形，默认512 * 512。比如一个scene的尺寸为1200 * 700：</p>
+<p><img src="../../assets/images/2020-02-07-aoi/IncServer-Scene-RealScene.png" alt="img"></p>
+<p>则需要6个land来表示:</p>
+<p><img src="../../assets/images/2020-02-07-aoi/IncServer-Scene.png" alt="img"></p>
+<h2 id="Patch"><a href="#Patch" class="headerlink" title="Patch"></a>Patch</h2><p>Land进一步被划分为若干个Patch（格子）。以patch为单位，land的边长是2的整数次幂。</p>
+<p><img src="../../assets/images/2020-02-07-aoi/IncServer-Scene-Patch.png" alt="img"></p>
+<h2 id="分块管理"><a href="#分块管理" class="headerlink" title="分块管理"></a>分块管理</h2><p>World对游戏对象的管理以patch为单位，<strong>每个patch都对应有一个对象链表</strong>。</p>
+<p>整个world中所有的对象链表的链表头可依次存储于一个一维数组中，这样根据对象的世界坐标，即可方便的计算出其所属的patch以及对应的对象链表。</p>
+<p><img src="../../assets/images/2020-02-07-aoi/IncServer-Scene-ObjectLink.png" alt="img"></p>
+<p>假设对象的坐标为(x, z)，patch的边长为patch_size，land的边长为land_size，整个场景在x方向上有land_x个land，则对象所属的对象链表的索引计算方式为：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">index &#x3D; (z &#x2F; patch_size) * (land_x * (land_size &#x2F; patch_size)) + (x &#x2F; patch_size);</span><br></pre></td></tr></table></figure>
+
+<h3 id="IncServer的AOI"><a href="#IncServer的AOI" class="headerlink" title="IncServer的AOI"></a>IncServer的AOI</h3><p>与常见的九宫格不同，IncServer支持NEAR、MIDDLE、FAR、FULL四种视野范围：</p>
+<p><img src="../../assets/images/2020-02-07-aoi/IncServer-Scene-ViewRange.png" alt="img"></p>
+<ul>
+<li>NEAR：当前对象所位于的patch</li>
+<li>MIDDLE：与NEAR相邻的patch</li>
+<li>FAR：与MID相邻的patch（NEAR除外）</li>
+<li>FULL：NEAR + MIDDILE + FAR</li>
+</ul>
+<p>不过在实际开发中，所有对象的视野都是FULL，即每个对象都能看到以自己所在patch为中心前后左右各两个patch（总计25个patch）内的其他对象。之后的讨论均假设<strong>所有游戏对象的视野范围均为FULL</strong>。</p>
+<p>如果对象B进入对象A的视野范围，则根据A对象类型，可能会触发不同的逻辑，比如：</p>
+<ul>
+<li>对象A是玩家：将B对象<strong>序列化</strong>到对象A的客户端。</li>
+<li>对象B是怪物：执行对象进入怪物视野的逻辑，比如激活AI等。</li>
+</ul>
+<p>后文将以上情况称之为在对象A的视野中加载对象B，简称为<strong>视野加载</strong>。</p>
+<h3 id="九宫格"><a href="#九宫格" class="headerlink" title="九宫格"></a>九宫格</h3><p>让我们首先绘制一个2D的地图</p>
+<p><img src="../../assets/images/2020-02-07-aoi/3276b001c9ca66df2fd93650fc75bc3d.jpeg" alt=" 3.1 网络法实现AOI算法  - 图1">我们给这个地图定义一些数值：</p>
+<p><strong>场景相关数值计算</strong></p>
+<ul>
+<li>场景大小： 250*250 ， w(x轴宽度) = 250，l(y轴长度) = 250</li>
+<li>x轴格子数量：nx = 5</li>
+<li>y轴格子数量：ny = 5</li>
+<li>格子宽度: dx = w / nx = 250 / 5 = 50</li>
+<li>格子长度: dy = l / ny = 250 / 5 = 50</li>
+<li>格子的x轴坐标：idx</li>
+<li>格子的y轴坐标：idy</li>
+<li>格子编号：id = idy *nx + idx (利用格子坐标得到格子编号)</li>
+<li>格子坐标：idx = id % nx , idy = id / nx (利用格子id得到格子坐标)</li>
+<li>格子的x轴坐标: idx = id % nx (利用格子id得到x轴坐标编号)</li>
+<li>格子的y轴坐标: idy = id / nx (利用格子id得到y轴坐标编号)</li>
+</ul>
+<p>以上几个数值，请参考图，简单过一下，就可以理解的，初中的几何计算而已。</p>
+<p>九宫格也是打格子的方式之一，把地图划分为很多小格子，每个格子记录格子内的玩家，每个玩家的aoi范围是以自己为中心范围内的九个格子，九个格子的大小略大于屏幕大小，同样的有三个主要的操作：enter,move,leave</p>
+<p>enter:根据玩家坐标，加入到所属的格子中，通过计算以这个格子的为中心的九个格子，这九个格子内的玩家就要被通知有新玩家初始化，同时这个新玩家初始化九个格子内的所有玩家。</p>
+<p>move:根据移动前位置的格子，计算出移动前的oldaoi集合，根据当前位置的格子，计算出当前的curaoi集合，如果oldaoi, curaoi为同一个格子，则通知格子内的所有玩家该玩家在移动。如果oldaoi,curaoi不是同一个格子，即发生了跨格子的操作，那么要将该玩家从旧格子移除，同时加入新格子。同时分别遍历oldaoi,curaoi,计算出需要通知玩家消失的格子集合，通知玩家出生的格子集合，以及通知玩家移动的格子集合。</p>
+<p>leave:玩家离开地图，将玩家从对应的格子里面删除，同时通知aoi集合有玩家离开。</p>
+<p> 服务器大格子的大小，以3*3的格子要总比客户端显示范围要大一点为原则。比客户端大一点，是为了预留资源加载的时间。<br>　　如下图所示，绿色表示手机客户端的显示区域，当角色A在格子6中时，他可以看到1,2,3,5,6,7,9,10,11这9个格子里的内容，那么当他的状态发生变化时，就需要同步给在这9个格子里的所有玩家；同样，当这9个格子里的有玩家或者怪物的状态改变时，也需要都同步给角色A。</p>
+<p><img src="../../assets/images/2020-02-07-aoi/1430365886_455802.jpg" alt="img"></p>
+<p>　　当角色A移动到角色B所在的格子(7)，则他将不再看到1,5,9这三个格子里的内容，同时他将新看到4,8,12这三个格子里的地图内容（玩家和怪物）。所以这个过程中，服务器要下发消息，删除角色A所在的客户端里的1,5,9这三个格子里的地图内容，同时下发消息新增4,8,12这三个格子里的地图内容（类型一）。<br>　　推荐大格子具体的大小，按客户端iPhone4S的960<em>640分辨来制定，取屏幕长宽的1/2大一些，可以定为640</em>360。 </p>
+<ul>
+<li><a href="https://github.com/artasccope/GameFW.AOI" target="_blank" rel="noopener">https://github.com/artasccope/GameFW.AOI</a> </li>
+<li><a href="https://www.bookstack.cn/read/zinx/78aa012966213643.md" target="_blank" rel="noopener">https://www.bookstack.cn/read/zinx/78aa012966213643.md</a></li>
+</ul>
+<h3 id="灯塔法"><a href="#灯塔法" class="headerlink" title="灯塔法"></a>灯塔法</h3><p>所谓灯塔法，即将大地图划分成有限的小格子，在每个小格子中间放一个灯塔，这个灯塔管理两个队列：一个是本格子内所有的对象集合，另一个是对本灯塔感兴趣的对象集合（简称观察者）。</p>
+<p>而地图上的每个对象，维护一个视野队列：该队列为其视野范围内的所有对象，即自身感兴趣的所有对象。</p>
+<p>一个对象在地图上面运动：分为三个操作：enter，move，leave.</p>
+<p>enter:当对象进入地图的时候，根据对象的当前位置和对象的感知距离，可以获取到该对象能观察到的所有灯塔，遍历这些灯塔，将该对象添加为其观察者。同时将这些对象添加到自己的视野队列中。</p>
+<p>move:当对象开始移动的时候，对象从一个点到另一个店，那么视野范围必然发生变化。此刻需要将对象从老的灯塔的观察者列表移除，同时将对象添加进新的灯塔的观察者列表。此外，还需要跟新玩家的视野队列，因为视野范围变化，视野内的对象也相应变化。</p>
+<p>leave:当对象离开的时候，将自身从附近灯塔的观察者队列中移除。</p>
+<p>通过灯塔法，每当物体发生变化，我们能马上根据其当前位置，定位到他的所在的灯塔，同时找到它视野范围内相关联的物体。这样避免了遍历地图上所有玩家进行处理的方式。</p>
+<p>当然灯塔的格子大小划分要因地制宜，格子越小，消耗内存越大，同时计算量变大。</p>
+<ul>
+<li><p><a href="https://github.com/Bestpoker/AOI" target="_blank" rel="noopener">https://github.com/Bestpoker/AOI</a> </p>
+</li>
+<li><p><a href="https://github.com/NetEase/pomelo-aoi" target="_blank" rel="noopener">https://github.com/NetEase/pomelo-aoi</a></p>
+</li>
+<li><p><a href="https://github.com/ahuangege/tower-aoi" target="_blank" rel="noopener">https://github.com/ahuangege/tower-aoi</a></p>
+</li>
+</ul>
+<p>前几天把pomelo中的tower aoi的js实现看了一遍，总结如下：</p>
+<ol>
+<li><p>js代码写得不是很好，发现了几个小问题；</p>
+</li>
+<li><p>“对象(包括观察者)出现”“对象(包括观察者)消失”“对象(包括观察者)位置变化”“观察者位置变化”的回调通知(前三者通知对应灯塔区域的观察者，第四个通知观察者本身)没有可测试的样例，采用的话需要自己实现和测试；</p>
+</li>
+<li><p>只考虑了起点和终点，移动路径上的玩家被忽视了，路径短的话也可能不是问题(长路径切分成多个短路径做位置更新)；</p>
+</li>
+<li><p>观察者可能收到超出自己视野范围的消息；</p>
+</li>
+<li><p>优点是可处理视野不同的观察者，相对于普通扫格子的实现在代码层面耦合度降低、效率提升不明显(把扫格子实现的地格看做一个灯塔区域，在地格上记录观察者就可以模拟这种灯塔模型，削去了遍历周边地格所有对象的逻辑)</p>
+</li>
+<li><p>这里做的是四边形灯塔区域，云风提的那种六边形灯塔区域减少查询灯塔个数是特指视野半径&lt;=六边形边长的一半这种情况</p>
+<ol start="7">
+<li>tower aoi其实就是处理地图视野的一个设计，类似于订阅-发布，我订阅某一块区域表示对这一块区域感兴趣，那么有对象在这一块区域出现消失移动你就通知我</li>
+</ol>
+</li>
+</ol>
+<h1 id="十字链表法"><a href="#十字链表法" class="headerlink" title="十字链表法"></a>十字链表法</h1><p>这里以2d游戏为例，3d游戏顺势扩展即可。</p>
+<p>所谓十字链表法，即维护两天链表，一条根据地图上所有物体的x坐标从小到大依次插入链表，一条根据地图上所有物体的y坐标从小到大依次插入链表，可以想象成一个十字架。这样便把地图上的所有对象按序分配到了x,y链表上。</p>
+<p>这里的链表为双向链表，双向链表的好处是，获取到链表中的一个节点，便可以向前和向后遍历。这样，当我们拿到一个对象时，要获取该对象的视野范围就变得非常简单。避免了从头到尾遍历所有对象。</p>
+<p>首先根据x坐标，在x链表上找到该节点，然后从该节点向前和向后遍历，根据x方向的视野范围找出需要识别的对象。</p>
+<p>然后根据y坐标，在y链表上找到该节点，然后从该节点向前和向后遍历，根据y方向的视野范围找出需要识别的对象。</p>
+<p>拿到x,y链表上需要关注的对象，然后取他们的交集，这便是玩家视野范围内的对象。</p>
+<p>对于对象在地图上的enter,move,leave 。根据前面的思路就变得非常简单</p>
+<ul>
+<li><a href="https://github.com/zhepama/AOI" target="_blank" rel="noopener">https://github.com/zhepama/AOI</a> </li>
+</ul>
+<h4 id="十字链表基本原理"><a href="#十字链表基本原理" class="headerlink" title="十字链表基本原理"></a><strong>十字链表基本原理</strong></h4><p>根据二维地图，将其分成x轴和y轴两个链表。如果是三维地图，则还需要维护多一个z轴的链表。将对象的坐标值按照从小到大相应的排列在相应的坐标轴上面。</p>
+<ul>
+<li>添加到AOI（ADD）: 根据新增对象的X,Y坐标,依次遍历X,Y轴坐标链表,这里有两个目的,一个是获得这个新增对象的坐标在X,Y轴坐标的位置,另一方面获得该通知哪些结点.通知的范围,每个对象可以自己定制自己的通知范围。必须X,Y坐标同时都在通知范围内才可以进入通知集合，我们要按照从小到大进行插入。例如X轴坐标为:</li>
+</ul>
+<p><code>a-&gt;b-&gt;c-&gt;d-&gt;e-&gt;f-&gt;g-&gt;h</code></p>
+<p>假设新增一个对象z,它最终所在的位置是c和d之间,需要重新在链表的头部开始遍历寻找z的位置，比如z的X轴位置是5：</p>
+<p><code>a(0)-&gt;b(1)-&gt;c(2)-&gt;d(3)-&gt;e(4)-z(5)-&gt;f(6)-&gt;g(7)-&gt;h(8)</code></p>
+<p>但是这样会发现一个问题，如果需要管理的坐标少还可以。但如果有很多个坐标比如1W个坐标，那这个链表会很长，如果每次都需要从头部开始查找效率就很低。针对这样的插入方法目前大家常用的有快速排序、分治、按区域划分格子等方式。</p>
+<h4 id="目前常用的排序算法"><a href="#目前常用的排序算法" class="headerlink" title="目前常用的排序算法"></a><strong>目前常用的排序算法</strong></h4><ul>
+<li>快速排序（Quicksort）是对<a href="https://link.zhihu.com/?target=https%3A//baike.baidu.com/item/%E5%86%92%E6%B3%A1%E6%8E%92%E5%BA%8F/4602306">冒泡排序</a>的一种改进。</li>
+</ul>
+<p>快速排序由C. A. R. Hoare在1962年提出。它的基本思想是：通过一趟排序将要排序的数据分割成独立的两部分，其中一部分的所有数据都比另外一部分的所有数据都要小，然后再按此方法对这两部分数据分别进行快速排序，整个排序过程可以<a href="https://link.zhihu.com/?target=https%3A//baike.baidu.com/item/%E9%80%92%E5%BD%92/1740695">递归</a>进行，以此达到整个数据变成有序<a href="https://link.zhihu.com/?target=https%3A//baike.baidu.com/item/%E5%BA%8F%E5%88%97/1302588">序列</a>。</p>
+<ul>
+<li>分治算法</li>
+</ul>
+<p>分治算法的基本思想是将一个规模为N的问题分解为K个规模较小的子问题，这些子问题相互独立且与原问题性质相同。求出子问题的解，就可得到原问题的解。即一种分目标完成程序算法，简单问题可用二分法完成。</p>
+<ul>
+<li>按区域划分格子</li>
+</ul>
+<p>该方法是把区域划分成多个格子，比如X坐标1到X坐标4为一个格子我们（暂时称之为A格子），坐标5到X坐标9为一个格子（暂时称之为B格子）。这样做的好处是，当你插入的坐标是2的时候，我们只需要遍历A格子里面的数据找到自己位置就可以了。</p>
+<p>综合以上三种方法，大家一眼就看出来了。是的，按区域划分格子的方式是目前最佳的方式。从时间复杂度等等所有方便都是这个最佳，但是这个方法也有一个很大的问题，用这样的方式插入是很快了，但查找范围内的坐标就变的很困难了。大家可以仔细考虑一下或者自己写一个DEMO。你马上会发现，当我知道我的位置的情况下，我该如何查找周围玩家呢，是的。这样的话十字链就没有什么用了。</p>
+<p>当然会有人说我在每个格子之间用链表进行连接就可以了，那么问题又来了。该如何连接，肯定有很复杂的代码才可以完成这样逻辑。就算是你能完成这个链表的连接，但这些逻辑会提升了时间复杂度。</p>
+<h4 id="快慢针"><a href="#快慢针" class="headerlink" title="快慢针"></a>快慢针</h4><p>所谓快慢针就是，总有一个指针快于一个指针。</p>
+<p>实现方式是，插入的时候把链表分成多份、比如链表长度为10，快的指针每次移动4个，然后对比当前节点如果位置小于的话，把慢指针指向快指针的位置，快指针继续向后面4个格子移动，直到找到大于的节点为止，这时候慢指针开始向前移动一个一个的对比位置就可以了。如果一直没有找到大于的节点，那就表示要插入的位置是当前链表最后的位置。</p>
+<p>相信大家已经看明白了，是的。这样的情况下效率就很高了，唯一的问题就是这个时间复杂度不稳定。使用这个方式，查找周围玩家直接前后查找移动就可以了。效率也非常高。</p>
+<p>快慢针实现：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line">if (First &#x3D;&#x3D; null)</span><br><span class="line">&#123;</span><br><span class="line">      node.Link.YNode &#x3D; AddFirst(AoiPool.Instance.Fetch&lt;LinkedListNode&lt;AoiNode&gt;&gt;(node).Value);</span><br><span class="line">&#125;</span><br><span class="line">else</span><br><span class="line">&#123;</span><br><span class="line">       var slowCursor &#x3D; First;</span><br><span class="line"></span><br><span class="line">       var skip &#x3D; Convert.ToInt32(Math.Ceiling(Convert.ToDouble(Count) &#x2F;</span><br><span class="line">                     Convert.ToDouble(_skipCount)));</span><br><span class="line"></span><br><span class="line">       if (Last.Value.Position.Y &gt; node.Position.Y)</span><br><span class="line">       &#123;</span><br><span class="line">            for (var i &#x3D; 0; i &lt; _skipCount; i++)</span><br><span class="line">            &#123;</span><br><span class="line">                 &#x2F;&#x2F; 移动快指针</span><br><span class="line"></span><br><span class="line">                 var fastCursor &#x3D; FastCursor(i * skip, skip);</span><br><span class="line"></span><br><span class="line">                 &#x2F;&#x2F; 如果快指针的值小于插入的值，把快指针赋给慢指针，当做当前指针。</span><br><span class="line"></span><br><span class="line">                 if (fastCursor.Value.Position.Y &lt;&#x3D; node.Position.Y)</span><br><span class="line">                 &#123;</span><br><span class="line">                       slowCursor &#x3D; fastCursor;</span><br><span class="line"></span><br><span class="line">                            continue;</span><br><span class="line">                 &#125;</span><br><span class="line"></span><br><span class="line">                 &#x2F;&#x2F; 慢指针移动到快指针位置</span><br><span class="line"></span><br><span class="line">                 while (slowCursor !&#x3D; fastCursor)</span><br><span class="line">                 &#123;</span><br><span class="line">                      if (slowCursor &#x3D;&#x3D; null) break;</span><br><span class="line"></span><br><span class="line">                      if (slowCursor.Value.Position.Y &gt;&#x3D; node.Position.Y)</span><br><span class="line">                      &#123;</span><br><span class="line">                           node.Link.YNode &#x3D; AddBefore(slowCursor,</span><br><span class="line">                                    AoiPool.Instance.Fetch&lt;LinkedListNode&lt;AoiNode&gt;&gt;(node).Value);</span><br><span class="line"></span><br><span class="line">                           return;</span><br><span class="line">                        &#125;</span><br><span class="line"></span><br><span class="line">                       slowCursor &#x3D; slowCursor.Next;</span><br><span class="line"></span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">if (node.Link.YNode &#x3D;&#x3D; null)</span><br><span class="line">&#123;</span><br><span class="line">       node.Link.YNode &#x3D; AddLast(AoiPool.Instance.Fetch&lt;LinkedListNode&lt;AoiNode&gt;&gt;(node).Value);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="实现方式"><a href="#实现方式" class="headerlink" title="实现方式"></a><strong>实现方式</strong></h4><ul>
+<li>Move（当角色移动后通知AOI）：</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br></pre></td><td class="code"><pre><span class="line">#region 移动X轴</span><br><span class="line"></span><br><span class="line">            if (Math.Abs(node.Position.X - x) &gt; 0)</span><br><span class="line">            &#123;</span><br><span class="line">                if (x &gt; node.Position.X)</span><br><span class="line">                &#123;</span><br><span class="line">                    var cur &#x3D; node.Link.XNode.Next;</span><br><span class="line"></span><br><span class="line">                    while (cur !&#x3D; null)</span><br><span class="line">                    &#123;</span><br><span class="line">                        if (x &lt; cur.Value.Position.X)</span><br><span class="line">                        &#123;</span><br><span class="line">                            _xLinks.Remove(node.Link.XNode);</span><br><span class="line"></span><br><span class="line">                            node.Position.X &#x3D; x;</span><br><span class="line">                            </span><br><span class="line">                            node.Link.XNode &#x3D; _xLinks.AddBefore(cur, node);</span><br><span class="line"></span><br><span class="line">                            break;</span><br><span class="line">                        &#125;</span><br><span class="line">                        else if (cur.Next &#x3D;&#x3D; null)</span><br><span class="line">                        &#123;</span><br><span class="line">                            _xLinks.Remove(node.Link.XNode);</span><br><span class="line">                            </span><br><span class="line">                            node.Position.X &#x3D; x;</span><br><span class="line">                            </span><br><span class="line">                            node.Link.XNode &#x3D; _xLinks.AddAfter(cur, node);</span><br><span class="line"></span><br><span class="line">                            break;</span><br><span class="line">                        &#125;</span><br><span class="line"></span><br><span class="line">                        cur &#x3D; cur.Next;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                else</span><br><span class="line">                &#123;</span><br><span class="line">                    var cur &#x3D; node.Link.XNode.Previous;</span><br><span class="line"></span><br><span class="line">                    while (cur !&#x3D; null)</span><br><span class="line">                    &#123;</span><br><span class="line">                        if (x &gt; cur.Value.Position.X)</span><br><span class="line">                        &#123;</span><br><span class="line">                            _xLinks.Remove(node.Link.XNode);</span><br><span class="line">                            </span><br><span class="line">                            node.Position.X &#x3D; x;</span><br><span class="line">                            </span><br><span class="line">                            node.Link.XNode &#x3D; _xLinks.AddBefore(cur, node);</span><br><span class="line"></span><br><span class="line">                            break;</span><br><span class="line">                        &#125;</span><br><span class="line">                        else if (cur.Previous &#x3D;&#x3D; null)</span><br><span class="line">                        &#123;</span><br><span class="line">                            _xLinks.Remove(node.Link.XNode);</span><br><span class="line">                            </span><br><span class="line">                            node.Position.X &#x3D; x;</span><br><span class="line">                            </span><br><span class="line">                            node.Link.XNode &#x3D; _xLinks.AddAfter(cur, node);</span><br><span class="line"></span><br><span class="line">                            break;</span><br><span class="line">                        &#125;</span><br><span class="line"></span><br><span class="line">                        cur &#x3D; cur.Previous;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            #endregion</span><br><span class="line"></span><br><span class="line">            #region 移动Y轴</span><br><span class="line"></span><br><span class="line">            if (Math.Abs(node.Position.Y - y) &gt; 0)</span><br><span class="line">            &#123;</span><br><span class="line">                if (y &gt; node.Position.Y)</span><br><span class="line">                &#123;</span><br><span class="line">                    var cur &#x3D; node.Link.YNode.Next;</span><br><span class="line"></span><br><span class="line">                    while (cur !&#x3D; null)</span><br><span class="line">                    &#123;</span><br><span class="line">                        if (y &lt; cur.Value.Position.Y)</span><br><span class="line">                        &#123;</span><br><span class="line">                            _yLinks.Remove(node.Link.YNode);</span><br><span class="line">                            </span><br><span class="line">                            node.Position.Y &#x3D; y;</span><br><span class="line">                            </span><br><span class="line">                            node.Link.YNode &#x3D; _yLinks.AddBefore(cur, node);</span><br><span class="line"></span><br><span class="line">                            break;</span><br><span class="line">                        &#125;</span><br><span class="line">                        else if (cur.Next &#x3D;&#x3D; null)</span><br><span class="line">                        &#123;</span><br><span class="line">                            _yLinks.Remove(node.Link.YNode);</span><br><span class="line">                            </span><br><span class="line">                            node.Position.Y &#x3D; y;</span><br><span class="line">                            </span><br><span class="line">                            node.Link.YNode &#x3D; _yLinks.AddAfter(cur, node);</span><br><span class="line"></span><br><span class="line">                            break;</span><br><span class="line">                        &#125;</span><br><span class="line"></span><br><span class="line">                        cur &#x3D; cur.Next;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                else</span><br><span class="line">                &#123;</span><br><span class="line">                    var cur &#x3D; node.Link.YNode.Previous;</span><br><span class="line"></span><br><span class="line">                    while (cur !&#x3D; null)</span><br><span class="line">                    &#123;</span><br><span class="line">                        if (y &gt; cur.Value.Position.Y)</span><br><span class="line">                        &#123;</span><br><span class="line">                            _yLinks.Remove(node.Link.YNode);</span><br><span class="line">                            </span><br><span class="line">                            node.Position.Y &#x3D; y;</span><br><span class="line">                            </span><br><span class="line">                            node.Link.YNode &#x3D; _yLinks.AddBefore(cur, node);</span><br><span class="line"></span><br><span class="line">                            break;</span><br><span class="line">                        &#125;</span><br><span class="line">                        else if (cur.Previous &#x3D;&#x3D; null)</span><br><span class="line">                        &#123;</span><br><span class="line">                            _yLinks.Remove(node.Link.YNode);</span><br><span class="line">                            </span><br><span class="line">                            node.Position.Y &#x3D; y;</span><br><span class="line">                            </span><br><span class="line">                            node.Link.YNode &#x3D; _yLinks.AddAfter(cur, node);</span><br><span class="line"></span><br><span class="line">                            break;</span><br><span class="line">                        &#125;</span><br><span class="line"></span><br><span class="line">                        cur &#x3D; cur.Previous;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            </span><br><span class="line">            #end-region</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>查找周围（按照指定的范围查找自己周围玩家）：</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line">for (var i &#x3D; 0; i &lt; 2; i++)</span><br><span class="line">            &#123;</span><br><span class="line">                var cur &#x3D; i &#x3D;&#x3D; 0 ? node.Link.XNode.Next : node.Link.XNode.Previous;</span><br><span class="line"></span><br><span class="line">                while (cur !&#x3D; null)</span><br><span class="line">                &#123;</span><br><span class="line">                    if (Math.Abs(Math.Abs(cur.Value.Position.X) - Math.Abs(node.Position.X)) &gt; area.X)</span><br><span class="line">                    &#123;</span><br><span class="line">                        break;</span><br><span class="line">                    &#125;</span><br><span class="line">                    else if (Math.Abs(Math.Abs(cur.Value.Position.Y) - Math.Abs(node.Position.Y)) &lt;&#x3D; area.Y)</span><br><span class="line">                    &#123;</span><br><span class="line">                        if (Distance(node.Position, cur.Value.Position) &lt;&#x3D; area.X)</span><br><span class="line">                        &#123;</span><br><span class="line">                            if (!node.AoiInfo.MovesSet.Contains(cur.Value.Id)) node.AoiInfo.MovesSet.Add(cur.Value.Id);</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    cur &#x3D; i &#x3D;&#x3D; 0 ? cur.Next : cur.Previous;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            for (var i &#x3D; 0; i &lt; 2; i++)</span><br><span class="line">            &#123;</span><br><span class="line">               var cur &#x3D; i &#x3D;&#x3D; 0 ? node.Link.YNode.Next : node.Link.YNode.Previous;</span><br><span class="line"></span><br><span class="line">                while (cur !&#x3D; null)</span><br><span class="line">                &#123;</span><br><span class="line">                    if (Math.Abs(Math.Abs(cur.Value.Position.Y) - Math.Abs(node.Position.Y)) &gt; area.Y)</span><br><span class="line">                    &#123;</span><br><span class="line">                        break;</span><br><span class="line">                    &#125;</span><br><span class="line">                    else if (Math.Abs(Math.Abs(cur.Value.Position.X) - Math.Abs(node.Position.X)) &lt;&#x3D; area.X)</span><br><span class="line">                    &#123;</span><br><span class="line">                        if (Distance(node.Position, cur.Value.Position) &lt;&#x3D; area.Y)</span><br><span class="line">                        &#123;</span><br><span class="line">                            if (!node.AoiInfo.MovesSet.Contains(cur.Value.Id)) node.AoiInfo.MovesSet.Add(cur.Value.Id);</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    cur &#x3D; i &#x3D;&#x3D; 0 ? cur.Next :cur.Previous;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="优缺点"><a href="#优缺点" class="headerlink" title="优缺点"></a>优缺点</h2><ul>
+<li>九宫格<ul>
+<li>优点: cpu消耗小</li>
+<li>缺点: 内存开销大,内存消耗不仅和实体数有关,还和场景大小成正比</li>
+</ul>
+</li>
+<li>十字链表<ul>
+<li>优点: 内存开销小,内存消耗仅和实体数有关,和场景大小无关</li>
+<li>缺点: cpu消耗高,每次移动都需要计算视野差,当实体在小区域堆积严重时效率更差</li>
+</ul>
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C</a>
+              <a href="/tags/%E6%B8%B8%E6%88%8F/" rel="tag"># 游戏</a>
+              <a href="/tags/GitHub/" rel="tag"># GitHub</a>
+              <a href="/tags/%E5%90%8C%E6%AD%A5/" rel="tag"># 同步</a>
+              <a href="/tags/%E5%9C%B0%E5%9B%BE/" rel="tag"># 地图</a>
+              <a href="/tags/aoi/" rel="tag"># aoi</a>
+              <a href="/tags/JS/" rel="tag"># JS</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/dotnet-2020-02-06-Consistent-Hash/" rel="prev" title="一致性hash算法">
+      <i class="fa fa-chevron-left"></i> 一致性hash算法
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/dotnet-2020-02-09-room-elo/" rel="next" title="游戏的匹配机制ELO">
+      游戏的匹配机制ELO <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  
+  <div class="comments">
+  <script src="https://utteranc.es/client.js" repo="zhepama/igiven.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async></script>
+  </div>
+  
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么要进行视野管理？"><span class="nav-number">1.</span> <span class="nav-text">为什么要进行视野管理？</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#格子"><span class="nav-number"></span> <span class="nav-text">格子</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Land"><span class="nav-number">1.</span> <span class="nav-text">Land</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Patch"><span class="nav-number">2.</span> <span class="nav-text">Patch</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#分块管理"><span class="nav-number">3.</span> <span class="nav-text">分块管理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#IncServer的AOI"><span class="nav-number">3.1.</span> <span class="nav-text">IncServer的AOI</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#九宫格"><span class="nav-number">3.2.</span> <span class="nav-text">九宫格</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#灯塔法"><span class="nav-number">3.3.</span> <span class="nav-text">灯塔法</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#十字链表法"><span class="nav-number"></span> <span class="nav-text">十字链表法</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#十字链表基本原理"><span class="nav-number">0.0.1.</span> <span class="nav-text">十字链表基本原理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#目前常用的排序算法"><span class="nav-number">0.0.2.</span> <span class="nav-text">目前常用的排序算法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#快慢针"><span class="nav-number">0.0.3.</span> <span class="nav-text">快慢针</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#实现方式"><span class="nav-number">0.0.4.</span> <span class="nav-text">实现方式</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#优缺点"><span class="nav-number">1.</span> <span class="nav-text">优缺点</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhepama"
+      src="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+  <p class="site-author-name" itemprop="name">zhepama</p>
+  <div class="site-description" itemprop="description">一个不专业的程序员,写着专业的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">139</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhepama" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhepama" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhepama@gmail.com" title="E-Mail → mailto:zhepama@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.godgodgame.com/" title="http:&#x2F;&#x2F;www.godgodgame.com" rel="noopener" target="_blank">GODGODGAME</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.igiven.com/" title="https:&#x2F;&#x2F;www.igiven.com">IGIVEN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhepama.github.io/C-Sharp-Playground/zh/" title="https:&#x2F;&#x2F;zhepama.github.io&#x2F;C-Sharp-Playground&#x2F;zh&#x2F;" rel="noopener" target="_blank">数据结构与算法</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhepama</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

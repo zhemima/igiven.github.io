@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.igiven.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="ability首先ability总是和item或者character结合在一起的 以下Authoring 会为ability加上不同的组件">
+<meta property="og:type" content="article">
+<meta property="og:title" content="unity-2020-11-16-dotssample">
+<meta property="og:url" content="http://www.igiven.com/unity-2020-11-16-dotssample/index.html">
+<meta property="og:site_name" content="IGiven">
+<meta property="og:description" content="ability首先ability总是和item或者character结合在一起的 以下Authoring 会为ability加上不同的组件">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-11-16T00:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-26T08:36:17.950Z">
+<meta property="article:author" content="zhepama">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="Unity">
+<meta property="article:tag" content="UNITY">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://www.igiven.com/unity-2020-11-16-dotssample/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>unity-2020-11-16-dotssample | IGiven</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="IGiven" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="IGiven" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">IGiven</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">李九仙的博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">139</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">32</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-留言">
+
+    <a href="/guestbook/" rel="section"><i class="fa fa-sticky-note fa-fw"></i>留言</a>
+
+  </li>
+        <li class="menu-item menu-item-rss">
+
+    <a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/unity-2020-11-16-dotssample/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+      <meta itemprop="name" content="zhepama">
+      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="IGiven">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          unity-2020-11-16-dotssample<a href="https://github.com/zhepama/igiven.github.io/edit/master/source/_posts/unity/2020-11-16-dotssample.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil-alt"></i></a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-11-16 08:00:00" itemprop="dateCreated datePublished" datetime="2020-11-16T08:00:00+08:00">2020-11-16</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 16:36:17" itemprop="dateModified" datetime="2021-06-26T16:36:17+08:00">2021-06-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/unity/" itemprop="url" rel="index"><span itemprop="name">unity</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="ability"><a href="#ability" class="headerlink" title="ability"></a>ability</h1><p>首先ability总是和item或者character结合在一起的</p>
+<p>以下Authoring 会为ability加上不同的组件</p>
+<ul>
+<li>AbilityAutoRifleAuthoring  </li>
+<li>AbilityMovementAuthoring</li>
+<li>AbilitySprintAuthoring</li>
+<li>AbilityDeadAuthoring</li>
+<li>AbilitySelectSlotAuthoring</li>
+<li>AbilityMeleeAuthoring</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">EntityManager.CreateArchetype(</span><br><span class="line">typeof(Ability.AbilityControl),  &#x2F;&#x2F;控制器</span><br><span class="line">typeof(Ability.AbilityTag), &#x2F;&#x2F;技能tag( Melee,Movement,AutoRifle, SelectSlot,Dead,Sprint)</span><br><span class="line">typeof(Ability.AbilityAction),  &#x2F;&#x2F;技能动作(None,PrimaryFire,SecondaryFire,Reloading,Melee,NumActions)会通过Item关联具体值</span><br><span class="line">typeof(settings),  &#x2F;&#x2F; 技能的配置</span><br><span class="line">typeof(state), &#x2F;&#x2F; 技能状态  </span><br><span class="line">typeof(PredictedState),  &#x2F;&#x2F; 预测状态</span><br><span class="line">typeof(InterpolatedState), &#x2F;&#x2F; 插值状态</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="AbilityCollection"><a href="#AbilityCollection" class="headerlink" title="AbilityCollection"></a>AbilityCollection</h2><p><code>AbilityEntry</code>是一个IBufferElementData.存储了多个ability</p>
+<p>定义了技能类型,能和什么类型一起运行,会打断什么类型</p>
+<p>一个技能可能会有多个触发button,比如一把枪,会有开火键和装弹键</p>
+<p>UpdateAbilityOwnership系统.. 填充character的OwnedCollection组件.分别为自己和item</p>
+<p>再根据OwnedCollection填充ownedAbilities</p>
+<p>PrepareOwnerForAbilityUpdate系统</p>
+<p>检查ability是否启用.未启用则删除</p>
+<p>SelectActiveBehavior系统</p>
+<p>选择激活一个ability</p>
+<h1 id="Item"><a href="#Item" class="headerlink" title="Item"></a>Item</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">EntityManager.CreateArchetype(</span><br><span class="line">typeof(Item.InputState),  &#x2F;&#x2F;输入状态</span><br><span class="line">typeof(AbilityCollection.State),   &#x2F;&#x2F;存储的是技能拥有者entity</span><br><span class="line">typeof(AbilityCollection.AbilityEntry),&#x2F;&#x2F;一个item可能有多个技能</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+<p>Item.Initialize会查找所有拥有(Inventory.ItemEntry)的实体(就是character)</p>
+<p>然后将item添加到character的Inventory.ItemEntry组件的buff中.</p>
+<p>将item和character关联起来</p>
+<p>Inventory.update系统</p>
+<p>比较activeslot和lastactiveinventoryslot.来在item上添加和删除PartOwner.Visible组件</p>
+<h1 id="Character"><a href="#Character" class="headerlink" title="Character"></a>Character</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">EntityManager.CreateArchetype(</span><br><span class="line">typeof(Settings),  &#x2F;&#x2F;角色设置</span><br><span class="line">typeof(InterpolatedData), &#x2F;&#x2F; 插值数据</span><br><span class="line">typeof(PredictedData),&#x2F;&#x2F;预测数据</span><br><span class="line">typeof(ReplicatedData),&#x2F;&#x2F; 角色类型</span><br><span class="line"></span><br><span class="line">typeof(Player.OwnerPlayerId.Default),&#x2F;&#x2F; 拥有者id</span><br><span class="line">typeof(PlayerControlled.State),&#x2F;&#x2F; 玩家控制器状态</span><br><span class="line">typeof(HitColliderOwner.State),  &#x2F;&#x2F;碰撞器状态</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F;Inventory</span><br><span class="line">typeof(Inventory.ItemEntry)   &#x2F;&#x2F;一个item的buff</span><br><span class="line">typeof(Inventory.State)   &#x2F;&#x2F;状态..激活的是哪一个item</span><br><span class="line">typeof(Inventory.InternalState)  &#x2F;&#x2F;最后激活的item</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F;生命和伤害</span><br><span class="line">typeof(HealthStateData),</span><br><span class="line">typeof(DamageEvent), &#x2F;&#x2F;注意是个buff</span><br><span class="line">typeof(DamageHistoryData),  </span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F;ability</span><br><span class="line">typeof(AbilityCollection.State),   &#x2F;&#x2F;存储的是技能拥有者entity</span><br><span class="line">typeof(AbilityCollection.AbilityEntry),&#x2F;&#x2F;一个角色可能有多个能力</span><br><span class="line">typeof(AbilityOwner.State),&#x2F;&#x2F;技能拥有者状态</span><br><span class="line">typeof(AbilityOwner.OwnedCollection),&#x2F;&#x2F;技能拥有者是个buff  拥有者有可能是角色也有可能是item</span><br><span class="line">typeof(AbilityOwner.OwnedAbility),&#x2F;&#x2F;拥有的所有技能,包括角色和item的</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F;角色控制器数据</span><br><span class="line">typeof(CharacterControllerComponentData),  &#x2F;&#x2F; 一些角色控制器数据</span><br><span class="line">typeof(CharacterControllerInitializationData),   &#x2F;&#x2F;碰撞盒数据</span><br><span class="line">typeof(CharacterControllerVelocity),</span><br><span class="line">typeof(CharacterControllerMoveQuery),</span><br><span class="line">typeof(CharacterControllerMoveResult),</span><br><span class="line">typeof(CharacterControllerGroundSupportData),</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+<h1 id="part"><a href="#part" class="headerlink" title="part"></a>part</h1><p> Part 模块是抽象”部分关系”的一种存在, 不过具体到实现来说, 就是可以用来管理角色模型, 武器模型(以及其LOD), 以角色配置为例说明下述具体用法</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">EntityManager.CreateArchetype(</span><br><span class="line">typeof(Part.Owner),  &#x2F;&#x2F;部件拥有者</span><br><span class="line">typeof(TerraformerWeaponPart.AutoringData)  &#x2F;&#x2F;声音</span><br><span class="line">typeof(TerraformerWeaponPart.AuthoringClass)  &#x2F;&#x2F;材质,特效之类的</span><br><span class="line">typeof(TerraformerWeaponPart.State)  &#x2F;&#x2F;状态</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+
+
+<p>同样的item和character都可以拥有part</p>
+<h1 id="local-player"><a href="#local-player" class="headerlink" title="local player"></a>local player</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">EntityManager.CreateArchetype(</span><br><span class="line">typeof(Player.State)  </span><br><span class="line">typeof(UserCommand)    &#x2F;&#x2F;是个buff</span><br><span class="line">typeof(LocalPlayer)  </span><br><span class="line">typeof(LocalPlayerCharacterControl.State)</span><br><span class="line"></span><br><span class="line">typeof(AbilityUIElement)</span><br><span class="line">typeof(PresentationElement)</span><br><span class="line">typeof(PlayerCameraControl.State)</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+<p>首先看<code>CharacterAuthoring</code>然后我们就知道.一个character到底有哪些东东了</p>
+<p>//Assets/Unity.Sample.Terraformer/Prefabs/Characters/Terraformer/Char_Terraformer.prefab</p>
+<p>SpawnCharacter</p>
+<p>ItemAuthoring</p>
+<h1 id="palyer-实例化流程"><a href="#palyer-实例化流程" class="headerlink" title="palyer 实例化流程"></a>palyer 实例化流程</h1><ol>
+<li>客户端连接的时候,服务端PlayerModuleServer.CreatePlayerEntity 创建player实体</li>
+<li>服务端根据GameMode,创建角色GameModeSystemServer.Update()</li>
+<li>客户端创建localplayer.并根据系统将localplayer和character和player进行绑定</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C</a>
+              <a href="/tags/Unity/" rel="tag"># Unity</a>
+              <a href="/tags/UNITY/" rel="tag"># UNITY</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/tool-2020-11-15-unity-is-big/" rel="prev" title="unity商店下载资源迁移">
+      <i class="fa fa-chevron-left"></i> unity商店下载资源迁移
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/tool-2020-11-16-coding-pages/" rel="next" title="关于coding的pages介绍">
+      关于coding的pages介绍 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  
+  <div class="comments">
+  <script src="https://utteranc.es/client.js" repo="zhepama/igiven.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async></script>
+  </div>
+  
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#ability"><span class="nav-number">1.</span> <span class="nav-text">ability</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#AbilityCollection"><span class="nav-number">1.1.</span> <span class="nav-text">AbilityCollection</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Item"><span class="nav-number">2.</span> <span class="nav-text">Item</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Character"><span class="nav-number">3.</span> <span class="nav-text">Character</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#part"><span class="nav-number">4.</span> <span class="nav-text">part</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#local-player"><span class="nav-number">5.</span> <span class="nav-text">local player</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#palyer-实例化流程"><span class="nav-number">6.</span> <span class="nav-text">palyer 实例化流程</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhepama"
+      src="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+  <p class="site-author-name" itemprop="name">zhepama</p>
+  <div class="site-description" itemprop="description">一个不专业的程序员,写着专业的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">139</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhepama" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhepama" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhepama@gmail.com" title="E-Mail → mailto:zhepama@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.godgodgame.com/" title="http:&#x2F;&#x2F;www.godgodgame.com" rel="noopener" target="_blank">GODGODGAME</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.igiven.com/" title="https:&#x2F;&#x2F;www.igiven.com">IGIVEN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhepama.github.io/C-Sharp-Playground/zh/" title="https:&#x2F;&#x2F;zhepama.github.io&#x2F;C-Sharp-Playground&#x2F;zh&#x2F;" rel="noopener" target="_blank">数据结构与算法</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhepama</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

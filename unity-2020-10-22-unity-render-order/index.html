@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.igiven.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="關於深度緩衝 (Depth buffering, or z-buffering)勢必得先回歸電腦繪圖學 (Computer graphics) 的知識，理解 Rasterization 怎麼透過 z-buffering ，來解決物體 rendering 可視問題 (visibility problem)，哪些可見那些不可見，這也關係到物件在 rendering result 成像後前後順序。 當物">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Unity rendering order渲染顺序">
+<meta property="og:url" content="http://www.igiven.com/unity-2020-10-22-unity-render-order/index.html">
+<meta property="og:site_name" content="IGiven">
+<meta property="og:description" content="關於深度緩衝 (Depth buffering, or z-buffering)勢必得先回歸電腦繪圖學 (Computer graphics) 的知識，理解 Rasterization 怎麼透過 z-buffering ，來解決物體 rendering 可視問題 (visibility problem)，哪些可見那些不可見，這也關係到物件在 rendering result 成像後前後順序。 當物">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-10-22-unity-render-order/bed-room.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-10-22-unity-render-order/depth-info-bed-room.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-10-22-unity-render-order/edit-camera-depth-unity.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-10-22-unity-render-order/edit-sorting-layers-unity.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-10-22-unity-render-order/edit-sorting-layer-unity.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-10-22-unity-render-order/edit-order-in-layer-unity.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-10-22-unity-render-order/edit-render-queue-unity.png">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/15536448-9a2deda21e4f661e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/744/format/webp">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-10-22-unity-render-order/edit-canvas-unity.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-10-22-unity-render-order/edit-canvas-unity.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-10-22-unity-render-order/canvas-renderer-rendering-order-unity.png">
+<meta property="article:published_time" content="2020-10-22T00:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-26T08:36:17.950Z">
+<meta property="article:author" content="zhepama">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="Unity">
+<meta property="article:tag" content="UNITY">
+<meta property="article:tag" content="JS">
+<meta property="article:tag" content="ugui">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.igiven.com/assets/images/2020-10-22-unity-render-order/bed-room.png">
+
+<link rel="canonical" href="http://www.igiven.com/unity-2020-10-22-unity-render-order/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Unity rendering order渲染顺序 | IGiven</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="IGiven" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="IGiven" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">IGiven</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">李九仙的博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">139</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">32</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-留言">
+
+    <a href="/guestbook/" rel="section"><i class="fa fa-sticky-note fa-fw"></i>留言</a>
+
+  </li>
+        <li class="menu-item menu-item-rss">
+
+    <a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/unity-2020-10-22-unity-render-order/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+      <meta itemprop="name" content="zhepama">
+      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="IGiven">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Unity rendering order渲染顺序<a href="https://github.com/zhepama/igiven.github.io/edit/master/source/_posts/unity/2020-10-22-unity-render-order.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil-alt"></i></a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-10-22 08:00:00" itemprop="dateCreated datePublished" datetime="2020-10-22T08:00:00+08:00">2020-10-22</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 16:36:17" itemprop="dateModified" datetime="2021-06-26T16:36:17+08:00">2021-06-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/unity/" itemprop="url" rel="index"><span itemprop="name">unity</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="關於深度緩衝-Depth-buffering-or-z-buffering"><a href="#關於深度緩衝-Depth-buffering-or-z-buffering" class="headerlink" title="關於深度緩衝 (Depth buffering, or z-buffering)"></a>關於深度緩衝 (Depth buffering, or z-buffering)</h2><p>勢必得先回歸電腦繪圖學 (Computer graphics) 的知識，理解 <a href="https://en.wikipedia.org/wiki/Rasterisation" target="_blank" rel="noopener">Rasterization</a> 怎麼透過 <a href="https://en.wikipedia.org/wiki/Z-buffering" target="_blank" rel="noopener">z-buffering</a> ，來解決物體 rendering 可視問題 (visibility problem)，哪些可見那些不可見，這也關係到物件在 rendering result 成像後前後順序。</p>
+<p>當物件 rendering 時，每個所生成的 pixel 產生的深度資訊 (z coordinate) 會儲存在 z-buffer (或稱為 depth buffer)，buffer 為二維陣列，其尺寸大小與最後成像尺寸相同。在 Unity shader 中可利用 <code>ZWrite On | Off</code> 來切換是否將深度資訊要寫入到 z-buffer。</p>
+<p>如果場景中其他物件 rendering 時，也在同一個 pixel 位置渲染結果時，會檢查 z-buffer 所儲存的深度資訊，是否將渲染結果覆蓋原本的 pixel，並且將新的深度資訊寫入到 z-buffer。通常條件會設定為深度資訊比原本更接近攝影機時，就能夠覆蓋原本結果。在 Unity shader 中可利用 <code>ZTest Less | Greater | LEqual | GEqual | Equal | NotEqual | Always</code> 來調整判斷方式。</p>
+<p><strong>有 z-buffering 機制，可不管物件算繪順序 (rendering order)，使得離攝影機越近的物件，永遠都描繪在其他離攝影機越遠的物件之前</strong> (<code>ZTest LEqual</code>)。</p>
+<p><a href="https://3.bp.blogspot.com/-xEsBEXX2jiQ/Wv_KFd2e3hI/AAAAAAAAwHY/aMJAzz3UIPkMUZOUqd9sgz_dsKZYN0PmQCHMYCw/s1600/bed-room.png" target="_blank" rel="noopener"><img src="../../assets/images/2020-10-22-unity-render-order/bed-room.png" alt="房間示意圖"></a></p>
+<p>房間示意圖</p>
+<p><a href="https://3.bp.blogspot.com/-x6KnmDnIk6o/Wv_KF_uymYI/AAAAAAAAwHc/XyV7-wddP-0QgqxstR_8MGzLGOxMlbUuACHMYCw/s1600/depth-info-bed-room.png" target="_blank" rel="noopener"><img src="../../assets/images/2020-10-22-unity-render-order/depth-info-bed-room.png" alt="房間的深度資訊，越深色表示離攝影機越近"></a></p>
+<p>房間的深度資訊，越深色表示離攝影機越近</p>
+<p><a href="https://assetstore.unity.com/packages/3d/props/furniture/pack-gesta-furniture-1-28237" target="_blank" rel="noopener">場景來源</a></p>
+<h2 id="Renderer’s-rendering-order"><a href="#Renderer’s-rendering-order" class="headerlink" title="Renderer’s rendering order"></a>Renderer’s rendering order</h2><p>假設 shader 中關閉深度機制的判斷 (<code>ZTest Always</code>)，或者在 render 場景物件的過程中都不寫入深度 (<code>ZWrite Off</code>)，即<strong>沒有 z-buffering 機制，rendering order 會決定成像的結果，越晚畫的物件永遠都在其他較早畫的物件之上</strong>。</p>
+<p>而在 SpriteRenderer 直接修改 sorting layer 以及 order in layer 來改變 rendering order，就能調整該物件在算繪結果的物件前後，便是基於此緣故，更多細節可查看 <code>Sprites/Default</code> shader 程式碼。</p>
+<p>故整理在 Unity 中，rendering order 是根據以下參數進行排序：<strong>Camera depth &gt; Material type &gt; Sorting layer &gt; Order in layer &gt; Material render queue &gt; Camera order algorithm</strong>。</p>
+<ul>
+<li><p>Camera depth</p>
+<ul>
+<li><p>數字越大越晚畫</p>
+</li>
+<li><p>通常無法搭配 Clear Flags: Don’t Clear，因為不會清除 depth buffer (z-buffer)</p>
+</li>
+<li><p>程式設定 <code>camera.depth</code></p>
+</li>
+<li><p>選擇場景中的 camera 編輯</p>
+<p><a href="https://3.bp.blogspot.com/-VdjJ2P8mRSw/Wv_KGL2e9kI/AAAAAAAAwHg/bf871Tz0ZCgcM_pTnENDlLA2EVCVEOXgQCHMYCw/s1600/edit-camera-depth-unity.png" target="_blank" rel="noopener"><img src="../../assets/images/2020-10-22-unity-render-order/edit-camera-depth-unity.png" alt="編輯 depth 參數"></a></p>
+<p>編輯 depth 參數</p>
+</li>
+</ul>
+</li>
+<li><p>Material type</p>
+<ul>
+<li>先畫不透明物件 (opaque)，再畫透明物件 (transparent)</li>
+<li>根據 material render queue 來決定，數值小於等於 2500 為不透明物件，數值大於 2500 為透明物件</li>
+</ul>
+</li>
+<li><p>Sorting layer</p>
+<ul>
+<li><p>數字越大越晚畫</p>
+</li>
+<li><p>大多數的 renderer 都有支援此參數，但僅有 SpriteRenderder 以及 ParticleSystemRenderer 能在預設的 Inspector 編輯（不過自定義編輯器來達成）</p>
+</li>
+<li><p>程式設定 <code>renderer.sortingLayerID</code></p>
+</li>
+<li><p>在 Tag Manager 編輯 Sorting layer</p>
+<p><a href="https://3.bp.blogspot.com/-HQnwI_JP7dQ/Wv_KG_RuisI/AAAAAAAAwHo/8ecZFCMsknsP2XOd227LgYyr_JsP-k5fwCHMYCw/s1600/edit-sorting-layers-unity.png" target="_blank" rel="noopener"><img src="../../assets/images/2020-10-22-unity-render-order/edit-sorting-layers-unity.png" alt="編輯 Sorting layers"></a></p>
+</li>
+<li><p>選擇場景的 SpriteRenderder 或是 ParticleSystemRenderer 編輯 Sorting layer</p>
+<p><a href="https://3.bp.blogspot.com/-74IY8tFv9b4/WwAf4mJ-bqI/AAAAAAAAwJQ/xHzyeHjHwP89PPKkCo3Ahp_OrsCdEJNKwCLcBGAs/s1600/edit-sorting-layer-unity.png" target="_blank" rel="noopener"><img src="../../assets/images/2020-10-22-unity-render-order/edit-sorting-layer-unity.png" alt="編輯 Sorting layer"></a></p>
+</li>
+</ul>
+</li>
+<li><p>Order in layer</p>
+<ul>
+<li><p>數字越大越晚畫</p>
+</li>
+<li><p>大多數的 renderer 都有支援此參數，但僅有 SpriteRenderder 以及 ParticleSystemRenderer 能在預設的 Inspector 編輯</p>
+</li>
+<li><p>程式設定 <code>renderer.sortingOrder</code></p>
+</li>
+<li><p>選擇場景的 SpriteRenderder 或是 ParticleSystemRenderer 編輯 Order in layer</p>
+<p><a href="https://3.bp.blogspot.com/-8VZ0pu3-ZdI/WwAfrRVqL9I/AAAAAAAAwJM/89ZAUPkUfUsy9eXQn1bZUW9y_Q8HxBCxwCLcBGAs/s1600/edit-order-in-layer-unity.png" target="_blank" rel="noopener"><img src="../../assets/images/2020-10-22-unity-render-order/edit-order-in-layer-unity.png" alt="編輯 Order in layer"></a></p>
+</li>
+</ul>
+</li>
+<li><p>Material render queue</p>
+<ul>
+<li><p>數字越大越晚畫</p>
+</li>
+<li><p>預設值會從 Shader 取得，但可自行定義</p>
+</li>
+<li><p>不透明物件 (Opaque)、半透明物件 (AlphaTest)、透明物件 (Transparent) 預設值分別 2000、2450、以及 3000</p>
+<ul>
+<li>通常只有透明物件會關閉 ZWrite</li>
+</ul>
+</li>
+<li><p>程式設定 <code>material.renderQueue</code></p>
+</li>
+<li><p>選擇專案中的 material 編輯</p>
+<p><a href="https://3.bp.blogspot.com/--4-IFurF7lk/Wv_KGSiPZ2I/AAAAAAAAwHk/95Bv8w902lke-HN_CCP1wigeekWuMQknQCHMYCw/s1600/edit-render-queue-unity.png" target="_blank" rel="noopener"><img src="../../assets/images/2020-10-22-unity-render-order/edit-render-queue-unity.png" alt="編輯 render queue"></a></p>
+</li>
+</ul>
+</li>
+<li><p>Camera render algorithm</p>
+<ul>
+<li><p>無法在預設編輯器修改，使用程式調整</p>
+</li>
+<li><p>非透明物件排序演算法</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">camera.opaqueSortMode</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>Default：在 Unity 2018.1 預設值 FrontToBack</li>
+<li>FrontToBack：粗略低由近到遠排序繪製，能使得 GPU rendering 時有更好的效能</li>
+<li>NoDistanceSort：關閉排序繪製，能降低 CPU 的使用量</li>
+</ul>
+</li>
+<li><p>透明物件排序演算法</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">camera.transparencySortMode</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>Default：根據 camera projection mode 調整</li>
+<li>Perspective：根據 camera 位置到物件中心 (object center) 的距離排序</li>
+<li>Orthographic：根據 view plane 到物件中心 (object center) 的距離排序</li>
+<li>CustomAxis：制定 axis 排序，專門用於 2D 遊戲製作，可參考<a href="https://qiita.com/RyotaMurohoshi/items/3f0de2689af72f9b46f9" target="_blank" rel="noopener">這篇文章</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="补充RenderQueue"><a href="#补充RenderQueue" class="headerlink" title="补充RenderQueue"></a>补充RenderQueue</h4><p>nderQueue ，RenderQueue 其实就是shader中tags中的Queue</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Tags &#123; <span class="string">"Queue"</span>=<span class="string">"Geometry"</span> &#125;</span><br></pre></td></tr></table></figure>
+
+<p>默认情况下，Unity会基于对象距离摄像机的远近来排序你的对象。因此，当一个对象离摄像机越近，它就会优先绘制在其他更远的对象上面。对于大多数情况这是有效并合适的，但是在一些特殊情况下，你可能想要自己控制对象的绘制顺序。而使用Tags{}块我们就可以得到这样的控制。</p>
+<p>Unity提供给我们一些默认的渲染队列，每一个对应一个唯一的值，来指导Unity绘制对象到屏幕上。这些内置的渲染队列被称为Background, Geometry, AlphaTest, GeometryLast,Transparent, Overlay。这些队列不是随便创建的，它们是为了让我们更容易地编写Shader并处理实时渲染的。</p>
+<p>同时需在SubShader中显示声明ZWrite Off，通知Unity我们会重写物体的渲染深度排序。</p>
+<p><img src="https:////upload-images.jianshu.io/upload_images/15536448-9a2deda21e4f661e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/744/format/webp" alt="img"></p>
+<p>好了，最后给出一个最终的总结：<br> 依次按条件先后顺序进行排序渲染处理。先按大项条件排序，后按小项条件排序</p>
+<p>1.Camera Depth: 越小越优先<br> 2.RenderQueue 2500以下</p>
+<pre><code>1. Sorting Layer/Order in Layer
+    1. 按照Sorting Layer/Order in Layer 设置的值，越小越优先
+    2. 无此属性，等同于 Sorting Layer=default ,Order in Layer=0 参与排序
+    2.RenderQueue 越小越优先
+    3.RenderQueue 相等，`由近到远排序优先`</code></pre><p> 3.RenderQueue 2500以上<br>        1. Sorting Layer/Order in Layer<br>        1. 按照Sorting Layer/Order in Layer 设置的值，越小越优先<br>        2. 无此属性，等同于 Sorting Layer=default ,Order in Layer=0 参与排序<br>        2.RenderQueue 越小越优先<br>        3.RenderQueue 相等，<code>由远到近排序优先</code></p>
+<p>说明一下：2500是关键值，它是透明跟不透明的分界点，因此我们考虑层级的时候要注意着点：renderqueue &gt; 2500的物体绝对会在renderqueue &lt;= 2500的物体前面，即渲染时renderqueue大的会挡住renderqueue小的，不论它的sortingLayer和sortingOrder怎么设置都是不起作用的。知道了这点，其他的就很好理解了。当两个的RenderQueue都在同一侧时，在SortingLayer高的绝对会在sortingLayer前面，无视renderqueue跟soringOrder，只有在sortingLayer相同的前提下，soringOrder高的会在sortingOrder低的前面，无视renderqueue。当sortingLayer跟sortingOrder相同时，才看renderqueue的高低，高的在前面。特别要注意一下半透明物体的渲染顺序是<code>越远越先渲染</code>，这与不透明物体是相反的。</p>
+<p>UGUI中的ui默认使用的是UI/Default 材质，对应的shader中的渲染队列是Transparent</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">Shader &quot;UI&#x2F;Default&quot;</span><br><span class="line">&#123;</span><br><span class="line">    Properties</span><br><span class="line">    &#123;</span><br><span class="line">       ...</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    SubShader</span><br><span class="line">    &#123;</span><br><span class="line">        Tags</span><br><span class="line">        &#123;</span><br><span class="line">            &quot;Queue&quot;&#x3D;&quot;Transparent&quot;</span><br><span class="line">            &quot;IgnoreProjector&quot;&#x3D;&quot;True&quot;</span><br><span class="line">            &quot;RenderType&quot;&#x3D;&quot;Transparent&quot;</span><br><span class="line">            &quot;PreviewType&quot;&#x3D;&quot;Plane&quot;</span><br><span class="line">            &quot;CanUseSpriteAtlas&quot;&#x3D;&quot;True&quot;</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h2 id="UGUI’s-rendering-order"><a href="#UGUI’s-rendering-order" class="headerlink" title="UGUI’s rendering order"></a>UGUI’s rendering order</h2><p>在 Unity 5.x 推出的 UGUI 系統中，其 rendering order 卻是另外規則，這分成兩個部分探討 Canvas &amp; CanvasRenderer，其概念可想像是 CanvasRenderer 可視為畫在畫布 Canvas 的元件，之後該畫布再畫在最終的畫面上（e.g. render target）。</p>
+<p>關於 Canvas 的 rendering order：</p>
+<ul>
+<li><p>Screen Space - Overlay</p>
+<ul>
+<li><p>想像該 canvas 由隱藏的 camera 處理，其 depth = 101 (最後才處理)</p>
+</li>
+<li><p>多個相同的 canvas 使用 Sort Order 來決定描繪順序，數字越大越晚畫</p>
+<p><a href="https://3.bp.blogspot.com/-Jwq-GkVy5Pg/Wv_MaxvDuEI/AAAAAAAAwII/8xeKRt-08sw9AtYHAxXbPztqk3rlwMH6QCLcBGAs/s1600/edit-canvas-unity.png" target="_blank" rel="noopener"><img src="../../assets/images/2020-10-22-unity-render-order/edit-canvas-unity.png" alt="編輯 Canvas&#39;s Sort Order"></a></p>
+</li>
+</ul>
+</li>
+<li><p>Screen Space - Camera &amp; World Space</p>
+<ul>
+<li><p>想像為存在在世界場景的平面</p>
+</li>
+<li><p>多個相同 canvas 使用 Sorting layer 以及 Order in layer 來決定 rendering order</p>
+<p><a href="https://4.bp.blogspot.com/-u-mDDKcRfAY/Wv_NHS9SsZI/AAAAAAAAwIU/Mt_mBRPL8DYo7Xj9Cbh-hOPTFbg6X3UMgCLcBGAs/s1600/edit-canvas-unity.png" target="_blank" rel="noopener"><img src="../../assets/images/2020-10-22-unity-render-order/edit-canvas-unity.png" alt="編輯 Canvas&#39;s Sorting layer &amp; Order in layer"></a></p>
+</li>
+</ul>
+</li>
+</ul>
+<p>關於同一個 canvas 下，其 CanvasRenderer 之間的 rendering order：</p>
+<ul>
+<li><p>Material render queue &gt; Transform order</p>
+<ul>
+<li><p>Material render queue 同前面說明，看材質球 (material) 的 render queue 參數</p>
+</li>
+<li><p>Transform order：依照 Transform 階層關係，採 Pre-order 方式排序</p>
+<p><a href="https://4.bp.blogspot.com/-fCMusmLKj4k/Wv_NnqL6SXI/AAAAAAAAwIo/suCM_XaddIAEwirQkIibP2wB8Mas3EjagCLcBGAs/s1600/canvas-renderer-rendering-order-unity.png" target="_blank" rel="noopener"><img src="../../assets/images/2020-10-22-unity-render-order/canvas-renderer-rendering-order-unity.png" alt="Canvas renderer&#39;s rendering order example"></a></p>
+</li>
+<li><p>注意：當所屬的 Canvas 之 render mode 為 Screen Space - Overlay，則無視 Material render queue</p>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="使用實踐情境"><a href="#使用實踐情境" class="headerlink" title="使用實踐情境"></a>使用實踐情境</h2><ul>
+<li>3D<ul>
+<li>不透明物件 &amp; 半透明物件 (e.g. 草、鐵絲網等等) 依照場景擺放<ul>
+<li>不需要特別設定 rendering order</li>
+<li>一切交給 z-buffering 機制</li>
+</ul>
+</li>
+<li>透明物件或是粒子特效 (particle system) 可透過 sort layer &amp; order in layer 機制調整 rendering order<ul>
+<li>透明物件 shader 通常不會寫 z-buffer (e.g. <code>ZWrite Off</code>)</li>
+<li>可 hack inspector 來設定 <code>renderer.sortingLayerID</code> 以及 <code>renderer.sortingOrder</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>2D<ul>
+<li>Sprite renderer 使用 sort layer &amp; order in layer 機制來調整 rendering order，以控制 depth</li>
+</ul>
+</li>
+<li>UGUI<ul>
+<li>利用 transform hierarchy 來建立 rendering order，因應效能優化可能還得拆成多個 canvas</li>
+<li>若採用 Canvas render mode: World space，想讓 UI 與 3D 場景物件的結合，可將 canvas 視為 3D 物件去設計場景架構 (這自己就沒有經驗…)</li>
+</ul>
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C</a>
+              <a href="/tags/Unity/" rel="tag"># Unity</a>
+              <a href="/tags/UNITY/" rel="tag"># UNITY</a>
+              <a href="/tags/JS/" rel="tag"># JS</a>
+              <a href="/tags/ugui/" rel="tag"># ugui</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/unity-2020-10-21-platform/" rel="prev" title="unity使用platforms构建">
+      <i class="fa fa-chevron-left"></i> unity使用platforms构建
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/unity-2020-10-23-unity-optimizing-gpu/" rel="next" title="关于静态批处理/动态批处理/GPU Instancing /SRP Batcher的详细剖析">
+      关于静态批处理/动态批处理/GPU Instancing /SRP Batcher的详细剖析 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  
+  <div class="comments">
+  <script src="https://utteranc.es/client.js" repo="zhepama/igiven.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async></script>
+  </div>
+  
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#關於深度緩衝-Depth-buffering-or-z-buffering"><span class="nav-number">1.</span> <span class="nav-text">關於深度緩衝 (Depth buffering, or z-buffering)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Renderer’s-rendering-order"><span class="nav-number">2.</span> <span class="nav-text">Renderer’s rendering order</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#补充RenderQueue"><span class="nav-number">2.0.1.</span> <span class="nav-text">补充RenderQueue</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#UGUI’s-rendering-order"><span class="nav-number">3.</span> <span class="nav-text">UGUI’s rendering order</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用實踐情境"><span class="nav-number">4.</span> <span class="nav-text">使用實踐情境</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhepama"
+      src="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+  <p class="site-author-name" itemprop="name">zhepama</p>
+  <div class="site-description" itemprop="description">一个不专业的程序员,写着专业的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">139</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhepama" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhepama" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhepama@gmail.com" title="E-Mail → mailto:zhepama@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.godgodgame.com/" title="http:&#x2F;&#x2F;www.godgodgame.com" rel="noopener" target="_blank">GODGODGAME</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.igiven.com/" title="https:&#x2F;&#x2F;www.igiven.com">IGIVEN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhepama.github.io/C-Sharp-Playground/zh/" title="https:&#x2F;&#x2F;zhepama.github.io&#x2F;C-Sharp-Playground&#x2F;zh&#x2F;" rel="noopener" target="_blank">数据结构与算法</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhepama</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

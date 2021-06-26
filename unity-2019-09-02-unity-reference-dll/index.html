@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.igiven.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="unity默认的#defind宏变量   Property: Function:    UNITY_EDITOR #define directive for calling Unity Editor scripts from your game code.   UNITY_EDITOR_WIN #define directive for Editor code on Windows.   UNIT">
+<meta property="og:type" content="article">
+<meta property="og:title" content="unity的宏以及添加net框架中未引用的dll">
+<meta property="og:url" content="http://www.igiven.com/unity-2019-09-02-unity-reference-dll/index.html">
+<meta property="og:site_name" content="IGiven">
+<meta property="og:description" content="unity默认的#defind宏变量   Property: Function:    UNITY_EDITOR #define directive for calling Unity Editor scripts from your game code.   UNITY_EDITOR_WIN #define directive for Editor code on Windows.   UNIT">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-unity-reference-dll/vstu_monobleedingedge.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-02-unity-reference-dll/vstu_missing-reference.png">
+<meta property="article:published_time" content="2019-09-02T00:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-26T08:36:17.946Z">
+<meta property="article:author" content="zhepama">
+<meta property="article:tag" content="Linux">
+<meta property="article:tag" content="Win">
+<meta property="article:tag" content="windows">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="C#">
+<meta property="article:tag" content="GitHub">
+<meta property="article:tag" content="Unity">
+<meta property="article:tag" content="UNITY">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.igiven.com/assets/images/2019-09-02-unity-reference-dll/vstu_monobleedingedge.png">
+
+<link rel="canonical" href="http://www.igiven.com/unity-2019-09-02-unity-reference-dll/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>unity的宏以及添加net框架中未引用的dll | IGiven</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="IGiven" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="IGiven" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">IGiven</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">李九仙的博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">139</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">32</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-留言">
+
+    <a href="/guestbook/" rel="section"><i class="fa fa-sticky-note fa-fw"></i>留言</a>
+
+  </li>
+        <li class="menu-item menu-item-rss">
+
+    <a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/unity-2019-09-02-unity-reference-dll/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+      <meta itemprop="name" content="zhepama">
+      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="IGiven">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          unity的宏以及添加net框架中未引用的dll<a href="https://github.com/zhepama/igiven.github.io/edit/master/source/_posts/unity/2019-09-02-unity-reference-dll.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil-alt"></i></a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-09-02 08:00:00" itemprop="dateCreated datePublished" datetime="2019-09-02T08:00:00+08:00">2019-09-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 16:36:17" itemprop="dateModified" datetime="2021-06-26T16:36:17+08:00">2021-06-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/unity/" itemprop="url" rel="index"><span itemprop="name">unity</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="unity默认的-defind宏变量"><a href="#unity默认的-defind宏变量" class="headerlink" title="unity默认的#defind宏变量"></a>unity默认的#defind宏变量</h1><table>
+<thead>
+<tr>
+<th align="left"><strong>Property:</strong></th>
+<th align="left"><strong>Function:</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>UNITY_EDITOR</strong></td>
+<td align="left">#define directive for calling Unity Editor scripts from your game code.</td>
+</tr>
+<tr>
+<td align="left"><strong>UNITY_EDITOR_WIN</strong></td>
+<td align="left">#define directive for Editor code on Windows.</td>
+</tr>
+<tr>
+<td align="left"><strong>UNITY_EDITOR_OSX</strong></td>
+<td align="left">#define directive for Editor code on Mac OS X.</td>
+</tr>
+<tr>
+<td align="left"><strong>UNITY_STANDALONE_OSX</strong></td>
+<td align="left">#define directive for compiling/executing code specifically for Mac OS X (including Universal, PPC and Intel architectures).</td>
+</tr>
+<tr>
+<td align="left"><strong>UNITY_STANDALONE_WIN</strong></td>
+<td align="left">#define directive for compiling/executing code specifically for Windows standalone applications.</td>
+</tr>
+<tr>
+<td align="left"><strong>UNITY_STANDALONE_LINUX</strong></td>
+<td align="left">#define directive for compiling/executing code specifically for Linux standalone applications.</td>
+</tr>
+<tr>
+<td align="left"><strong>UNITY_STANDALONE</strong></td>
+<td align="left">#define directive for compiling/executing code for any standalone platform (Mac OS X, Windows or Linux).</td>
+</tr>
+<tr>
+<td align="left"><strong>UNITY_WII</strong></td>
+<td align="left">#define directive for compiling/executing code for the Wii console.</td>
+</tr>
+<tr>
+<td align="left"><strong>UNITY_IOS</strong></td>
+<td align="left">#define directive for compiling/executing code for the iOS platform.</td>
+</tr>
+<tr>
+<td align="left"><strong>UNITY_IPHONE</strong></td>
+<td align="left">Deprecated. Use <strong>UNITY_IOS</strong> instead.</td>
+</tr>
+<tr>
+<td align="left"><strong>UNITY_ANDROID</strong></td>
+<td align="left">#define directive for the Android platform.</td>
+</tr>
+<tr>
+<td align="left"><strong>UNITY_PS4</strong></td>
+<td align="left">#define directive for running <strong>PlayStation 4</strong>  code.</td>
+</tr>
+<tr>
+<td align="left"><strong>UNITY_XBOXONE</strong></td>
+<td align="left">#define directive for executing <strong>Xbox One</strong>  code.</td>
+</tr>
+<tr>
+<td align="left"><strong>UNITY_TIZEN</strong></td>
+<td align="left">#define directive for the Tizen platform.</td>
+</tr>
+<tr>
+<td align="left"><strong>UNITY_TVOS</strong></td>
+<td align="left">#define directive for the Apple TV platform.</td>
+</tr>
+<tr>
+<td align="left"><strong>UNITY_WSA</strong></td>
+<td align="left">#define directive for <strong>Universal Windows Platform</strong> . Additionally, <strong>NETFX_CORE</strong> is defined when compiling C# files against .NET Core and using .NET <strong>scripting backend</strong> .</td>
+</tr>
+<tr>
+<td align="left"><strong>UNITY_WSA_10_0</strong></td>
+<td align="left">#define directive for Universal Windows Platform. Additionally <strong>WINDOWS_UWP</strong> is defined when compiling C# files against .NET Core.</td>
+</tr>
+<tr>
+<td align="left"><strong>UNITY_WINRT</strong></td>
+<td align="left">Same as <strong>UNITY_WSA</strong>.</td>
+</tr>
+<tr>
+<td align="left"><strong>UNITY_WINRT_10_0</strong></td>
+<td align="left">Equivalent to <strong>UNITY_WSA_10_0</strong></td>
+</tr>
+<tr>
+<td align="left"><strong>UNITY_WEBGL</strong></td>
+<td align="left">#define directive for <strong>WebGL</strong> .</td>
+</tr>
+<tr>
+<td align="left"><strong>UNITY_FACEBOOK</strong></td>
+<td align="left">#define directive for the Facebook platform (WebGL or Windows standalone).</td>
+</tr>
+<tr>
+<td align="left"><strong>UNITY_ADS</strong></td>
+<td align="left">#define directive for calling Unity Ads methods from your game code. Version 5.2 and above.</td>
+</tr>
+<tr>
+<td align="left"><strong>UNITY_ANALYTICS</strong></td>
+<td align="left">#define directive for calling Unity <strong>Analytics</strong>  methods from your game code. Version 5.2 and above.</td>
+</tr>
+<tr>
+<td align="left"><strong>UNITY_ASSERTIONS</strong></td>
+<td align="left">#define directive for assertions control process.</td>
+</tr>
+</tbody></table>
+<h2 id="在-NET-4-x-和-NET-Standard-2-0-配置文件之间进行选择"><a href="#在-NET-4-x-和-NET-Standard-2-0-配置文件之间进行选择" class="headerlink" title="在 .NET 4.x 和 .NET Standard 2.0 配置文件之间进行选择"></a>在 .NET 4.x 和 .NET Standard 2.0 配置文件之间进行选择</h2><p>一旦切换到 .NET 4.x 等效脚本运行时，可使用 PlayerSettings 中的下拉菜单指定“Api Compatibility Level”（“Edit &gt; Project Settings &gt; Player”）。 有两种选项：</p>
+<ul>
+<li><strong>.NET Standard 2.0</strong>。 此配置文件与 .NET Foundation 发布的 <a href="https://github.com/dotnet/standard/blob/master/docs/versions/netstandard2.0.md" target="_blank" rel="noopener">.NET Standard 2.0 配置文件</a>匹配。 Unity 建议新项目使用 .NET Standard 2.0。 它比 .NET 4.x 小，有利于尺寸受限的平台。 此外，Unity 承诺在 Unity 支持的所有平台上支持此配置文件。</li>
+<li><strong>.NET 4.x</strong>。 此配置文件提供对最新 .NET 4 API 的访问权限。 它包括 .NET Framework 类库中提供的所有代码，并且支持 .NET Standard 2.0 配置文件。 如果 .NET Standard 2.0 配置文件中未包含项目所需的部分 API，请使用 .NET 4.x 配置文件。 但此 API 的某些部分并非在所有 Unity 平台上均受支持。</li>
+</ul>
+<p>可在 Unity 的<a href="https://blogs.unity3d.com/2018/03/28/updated-scripting-runtime-in-unity-2018-1-what-does-the-future-hold/" target="_blank" rel="noopener">博客文章</a>中阅读有关这些选项的更多信息。</p>
+<h3 id="使用-NET-4-x-API-兼容级别时添加程序集引用"><a href="#使用-NET-4-x-API-兼容级别时添加程序集引用" class="headerlink" title="使用 .NET 4.x API 兼容级别时添加程序集引用"></a>使用 .NET 4.x API 兼容级别时添加程序集引用</h3><p>在“API 兼容级别”下拉列表中使用 .NET Standard 2.0 设置时，将引用和使用 API 配置文件中的所有程序集。 但是，在使用较大的 .NET 4.x 配置文件时，默认情况下不会引用 Unity 附带的某些程序集。 若要使用这些 API，必须手动添加程序集引用。 可在 Unity 编辑器安装的 MonoBleedingEdge/lib/mono 目录中查看 Unity 附带的程序集：</p>
+<p><img src="../../assets/images/2019-09-02-unity-reference-dll/vstu_monobleedingedge.png" alt="MonoBleedingEdge 目录"></p>
+<p>例如，如果使用的是 .NET 4.x 配置文件且希望使用 <code>HttpClient</code>，则必须为 System.Net.Http.dll 添加程序集引用。 如果没有它，编译器将报错，指示缺少程序集引用：</p>
+<p><img src="../../assets/images/2019-09-02-unity-reference-dll/vstu_missing-reference.png" alt="缺少程序集引用"></p>
+<p>每次打开 Unity 项目时 Visual Studio 都会为其重新生成 .csproj 和 .sln 文件。 因此，无法直接在 Visual Studio 中添加程序集引用，因为它们将在重新打开项目时丢失。 相反，必须使用名为 mcs.rsp 的特殊文本文件：</p>
+<ol>
+<li>在 Unity 项目的根Assets目录中创建名为 mcs.rsp 的新文本文件。</li>
+<li>在空文本文件的第一行，输入：<code>-r:System.Net.Http.dll</code>，然后保存文件。 可将“System.Net.Http.dll”替换为可能缺少引用的任何包含的程序集。</li>
+<li>重启 Unity 编辑器。</li>
+</ol>
+<h2 id="相关链接"><a href="#相关链接" class="headerlink" title="相关链接"></a>相关链接</h2><ul>
+<li><a href="https://docs.microsoft.com/zh-cn/visualstudio/cross-platform/unity-scripting-upgrade?view=vs-2019" target="_blank" rel="noopener">https://docs.microsoft.com/zh-cn/visualstudio/cross-platform/unity-scripting-upgrade?view=vs-2019</a></li>
+<li><a href="https://docs.unity3d.com/Manual/PlatformDependentCompilation.html" target="_blank" rel="noopener">https://docs.unity3d.com/Manual/PlatformDependentCompilation.html</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+              <a href="/tags/Win/" rel="tag"># Win</a>
+              <a href="/tags/windows/" rel="tag"># windows</a>
+              <a href="/tags/C/" rel="tag"># C</a>
+              <a href="/tags/C/" rel="tag"># C#</a>
+              <a href="/tags/GitHub/" rel="tag"># GitHub</a>
+              <a href="/tags/Unity/" rel="tag"># Unity</a>
+              <a href="/tags/UNITY/" rel="tag"># UNITY</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/unity-2019-09-01-addressable/" rel="prev" title="关于addressable那些事">
+      <i class="fa fa-chevron-left"></i> 关于addressable那些事
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/unity-2019-09-02-ilruntime/" rel="next" title="ilruntime的研究">
+      ilruntime的研究 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  
+  <div class="comments">
+  <script src="https://utteranc.es/client.js" repo="zhepama/igiven.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async></script>
+  </div>
+  
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#unity默认的-defind宏变量"><span class="nav-number">1.</span> <span class="nav-text">unity默认的#defind宏变量</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#在-NET-4-x-和-NET-Standard-2-0-配置文件之间进行选择"><span class="nav-number">1.1.</span> <span class="nav-text">在 .NET 4.x 和 .NET Standard 2.0 配置文件之间进行选择</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#使用-NET-4-x-API-兼容级别时添加程序集引用"><span class="nav-number">1.1.1.</span> <span class="nav-text">使用 .NET 4.x API 兼容级别时添加程序集引用</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#相关链接"><span class="nav-number">1.2.</span> <span class="nav-text">相关链接</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhepama"
+      src="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+  <p class="site-author-name" itemprop="name">zhepama</p>
+  <div class="site-description" itemprop="description">一个不专业的程序员,写着专业的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">139</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhepama" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhepama" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhepama@gmail.com" title="E-Mail → mailto:zhepama@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.godgodgame.com/" title="http:&#x2F;&#x2F;www.godgodgame.com" rel="noopener" target="_blank">GODGODGAME</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.igiven.com/" title="https:&#x2F;&#x2F;www.igiven.com">IGIVEN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhepama.github.io/C-Sharp-Playground/zh/" title="https:&#x2F;&#x2F;zhepama.github.io&#x2F;C-Sharp-Playground&#x2F;zh&#x2F;" rel="noopener" target="_blank">数据结构与算法</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhepama</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

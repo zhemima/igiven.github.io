@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.igiven.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="安装scoop前提版本大于等于3的powershell 1&gt; $psversiontable.psversion.major">
+<meta property="og:type" content="article">
+<meta property="og:title" content="scoop的使用">
+<meta property="og:url" content="http://www.igiven.com/tool-2019-08-20-scoop-use/index.html">
+<meta property="og:site_name" content="IGiven">
+<meta property="og:description" content="安装scoop前提版本大于等于3的powershell 1&gt; $psversiontable.psversion.major">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-08-20-scoop-use/03.jpg">
+<meta property="article:published_time" content="2019-08-20T00:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-26T08:36:17.942Z">
+<meta property="article:author" content="zhepama">
+<meta property="article:tag" content="Win">
+<meta property="article:tag" content="shell">
+<meta property="article:tag" content="windows">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="GitHub">
+<meta property="article:tag" content="Java">
+<meta property="article:tag" content="代理">
+<meta property="article:tag" content="PHP">
+<meta property="article:tag" content="Redis">
+<meta property="article:tag" content="JS">
+<meta property="article:tag" content="proxy">
+<meta property="article:tag" content="powershell">
+<meta property="article:tag" content="scoop">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.igiven.com/assets/images/2019-08-20-scoop-use/03.jpg">
+
+<link rel="canonical" href="http://www.igiven.com/tool-2019-08-20-scoop-use/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>scoop的使用 | IGiven</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="IGiven" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="IGiven" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">IGiven</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">李九仙的博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">139</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">32</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-留言">
+
+    <a href="/guestbook/" rel="section"><i class="fa fa-sticky-note fa-fw"></i>留言</a>
+
+  </li>
+        <li class="menu-item menu-item-rss">
+
+    <a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/tool-2019-08-20-scoop-use/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+      <meta itemprop="name" content="zhepama">
+      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="IGiven">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          scoop的使用<a href="https://github.com/zhepama/igiven.github.io/edit/master/source/_posts/tool/2019-08-20-scoop-use.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil-alt"></i></a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-08-20 08:00:00" itemprop="dateCreated datePublished" datetime="2019-08-20T08:00:00+08:00">2019-08-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 16:36:17" itemprop="dateModified" datetime="2021-06-26T16:36:17+08:00">2021-06-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/tool/" itemprop="url" rel="index"><span itemprop="name">tool</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="安装scoop前提"><a href="#安装scoop前提" class="headerlink" title="安装scoop前提"></a>安装scoop前提</h1><p>版本大于等于3的powershell</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&gt; $psversiontable.psversion.major</span><br></pre></td></tr></table></figure>
+<p>确保您已允许PowerShell执行本地脚本</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&gt; set-executionpolicy remotesigned -scope currentuser</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h1 id="常用命令"><a href="#常用命令" class="headerlink" title="常用命令"></a>常用命令</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">#打开powershell,win+r,然后输入powershell</span><br><span class="line">#更改策略</span><br><span class="line">Set-ExecutionPolicy RemoteSigned -scope CurrentUser</span><br><span class="line"></span><br><span class="line">#安装</span><br><span class="line">iex (new-object net.webclient).downloadstring(&#39;https:&#x2F;&#x2F;get.scoop.sh&#39;)</span><br><span class="line"></span><br><span class="line">#安装git</span><br><span class="line">scoop install git</span><br><span class="line"></span><br><span class="line">#开启extras库</span><br><span class="line">scoop bucket add extras</span><br><span class="line"></span><br><span class="line">#开启java库</span><br><span class="line">scoop bucket add java</span><br><span class="line"></span><br><span class="line">#更新</span><br><span class="line">scoop update</span><br><span class="line"></span><br><span class="line">#查看安装软件列表</span><br><span class="line">scoop list</span><br><span class="line"></span><br><span class="line">#搜索某软件</span><br><span class="line">scoop search xxx</span><br><span class="line"></span><br><span class="line">#打开某软件官网</span><br><span class="line">scoop home xxx</span><br><span class="line"></span><br><span class="line">#查看某软件安装信息</span><br><span class="line">scoop info xxx</span><br><span class="line"></span><br><span class="line">#查看某软件执行命令位置</span><br><span class="line">scoop which xxx</span><br><span class="line"></span><br><span class="line">#查看某软件当前状态，是否有更新等信息</span><br><span class="line">scoop status xxx</span><br><span class="line"></span><br><span class="line">#更新某软件</span><br><span class="line">scoop update xxx</span><br><span class="line"></span><br><span class="line">#卸载某软件,以xxx为例</span><br><span class="line">scoop uninstall xxx</span><br></pre></td></tr></table></figure>
+
+<p>这里是一个按照 Github score（由 Star 数量、Fork 数量和 App 数量综合决定的 Github score）排列的 bucket 列表：<a href="https://github.com/rasa/scoop-directory/blob/master/by-score.md" target="_blank" rel="noopener">Scoop buckets by Github score</a>。</p>
+<h1 id="安装scoop到自定义目录"><a href="#安装scoop到自定义目录" class="headerlink" title="安装scoop到自定义目录"></a>安装scoop到自定义目录</h1><p>如果重新安装系统.只需要将shime路径添加到环境变量path中<code>D:\Application\Scoop\shims</code></p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">set-executionpolicy</span> remotesigned <span class="literal">-scope</span> currentuser</span><br><span class="line"></span><br><span class="line">[<span class="type">environment</span>]::setEnvironmentVariable(<span class="string">'SCOOP'</span>,<span class="string">'D:\Application\Scoop'</span>,<span class="string">'User'</span>)</span><br><span class="line"></span><br><span class="line">[<span class="type">environment</span>]::setEnvironmentVariable(<span class="string">'Path'</span>,[<span class="type">System.Environment</span>]::GetEnvironmentVariable(<span class="string">'Path'</span>,[<span class="type">System.EnvironmentVariableTarget</span>]::User)+<span class="string">";D:\Application\Scoop\shims"</span>,<span class="string">'User'</span>)</span><br><span class="line"></span><br><span class="line"><span class="variable">$env:SCOOP</span>=<span class="string">'D:\Application\Scoop'</span></span><br><span class="line"></span><br><span class="line">[<span class="type">environment</span>]::setEnvironmentVariable(<span class="string">'SCOOP_GLOBAL'</span>,<span class="string">'D:\Application\ScoopGlobal'</span>,<span class="string">'Machine'</span>)</span><br><span class="line"></span><br><span class="line">[<span class="type">environment</span>]::setEnvironmentVariable(<span class="string">'Path'</span>,[<span class="type">System.Environment</span>]::GetEnvironmentVariable(<span class="string">'Path'</span>,[<span class="type">System.EnvironmentVariableTarget</span>]::Machine)+<span class="string">";D:\Application\ScoopGlobal\shims"</span>,<span class="string">'Machine'</span>)</span><br><span class="line"></span><br><span class="line"><span class="variable">$env:SCOOP_GLOBAL</span>=<span class="string">'D:\Application\ScoopGlobal'</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">#重置应用以解决冲突,会重置环境变量,快捷方式等..</span></span><br><span class="line">scoop reset *</span><br><span class="line"><span class="comment">#检查潜在的问题..执行下看看使用scoop会有什么问题</span></span><br><span class="line">scoop checkup</span><br><span class="line"><span class="comment">#如果使用了aria2感觉慢的话可以修改下参数或者关闭</span></span><br><span class="line">scoop config aria2<span class="literal">-max</span><span class="literal">-connection</span><span class="literal">-per</span><span class="literal">-server</span> <span class="number">16</span></span><br><span class="line">scoop config aria2<span class="operator">-split</span> <span class="number">16</span></span><br><span class="line">scoop config aria2<span class="literal">-min</span><span class="operator">-split</span><span class="literal">-size</span> <span class="number">1</span>M</span><br><span class="line">scoop config aria2<span class="literal">-enabled</span> false  </span><br><span class="line"><span class="comment">#下面是日常更新软件命令</span></span><br><span class="line">sudo scoop update * <span class="literal">-g</span> ; scoop update * ; sudo scoop cleanup * <span class="literal">-g</span> ; scoop cleanup *</span><br><span class="line"><span class="comment"># 查看 Scoop 还能直接识别哪些 bucket</span></span><br><span class="line">scoop bucket known</span><br></pre></td></tr></table></figure>
+<h3 id="快捷方式"><a href="#快捷方式" class="headerlink" title="快捷方式"></a>快捷方式</h3><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">Invoke-Item</span> <span class="string">"~\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Scoop Apps"</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>将Scoop安装到自定义目录</strong><br>假设目标目录是<code>D:\Application\Scoop</code>,在PowerShell命令控制台中运行：</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[<span class="type">environment</span>]::setEnvironmentVariable(<span class="string">'SCOOP'</span>,<span class="string">'D:\Application\Scoop'</span>,<span class="string">'User'</span>)</span><br><span class="line"><span class="variable">$env:SCOOP</span>=<span class="string">'D:\Application\Scoop'</span></span><br><span class="line">iex (<span class="built_in">new-object</span> net.webclient).downloadstring(<span class="string">'https://get.scoop.sh'</span>)</span><br></pre></td></tr></table></figure>
+<p>将全局应用安装到自定义目录,假设目标目录是<code>D:\Application\ScoopGlobal</code>,在PowerShell命令控制台中运行：</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[<span class="type">environment</span>]::setEnvironmentVariable(<span class="string">'SCOOP_GLOBAL'</span>,<span class="string">'D:\Application\ScoopGlobal'</span>,<span class="string">'Machine'</span>)</span><br><span class="line"><span class="variable">$env:SCOOP_GLOBAL</span>=<span class="string">'D:\Application\ScoopGlobal'</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="安装应用"><a href="#安装应用" class="headerlink" title="安装应用"></a>安装应用</h3><p>以我常用应用为例(可作为脚本文件,后缀ps1)</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">###安装scoop并自定义安装路径</span></span><br><span class="line">[<span class="type">environment</span>]::setEnvironmentVariable(<span class="string">'SCOOP'</span>,<span class="string">'D:\Application\Scoop'</span>,<span class="string">'User'</span>)</span><br><span class="line"><span class="variable">$env:SCOOP</span>=<span class="string">'D:\Application\Scoop'</span></span><br><span class="line">iex (<span class="built_in">new-object</span> net.webclient).downloadstring(<span class="string">'https://get.scoop.sh'</span>)</span><br><span class="line">[<span class="type">environment</span>]::setEnvironmentVariable(<span class="string">'SCOOP_GLOBAL'</span>,<span class="string">'D:\Application\ScoopGlobal'</span>,<span class="string">'Machine'</span>)</span><br><span class="line"><span class="variable">$env:SCOOP_GLOBAL</span>=<span class="string">'D:\Application\ScoopGlobal'</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#git,程序员必备,只有安装了git才能添加其他桶</span></span><br><span class="line">scoop install git;</span><br><span class="line"><span class="comment">#arias2 scoop 下载会用到</span></span><br><span class="line">scoop install aria2;</span><br><span class="line"><span class="comment">#7zip 一些app会用到</span></span><br><span class="line">scoop install <span class="number">7</span>zip</span><br><span class="line"><span class="comment">#scoop checkup提示装的软件</span></span><br><span class="line">scoop install wixtoolset</span><br><span class="line"></span><br><span class="line"><span class="comment">###添加桶</span></span><br><span class="line"><span class="comment">#scoop内置的桶</span></span><br><span class="line"><span class="comment">#scoop bucket known;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">### D:\Application\Scoop\buckets,如果发现bucket中有错误可以检查并删除</span></span><br><span class="line">scoop bucket add extras;</span><br><span class="line">scoop bucket add Java;</span><br><span class="line">scoop bucket add versions;</span><br><span class="line"><span class="comment">#一个还不错的</span></span><br><span class="line">scoop bucket add Ash258 <span class="string">'https://github.com/Ash258/scoop-Ash258.git'</span></span><br><span class="line"><span class="comment">#一个还不错的桶</span></span><br><span class="line">scoop bucket add dodorz https://github.com/dodorz/scoop<span class="literal">-bucket</span></span><br><span class="line"><span class="comment">#一个还不错的桶</span></span><br><span class="line">scoop bucket add dorado https://github.com/h404bi/dorado</span><br><span class="line"><span class="comment">#一个还不错的桶</span></span><br><span class="line">scoop bucket add Hass https://github.com/zhepama/Scoop<span class="literal">-Hass</span></span><br><span class="line"><span class="comment">### 添加代理</span></span><br><span class="line">scoop config proxy <span class="number">127.0</span>.<span class="number">0.1</span>:<span class="number">1080</span></span><br><span class="line"><span class="comment"># 删除代理</span></span><br><span class="line">scoop config rm proxy</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">###安装全局应用</span></span><br><span class="line">scoop install apache <span class="literal">-g</span>;</span><br><span class="line">scoop install redis <span class="literal">-g</span>;</span><br><span class="line">scoop install mysql <span class="literal">-g</span>;</span><br><span class="line"><span class="comment"># jdk最好使用8,否则android-sdk会有问题</span></span><br><span class="line">scoop install ojdkbuild8 <span class="literal">-g</span>; </span><br><span class="line">scoop install php <span class="literal">-g</span>;</span><br><span class="line"><span class="comment">#整合apache php</span></span><br><span class="line">iex (<span class="built_in">new-object</span> net.webclient).downloadstring(<span class="string">'https://gist.githubusercontent.com/nilkesede/c98a275b80b6d373131df82eaba96c63/raw/apache-php-init.ps1'</span>)</span><br><span class="line"><span class="comment"># 或者手动修改apache配置</span></span><br><span class="line"><span class="comment">#LoadModule php7_module 'C:/Users/xxxxx/scoop/apps/php71/current/php7apache2_4.dll'</span></span><br><span class="line"><span class="comment">#AddHandler application/x-httpd-php .php</span></span><br><span class="line"><span class="comment">#PHPIniDir "C:\Users\xxxxx\scoop\apps\php71\current"</span></span><br><span class="line"></span><br><span class="line"><span class="comment">###安装APP</span></span><br><span class="line"><span class="comment">#使用nvm安装nodejs  https://www.sitepoint.com/quick-tip-multiple-versions-node-nvm/</span></span><br><span class="line">scoop install nvm</span><br><span class="line">nvm list available</span><br><span class="line">nvm install <span class="number">12.18</span>.<span class="number">2</span></span><br><span class="line"><span class="comment">#效率启动神器</span></span><br><span class="line">scoop install wox;</span><br><span class="line"><span class="comment">#文件检索</span></span><br><span class="line">scoop install everything;</span><br><span class="line"><span class="comment">#解压</span></span><br><span class="line">scoop install bandizip;</span><br><span class="line"><span class="comment">#远程终端</span></span><br><span class="line">scoop install MobaXterm;</span><br><span class="line"><span class="comment">#桌面控制</span></span><br><span class="line">scoop install teamviewer;</span><br><span class="line"><span class="comment">#markdown编写</span></span><br><span class="line">scoop install typora;</span><br><span class="line"><span class="comment">#编辑器 注意使用vscode-portable,这样data文件夹就会持久化在scoop,而不是c盘用户目录</span></span><br><span class="line"><span class="comment">#From "$env:USERPROFILE\.vscode\extensions" to "$env:USERPROFILE\scoop\persist\vscode-portable\data\extensions"</span></span><br><span class="line"><span class="comment">#From "$env:APPDATA\Code" to "$env:USERPROFILE\scoop\persist\vscode-portable\data\user-data"</span></span><br><span class="line"><span class="comment">#如果想添加右键菜单.执行下current文件夹下的vscode-install-context.reg</span></span><br><span class="line">scoop install vscode<span class="literal">-portable</span>;</span><br><span class="line"><span class="comment">#ditto 剪贴板</span></span><br><span class="line">scoop install ditto</span><br><span class="line"><span class="comment">#postman</span></span><br><span class="line">scoop install postman</span><br><span class="line"><span class="comment">#heidisql</span></span><br><span class="line">scoop install heidisql</span><br><span class="line"><span class="comment">#imageglass 图片浏览器</span></span><br><span class="line">scoop install imageglass</span><br><span class="line"><span class="comment">#quick look</span></span><br><span class="line">scoop install quicklook</span><br><span class="line"><span class="comment">#obs  录制视频或者直播</span></span><br><span class="line">scoop install obs<span class="literal">-studio</span></span><br><span class="line"><span class="comment"># 录像软件</span></span><br><span class="line">scoop install captura</span><br><span class="line"><span class="comment">#switchhosts</span></span><br><span class="line">scoop install switchhosts</span><br><span class="line"><span class="comment"># gradle</span></span><br><span class="line">scoop install gradle</span><br><span class="line"><span class="comment"># android-sdk</span></span><br><span class="line">scoop install android<span class="literal">-sdk</span></span><br><span class="line"><span class="comment"># 安装ndk 老版本下载https://developer.android.com/ndk/downloads/older_releases.html</span></span><br><span class="line"><span class="comment"># sdkmanager ndk-bundle</span></span><br><span class="line"><span class="comment"># shadowsocksr-csharp</span></span><br><span class="line">scoop install shadowsocksr<span class="literal">-csharp</span></span><br><span class="line"><span class="comment"># 截图软件</span></span><br><span class="line">scoop install picpick</span><br><span class="line">scoop install snipaste</span><br><span class="line">scoop install sharex </span><br><span class="line">scoop install lightshot</span><br><span class="line"><span class="comment">#xmind8</span></span><br><span class="line">scoop install XMind2020</span><br><span class="line"><span class="comment"># android-studio</span></span><br><span class="line">scoop install android<span class="literal">-studio</span></span><br><span class="line"><span class="comment">#记住sourcetree的git最好使用内嵌版本</span></span><br><span class="line">scoop install sourcetree</span><br><span class="line"><span class="comment"># php的包工具</span></span><br><span class="line">scoop intstall composer</span><br><span class="line"><span class="comment"># 反向代理</span></span><br><span class="line">scoop install frp</span><br><span class="line"><span class="comment">#网易云音乐</span></span><br><span class="line">scoop install neteasemusic</span><br><span class="line"><span class="comment"># ftp工具</span></span><br><span class="line">scoop install filezilla </span><br><span class="line"><span class="comment"># pdf阅读工具</span></span><br><span class="line"> scoop install foxit<span class="literal">-reader</span></span><br><span class="line"><span class="comment"># 播放器</span></span><br><span class="line">scoop install potplayer </span><br><span class="line"><span class="comment"># draw工程图,uml工具</span></span><br><span class="line">scoop install draw.io</span><br><span class="line"><span class="comment"># 定时提醒休息工具</span></span><br><span class="line">scoop install wnr</span><br><span class="line"><span class="comment"># 投屏工具</span></span><br><span class="line">scoop install scrcpy </span><br><span class="line"><span class="comment"># 卸载工具</span></span><br><span class="line">scoop install geekuninstaller</span><br><span class="line"><span class="comment">#浏览器</span></span><br><span class="line">scoop install  firefox<span class="literal">-developer</span><span class="literal">-zh</span><span class="literal">-cn</span></span><br><span class="line">scoop install  googlechrome</span><br><span class="line"><span class="comment">#wechat</span></span><br><span class="line">scoop install wechat</span><br><span class="line"><span class="comment">#steam</span></span><br><span class="line">scoop install steam</span><br><span class="line"><span class="comment"># pwsh</span></span><br><span class="line">scoop install pwsh</span><br><span class="line"><span class="comment">#windows teraminal</span></span><br><span class="line">scoop install windows<span class="literal">-terminal</span></span><br><span class="line"><span class="comment"># 反编译 ilspy  https://github.com/sailro/Reflexil下载Reflexil将Reflexil.ILSpy.Plugin.dll直接扔到ilspy目录下即行</span></span><br><span class="line">scoop install ilspy</span><br><span class="line">scoop install dnspy</span><br><span class="line"><span class="comment">#win+x菜单编辑</span></span><br><span class="line">scoop install WinXMenuEditor   </span><br><span class="line"><span class="comment">#发送到菜单编辑</span></span><br><span class="line">scoop install SendToMenuEditor</span><br><span class="line"><span class="comment"># 上下文菜单</span></span><br><span class="line">scoop install EasyContextMenu</span><br><span class="line"><span class="comment"># 备份开始屏幕</span></span><br><span class="line">scoop install BackupStartMenuLayout</span><br><span class="line"><span class="comment">#定时关机</span></span><br><span class="line">scoop install kshutdown</span><br><span class="line"><span class="comment"># 创建可启动U盘的工具  https://www.ventoy.net/cn/index.html</span></span><br><span class="line">scoop install ventoy</span><br><span class="line"><span class="comment"># 修改dns工具</span></span><br><span class="line">scoop install dnsjumper</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="apache"><a href="#apache" class="headerlink" title="apache"></a>apache</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sudo httpd -k install -n apache  </span><br><span class="line">start-service apache</span><br><span class="line">remove-service apache</span><br></pre></td></tr></table></figure>
+<h2 id="修改配置"><a href="#修改配置" class="headerlink" title="修改配置"></a>修改配置</h2><p>文件路径<code>D:\Application\ScoopGlobal\apps\apache\current\conf\httpd.conf</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Define SRVROOT &quot;D:\Application\ScoopGlobal\apps\apache\current&quot;</span><br><span class="line">ServerName localhost</span><br></pre></td></tr></table></figure>
+
+<h1 id="Redis"><a href="#Redis" class="headerlink" title="Redis"></a>Redis</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-server --service-install D:\Application\ScoopGlobal\apps\redis\current\redis.windows-service.conf --loglevel verbose</span><br></pre></td></tr></table></figure>
+<h1 id="MySQL"><a href="#MySQL" class="headerlink" title="MySQL"></a>MySQL</h1><p>注册MySQL服务,(因为scoop是低污染的,所以要自己做):</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysqld --install MySQL --defaults-file&#x3D;&quot;D:\Application\ScoopGlobal\apps\mysql\current\my.ini&quot;</span><br></pre></td></tr></table></figure>
+
+<p>注意mysql8密码可能认证有错误my.ini中需要设置</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">default_authentication_plugin&#x3D;mysql_native_password</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h1 id="pwsh"><a href="#pwsh" class="headerlink" title="pwsh"></a>pwsh</h1><p>将pwsh添加到terminal中,配置默认路径:<code>C:\Users\zhepama\AppData\Local\Microsoft\Windows Terminal\settings.json</code></p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// This file was initially generated by Windows 终端(未打包) 1.0.200517002-release1.0</span></span><br><span class="line"><span class="comment">// It should still be usable in newer versions, but newer versions might have additional</span></span><br><span class="line"><span class="comment">// settings, help text, or changes that you will not see unless you clear this file</span></span><br><span class="line"><span class="comment">// and let us generate a new one for you.</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// To view the default settings, hold "alt" while clicking on the "Settings" button.</span></span><br><span class="line"><span class="comment">// For documentation on these settings, see: https://aka.ms/terminal-documentation</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"$schema"</span>: <span class="string">"https://aka.ms/terminal-profiles-schema"</span>,</span><br><span class="line"></span><br><span class="line">  <span class="attr">"defaultProfile"</span>: <span class="string">"&#123;90cbdc15-f4fe-49d2-a245-ec066b70845f&#125;"</span>,</span><br><span class="line"></span><br><span class="line">  <span class="comment">// You can add more global application settings here.</span></span><br><span class="line">  <span class="comment">// To learn more about global settings, visit https://aka.ms/terminal-global-settings</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">// If enabled, selections are automatically copied to your clipboard.</span></span><br><span class="line">  <span class="attr">"copyOnSelect"</span>: <span class="literal">false</span>,</span><br><span class="line"></span><br><span class="line">  <span class="comment">// If enabled, formatted data is also copied to your clipboard</span></span><br><span class="line">  <span class="attr">"copyFormatting"</span>: <span class="literal">false</span>,</span><br><span class="line"></span><br><span class="line">  <span class="comment">// A profile specifies a command to execute paired with information about how it should look and feel.</span></span><br><span class="line">  <span class="comment">// Each one of them will appear in the 'New Tab' dropdown,</span></span><br><span class="line">  <span class="comment">//   and can be invoked from the commandline with `wt.exe -p xxx`</span></span><br><span class="line">  <span class="comment">// To learn more about profiles, visit https://aka.ms/terminal-profile-settings</span></span><br><span class="line">  <span class="attr">"profiles"</span>: &#123;</span><br><span class="line">    <span class="attr">"defaults"</span>: &#123;</span><br><span class="line">      <span class="comment">// Put settings here that you want to apply to all profiles.</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">"list"</span>: [</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="comment">// Make changes here to the powershell.exe profile.</span></span><br><span class="line">        <span class="attr">"guid"</span>: <span class="string">"&#123;61c54bbd-c2c6-5271-96e7-009a87ff44bf&#125;"</span>,</span><br><span class="line">        <span class="attr">"name"</span>: <span class="string">"Windows PowerShell"</span>,</span><br><span class="line">        <span class="attr">"commandline"</span>: <span class="string">"powershell.exe"</span>,</span><br><span class="line">        <span class="attr">"hidden"</span>: <span class="literal">false</span></span><br><span class="line">      &#125;,</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="comment">// Make changes here to the cmd.exe profile.</span></span><br><span class="line">        <span class="attr">"guid"</span>: <span class="string">"&#123;0caa0dad-35be-5f56-a8ff-afceeeaa6101&#125;"</span>,</span><br><span class="line">        <span class="attr">"name"</span>: <span class="string">"命令提示符"</span>,</span><br><span class="line">        <span class="attr">"commandline"</span>: <span class="string">"cmd.exe"</span>,</span><br><span class="line">        <span class="attr">"hidden"</span>: <span class="literal">false</span></span><br><span class="line">      &#125;,</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">"guid"</span>: <span class="string">"&#123;b453ae62-4e3d-5e58-b989-0a998ec441b8&#125;"</span>,</span><br><span class="line">        <span class="attr">"hidden"</span>: <span class="literal">false</span>,</span><br><span class="line">        <span class="attr">"name"</span>: <span class="string">"Azure Cloud Shell"</span>,</span><br><span class="line">        <span class="attr">"source"</span>: <span class="string">"Windows.Terminal.Azure"</span></span><br><span class="line">      &#125;,</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">"guid"</span>: <span class="string">"&#123;90cbdc15-f4fe-49d2-a245-ec066b70845f&#125;"</span>,</span><br><span class="line">        <span class="attr">"name"</span>: <span class="string">"pwsh"</span>,</span><br><span class="line">        <span class="attr">"commandline"</span>: <span class="string">"D:\\Application\\Scoop\\apps\\pwsh\\current\\pwsh.exe"</span>,</span><br><span class="line">        <span class="attr">"hidden"</span>: <span class="literal">false</span>,</span><br><span class="line">        <span class="attr">"startingDirectory"</span>: <span class="string">"%USERPROFILE%"</span></span><br><span class="line">      &#125;</span><br><span class="line">    ]</span><br><span class="line">  &#125;,</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Add custom color schemes to this array.</span></span><br><span class="line">  <span class="comment">// To learn more about color schemes, visit https://aka.ms/terminal-color-schemes</span></span><br><span class="line">  <span class="attr">"schemes"</span>: [],</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Add custom keybindings to this array.</span></span><br><span class="line">  <span class="comment">// To unbind a key combination from your defaults.json, set the command to "unbound".</span></span><br><span class="line">  <span class="comment">// To learn more about keybindings, visit https://aka.ms/terminal-keybindings</span></span><br><span class="line">  <span class="attr">"keybindings"</span>: [</span><br><span class="line">    <span class="comment">// Copy and paste are bound to Ctrl+Shift+C and Ctrl+Shift+V in your defaults.json.</span></span><br><span class="line">    <span class="comment">// These two lines additionally bind them to Ctrl+C and Ctrl+V.</span></span><br><span class="line">    <span class="comment">// To learn more about selection, visit https://aka.ms/terminal-selection</span></span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">"command"</span>: &#123;</span><br><span class="line">        <span class="attr">"action"</span>: <span class="string">"copy"</span>,</span><br><span class="line">        <span class="attr">"singleLine"</span>: <span class="literal">false</span></span><br><span class="line">      &#125;,</span><br><span class="line">      <span class="attr">"keys"</span>: <span class="string">"ctrl+c"</span></span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">"command"</span>: <span class="string">"paste"</span>,</span><br><span class="line">      <span class="attr">"keys"</span>: <span class="string">"ctrl+v"</span></span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Press Ctrl+Shift+F to open the search box</span></span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">"command"</span>: <span class="string">"find"</span>,</span><br><span class="line">      <span class="attr">"keys"</span>: <span class="string">"ctrl+shift+f"</span></span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Press Alt+Shift+D to open a new pane.</span></span><br><span class="line">    <span class="comment">// - "split": "auto" makes this pane open in the direction that provides the most surface area.</span></span><br><span class="line">    <span class="comment">// - "splitMode": "duplicate" makes the new pane use the focused pane's profile.</span></span><br><span class="line">    <span class="comment">// To learn more about panes, visit https://aka.ms/terminal-panes</span></span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">"command"</span>: &#123;</span><br><span class="line">        <span class="attr">"action"</span>: <span class="string">"splitPane"</span>,</span><br><span class="line">        <span class="attr">"split"</span>: <span class="string">"auto"</span>,</span><br><span class="line">        <span class="attr">"splitMode"</span>: <span class="string">"duplicate"</span></span><br><span class="line">      &#125;,</span><br><span class="line">      <span class="attr">"keys"</span>: <span class="string">"alt+shift+d"</span></span><br><span class="line">    &#125;</span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="自制bucket"><a href="#自制bucket" class="headerlink" title="自制bucket"></a>自制bucket</h1><p>最佳方式是使用模板 <a href="https://github.com/Ash258/GenericBucket" target="_blank" rel="noopener">https://github.com/Ash258/GenericBucket</a></p>
+<h3 id="如何解压exe的程序"><a href="#如何解压exe的程序" class="headerlink" title="如何解压exe的程序"></a>如何解压exe的程序</h3><p>首先下载的时候后面加上#/dl.7z类似的后缀..然后scoop保存的时候.会把他存在7z格式的文件夹</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&quot;architecture&quot;: &#123;</span><br><span class="line">    &quot;64bit&quot;: &#123;</span><br><span class="line">        &quot;url&quot;: &quot;https:&#x2F;&#x2F;github.com&#x2F;RoderickQiu&#x2F;wnr&#x2F;releases&#x2F;download&#x2F;v1.17.1&#x2F;wnr-1.17.1-Setup-64.exe#&#x2F;dl.7z&quot;,</span><br><span class="line">        &quot;hash&quot;: &quot;BE14DE68FDBFB3663F57B6B28E8B0CC90AE876DD06CA899839BEB9377FE21436&quot;</span><br><span class="line">    &#125;,</span><br><span class="line">    &quot;32bit&quot;: &#123;</span><br><span class="line">        &quot;url&quot;: &quot;https:&#x2F;&#x2F;github.com&#x2F;RoderickQiu&#x2F;wnr&#x2F;releases&#x2F;download&#x2F;v1.17.1&#x2F;wnr-1.17.1-Setup-32.exe#&#x2F;dl.7z&quot;,</span><br><span class="line">        &quot;hash&quot;: &quot;9C437170019E8AFC82B64A5475E349602E03A9493DD6AC6CACF58FDFD75762DD&quot;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;,</span><br></pre></td></tr></table></figure>
+
+<p>例如上面旧会被存在scoop/cache/wnr#1.17.1#https_github.com_RoderickQiu_wnr_releases_download_v1.17.1_wnr-1.17.1-Setup-64.exe_dl.7z</p>
+<p>然后旧可以解压了</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&quot;installer&quot;: &#123;</span><br><span class="line">    &quot;script&quot;: [</span><br><span class="line">        &quot;Expand-7zipArchive -Path (Join-Path $dir &#39;$PLUGINSDIR\\*.7z&#39;) -DestinationPath $dir&quot;,</span><br><span class="line">        &quot;Remove-Item -Path (Join-Path $dir &#39;$PLUGINSDIR&#39;) -Recurse&quot;,</span><br><span class="line">        &quot;Remove-Item \&quot;$dir\\Uninstall wnr.exe\&quot;&quot;</span><br><span class="line">    ]</span><br><span class="line">&#125;,</span><br></pre></td></tr></table></figure>
+
+
+
+<p>安装脚本都是执行在Scoop\apps\wnr\11.XXX\下面</p>
+<h3 id="导出-Scoop-软件列表"><a href="#导出-Scoop-软件列表" class="headerlink" title="导出 Scoop 软件列表"></a>导出 Scoop 软件列表</h3><p>备份 Scoop 的方式为：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">scoop export &gt; scoop.txt</span><br></pre></td></tr></table></figure>
+
+<p>可以对 Scoop 的导出列表进行额外处理，以方便后续安装。使用 VSCode 打开 <code>scoop.txt</code> 文件，以正则表达式搜索：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(.*?) .*</span><br></pre></td></tr></table></figure>
+
+<p>并全部替换成：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$1</span><br></pre></td></tr></table></figure>
+
+<p>注意正则式中包含空格，请完整复制。</p>
+<p><img src="../../assets/images/2019-08-20-scoop-use/03.jpg" alt="VSCode 中的正则式替换"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Win/" rel="tag"># Win</a>
+              <a href="/tags/shell/" rel="tag"># shell</a>
+              <a href="/tags/windows/" rel="tag"># windows</a>
+              <a href="/tags/C/" rel="tag"># C</a>
+              <a href="/tags/GitHub/" rel="tag"># GitHub</a>
+              <a href="/tags/Java/" rel="tag"># Java</a>
+              <a href="/tags/%E4%BB%A3%E7%90%86/" rel="tag"># 代理</a>
+              <a href="/tags/PHP/" rel="tag"># PHP</a>
+              <a href="/tags/Redis/" rel="tag"># Redis</a>
+              <a href="/tags/JS/" rel="tag"># JS</a>
+              <a href="/tags/proxy/" rel="tag"># proxy</a>
+              <a href="/tags/powershell/" rel="tag"># powershell</a>
+              <a href="/tags/scoop/" rel="tag"># scoop</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/unity-2019-08-12-ugui-Raycasters/" rel="prev" title="Unity Raycasters 剖析">
+      <i class="fa fa-chevron-left"></i> Unity Raycasters 剖析
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/unity-2019-09-01-spriteAtlas/" rel="next" title="关于spriteAtlas打包那些事">
+      关于spriteAtlas打包那些事 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  
+  <div class="comments">
+  <script src="https://utteranc.es/client.js" repo="zhepama/igiven.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async></script>
+  </div>
+  
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#安装scoop前提"><span class="nav-number">1.</span> <span class="nav-text">安装scoop前提</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#常用命令"><span class="nav-number">2.</span> <span class="nav-text">常用命令</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#安装scoop到自定义目录"><span class="nav-number">3.</span> <span class="nav-text">安装scoop到自定义目录</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#快捷方式"><span class="nav-number">3.0.1.</span> <span class="nav-text">快捷方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#安装应用"><span class="nav-number">3.0.2.</span> <span class="nav-text">安装应用</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#apache"><span class="nav-number">4.</span> <span class="nav-text">apache</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#修改配置"><span class="nav-number">4.1.</span> <span class="nav-text">修改配置</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Redis"><span class="nav-number">5.</span> <span class="nav-text">Redis</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#MySQL"><span class="nav-number">6.</span> <span class="nav-text">MySQL</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#pwsh"><span class="nav-number">7.</span> <span class="nav-text">pwsh</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#自制bucket"><span class="nav-number">8.</span> <span class="nav-text">自制bucket</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#如何解压exe的程序"><span class="nav-number">8.0.1.</span> <span class="nav-text">如何解压exe的程序</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#导出-Scoop-软件列表"><span class="nav-number">8.0.2.</span> <span class="nav-text">导出 Scoop 软件列表</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhepama"
+      src="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+  <p class="site-author-name" itemprop="name">zhepama</p>
+  <div class="site-description" itemprop="description">一个不专业的程序员,写着专业的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">139</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhepama" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhepama" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhepama@gmail.com" title="E-Mail → mailto:zhepama@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.godgodgame.com/" title="http:&#x2F;&#x2F;www.godgodgame.com" rel="noopener" target="_blank">GODGODGAME</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.igiven.com/" title="https:&#x2F;&#x2F;www.igiven.com">IGIVEN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhepama.github.io/C-Sharp-Playground/zh/" title="https:&#x2F;&#x2F;zhepama.github.io&#x2F;C-Sharp-Playground&#x2F;zh&#x2F;" rel="noopener" target="_blank">数据结构与算法</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhepama</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

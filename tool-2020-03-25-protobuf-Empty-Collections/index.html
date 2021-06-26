@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.igiven.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Base &#x2F; Derived ClassesEach derived class must have its base class marked with [ProtoInclude(, typeof(ProtoBuff-Derived-Class))]. If not, all values will be NULL. 12345678910111213141516171819202122232">
+<meta property="og:type" content="article">
+<meta property="og:title" content="protobuf序列化的一些问题">
+<meta property="og:url" content="http://www.igiven.com/tool-2020-03-25-protobuf-Empty-Collections/index.html">
+<meta property="og:site_name" content="IGiven">
+<meta property="og:description" content="Base &#x2F; Derived ClassesEach derived class must have its base class marked with [ProtoInclude(, typeof(ProtoBuff-Derived-Class))]. If not, all values will be NULL. 12345678910111213141516171819202122232">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-03-25T00:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-26T08:36:17.942Z">
+<meta property="article:author" content="zhepama">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="Unity">
+<meta property="article:tag" content="UNITY">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://www.igiven.com/tool-2020-03-25-protobuf-Empty-Collections/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>protobuf序列化的一些问题 | IGiven</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="IGiven" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="IGiven" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">IGiven</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">李九仙的博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">139</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">32</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-留言">
+
+    <a href="/guestbook/" rel="section"><i class="fa fa-sticky-note fa-fw"></i>留言</a>
+
+  </li>
+        <li class="menu-item menu-item-rss">
+
+    <a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/tool-2020-03-25-protobuf-Empty-Collections/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+      <meta itemprop="name" content="zhepama">
+      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="IGiven">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          protobuf序列化的一些问题<a href="https://github.com/zhepama/igiven.github.io/edit/master/source/_posts/tool/2020-03-25-protobuf-Empty-Collections.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil-alt"></i></a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-03-25 08:00:00" itemprop="dateCreated datePublished" datetime="2020-03-25T08:00:00+08:00">2020-03-25</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 16:36:17" itemprop="dateModified" datetime="2021-06-26T16:36:17+08:00">2021-06-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/tool/" itemprop="url" rel="index"><span itemprop="name">tool</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Base-Derived-Classes"><a href="#Base-Derived-Classes" class="headerlink" title="Base / Derived Classes"></a>Base / Derived Classes</h1><p>Each derived class must have its base class marked with [ProtoInclude(<num>, typeof(ProtoBuff-Derived-Class))]. If not, all values will be NULL.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">[ProtoContract]</span><br><span class="line">[ProtoInclude(100, typeof(HomeFolders))]</span><br><span class="line">[ProtoInclude(200, typeof(PublicFolders))]</span><br><span class="line">public class Folders</span><br><span class="line">&#123;</span><br><span class="line">  [ProtoMember(1)]</span><br><span class="line">  public int ProtoMember1 &#123; get; set; &#125;</span><br><span class="line"></span><br><span class="line">  [ProtoMember(2)]</span><br><span class="line">  public int ProtoMember2 &#123; get; set; &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">[ProtoContract]</span><br><span class="line">public class HomeFolders : Folders</span><br><span class="line">&#123;</span><br><span class="line">  [ProtoMember(1)]</span><br><span class="line">  public int ProtoMember4 &#123; get; set; &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">[ProtoContract]</span><br><span class="line">public class PublicFolders : Folders</span><br><span class="line">&#123;</span><br><span class="line">  [ProtoMember(1)]</span><br><span class="line">  public int ProtoMember5 &#123; get; set; &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="Avoid-duplicate-property-tags"><a href="#Avoid-duplicate-property-tags" class="headerlink" title="Avoid duplicate property tags"></a>Avoid duplicate property tags</h1><p>Using the same number for ProtoInclude and ProtoMember will generate an error about duplicate property tags. The example below is <strong>NOT</strong> correct.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">[ProtoContract]</span><br><span class="line">[ProtoInclude(1, typeof(PublicFolders))]</span><br><span class="line">public class Folders</span><br><span class="line">&#123;</span><br><span class="line">  [ProtoMember(1)]</span><br><span class="line">  public int ProtoMember1 &#123; get; set; &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>So you need to use a different number for ProtoInclude. Corrected example:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">[ProtoContract]</span><br><span class="line">[ProtoInclude(100, typeof(PublicFolders))]</span><br><span class="line">public class Folders</span><br><span class="line">&#123;</span><br><span class="line">  [ProtoMember(1)]</span><br><span class="line">  public int ProtoMember1 &#123; get; set; &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="Null-vs-Empty-Collections"><a href="#Null-vs-Empty-Collections" class="headerlink" title="Null vs. Empty Collections"></a>Null vs. Empty Collections</h1><p>ProtoBuf does not understand the difference between a collection (List, IEnumerable etc) being null versus empty (zero count). For example, if you put these objects into the cache,</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">List&lt;int&gt; list1 &#x3D; new List&lt;int&gt;();</span><br><span class="line">List&lt;int&gt; list2 &#x3D; null;</span><br></pre></td></tr></table></figure>
+
+<p>after deserialization, both the lists will have the same value—that is NULL. There are two ways to solve this:</p>
+<ol>
+<li><p>Using a private field (we are using this):</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">[ProtoMember(12, OverwriteList &#x3D; true)]</span><br><span class="line">private List _publicFolders;</span><br><span class="line">public List publicFolders</span><br><span class="line">&#123;</span><br><span class="line">  get</span><br><span class="line">  &#123;</span><br><span class="line">    if (_publicFolders &#x3D;&#x3D; null)</span><br><span class="line">    &#123;</span><br><span class="line">      _publicFolders &#x3D; new List();</span><br><span class="line">    &#125;</span><br><span class="line">    return _publicFolders;</span><br><span class="line">  &#125;</span><br><span class="line">  set</span><br><span class="line">  &#123;</span><br><span class="line">    _publicFolders &#x3D; value;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Using the OnDeserialized attribute:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">[ProtoMember(2, OverwriteList &#x3D; true)]</span><br><span class="line">private PublicFolder[] publicFolders;</span><br><span class="line">[ProtoMember(3, OverwriteList &#x3D; true)]</span><br><span class="line">private PrivateFolder[] privateFolder;</span><br><span class="line">[ProtoMember(4, OverwriteList &#x3D; true)]</span><br><span class="line">private SecureFolder[] secureFolder;</span><br><span class="line"></span><br><span class="line">[OnDeserialized]</span><br><span class="line">private void HandleSerializationMismatch(StreamingContext context)</span><br><span class="line">&#123;</span><br><span class="line">  publicFolders &#x3D; publicFolders ?? new PublicFolders[0];</span><br><span class="line">  privateFolder &#x3D; privateFolder ?? new PrivateFolder[0];</span><br><span class="line">  secureFolder &#x3D; secureFolder ?? new SecureFolder[0];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ol>
+<h1 id="Things-to-Remember"><a href="#Things-to-Remember" class="headerlink" title="Things to Remember"></a>Things to Remember</h1><p>ProtoBuf ignores properties if the class inherits from a collection and the Items property for that collection is null. Example:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">public class Folders : List</span><br><span class="line">&#123;</span><br><span class="line">  public int value1 &#123; get; set; &#125;</span><br><span class="line"></span><br><span class="line">  public int value2 &#123; get; set; &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Folders folders &#x3D; new Folders() &#123; value1 &#x3D; 5; value2 &#x3D; 6; &#125;;</span><br></pre></td></tr></table></figure>
+
+<p>After deserialization, the value of the Folders object will be NULL, because the count of items on is 0.</p>
+<p>Classes that inherit from special collections are also not supported.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">public class Folders : ReadOnlyCollection</span><br><span class="line">&#123;</span><br><span class="line">  public int value1 &#123; get; set; &#125;</span><br><span class="line"></span><br><span class="line">  public int value2 &#123; get; set; &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Folders folders &#x3D; new Folders() &#123; value1 &#x3D; 5; value2 &#x3D; 6; &#125;;</span><br></pre></td></tr></table></figure>
+
+<h1 id="AllowParseableTypes"><a href="#AllowParseableTypes" class="headerlink" title="AllowParseableTypes"></a>AllowParseableTypes</h1><p>AllowParseableTypes is a global switch that determines whether types with “.ToString()” and “Parse(string)” methods should be serialized as strings. We can use this setting for types that can’t be marked in the ProtoContract but can be parseable.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">static ProtoBufClient()</span><br><span class="line">&#123;</span><br><span class="line">  RuntimeTypeModel.Default.AllowParseableTypes &#x3D; true;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>For example, to solve the serialization problem with the Version type:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">[Serializable]</span><br><span class="line">[ProtoContract(SkipConstructor &#x3D; true)]</span><br><span class="line">[ProtoInclude(100, typeof(PrivateFolder))]</span><br><span class="line">[ProtoInclude(200, typeof(PublicFolder))]</span><br><span class="line">[ProtoInclude(300, typeof(SecureFolder))]</span><br><span class="line">public abstract class FolderBase : Folder</span><br><span class="line">&#123;</span><br><span class="line">  ...</span><br><span class="line"></span><br><span class="line">  [ProtoMember(3)]</span><br><span class="line">  private string name;</span><br><span class="line">  [ProtoMember(4)]</span><br><span class="line">  private Owner owner;</span><br><span class="line"></span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="Protobuf-net-Generics-on-Unity3D-IL2CPP"><a href="#Protobuf-net-Generics-on-Unity3D-IL2CPP" class="headerlink" title="Protobuf-net Generics on Unity3D IL2CPP."></a>Protobuf-net Generics on Unity3D IL2CPP.</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br></pre></td><td class="code"><pre><span class="line">public class CustomCollectionBase&lt;TCollection, TElement, TKey&gt;</span><br><span class="line">&#123;</span><br><span class="line">	protected TCollection _collection;</span><br><span class="line"></span><br><span class="line">	protected SortedDictionary&lt;TKey, bool&gt; _removed;</span><br><span class="line"></span><br><span class="line">	public CustomCollectionBase(TCollection collection)</span><br><span class="line">	&#123;</span><br><span class="line">		_collection &#x3D; collection;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	protected byte[] _cBytes;</span><br><span class="line"></span><br><span class="line">	protected byte[] _rBytes;</span><br><span class="line"></span><br><span class="line">	protected void __PreSerialize()</span><br><span class="line">	&#123;</span><br><span class="line">		using (MemoryStream stream &#x3D; new MemoryStream())</span><br><span class="line">		&#123;</span><br><span class="line">			Serializer.Serialize(stream, this._collection);</span><br><span class="line">			this._cBytes &#x3D; stream.ToArray();</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		using (MemoryStream stream &#x3D; new MemoryStream())</span><br><span class="line">		&#123;</span><br><span class="line">			Serializer.Serialize(stream, this._removed);</span><br><span class="line">			this._rBytes &#x3D; stream.ToArray();</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	protected void __PostDeserialize()</span><br><span class="line">	&#123;</span><br><span class="line">		using (MemoryStream stream &#x3D; new MemoryStream(this._cBytes))</span><br><span class="line">		&#123;</span><br><span class="line">			this._collection &#x3D; Serializer.Deserialize&lt;TCollection&gt;(stream);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		using (MemoryStream stream &#x3D; new MemoryStream(this._rBytes))</span><br><span class="line">		&#123;</span><br><span class="line">			this._removed &#x3D; Serializer.Deserialize&lt;SortedDictionary&lt;TKey, bool&gt;&gt;(stream);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">[ProtoContract]</span><br><span class="line">public class CustomList&lt;TElement&gt; : CustomCollectionBase&lt;List&lt;TElement&gt;, TElement, int&gt;</span><br><span class="line">&#123;</span><br><span class="line">	public CustomList() : base( new List&lt;TElement&gt;())</span><br><span class="line">	&#123;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	[ProtoMember(1)]</span><br><span class="line">	private byte[] _cProto</span><br><span class="line">	&#123;</span><br><span class="line">		get &#123; return base._cBytes; &#125;</span><br><span class="line">		set &#123; base._cBytes &#x3D; value; &#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	[ProtoMember(2)]</span><br><span class="line">	private byte[] _rProto</span><br><span class="line">	&#123;</span><br><span class="line">		get &#123; return base._rBytes; &#125;</span><br><span class="line">		set &#123; base._rBytes &#x3D; value; &#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	[ProtoBeforeSerialization]</span><br><span class="line">	private void __PreSerialize()</span><br><span class="line">	&#123;</span><br><span class="line">		base.__PreSerialize();</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	[ProtoAfterDeserialization]</span><br><span class="line">	private void __PostDeserialize()</span><br><span class="line">	&#123;</span><br><span class="line">		base.__PostDeserialize();</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">[ProtoContract]</span><br><span class="line">public class CustomIntDictionary&lt;TElement&gt; : CustomCollectionBase&lt;Dictionary&lt;int, TElement&gt;, TElement, int&gt;</span><br><span class="line">&#123;</span><br><span class="line">	public CustomIntDictionary() : base(new Dictionary&lt;int, TElement&gt;())</span><br><span class="line">	&#123;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	[ProtoMember(1)]</span><br><span class="line">	private byte[] _cProto</span><br><span class="line">	&#123;</span><br><span class="line">		get &#123; return base._cBytes; &#125;</span><br><span class="line">		set &#123; base._cBytes &#x3D; value; &#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	[ProtoMember(2)]</span><br><span class="line">	private byte[] _rProto</span><br><span class="line">	&#123;</span><br><span class="line">		get &#123; return base._rBytes; &#125;</span><br><span class="line">		set &#123; base._rBytes &#x3D; value; &#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	[ProtoBeforeSerialization]</span><br><span class="line">	private void __PreSerialize()</span><br><span class="line">	&#123;</span><br><span class="line">		base.__PreSerialize();</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	[ProtoAfterDeserialization]</span><br><span class="line">	private void __PostDeserialize()</span><br><span class="line">	&#123;</span><br><span class="line">		base.__PostDeserialize();</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">[ProtoContract]</span><br><span class="line">public class CustomStringDictionary&lt;TElement&gt; : CustomCollectionBase&lt;Dictionary&lt;string, TElement&gt;, TElement, string&gt;</span><br><span class="line">&#123;</span><br><span class="line">	public CustomStringDictionary() : base(new Dictionary&lt;string, TElement&gt;())</span><br><span class="line">	&#123;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	[ProtoMember(1)]</span><br><span class="line">	private byte[] _cProto</span><br><span class="line">	&#123;</span><br><span class="line">		get &#123; return base._cBytes; &#125;</span><br><span class="line">		set &#123; base._cBytes &#x3D; value; &#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	[ProtoMember(2)]</span><br><span class="line">	private byte[] _rProto</span><br><span class="line">	&#123;</span><br><span class="line">		get &#123; return base._rBytes; &#125;</span><br><span class="line">		set &#123; base._rBytes &#x3D; value; &#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	[ProtoBeforeSerialization]</span><br><span class="line">	private void __PreSerialize()</span><br><span class="line">	&#123;</span><br><span class="line">		base.__PreSerialize();</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	[ProtoAfterDeserialization]</span><br><span class="line">	private void __PostDeserialize()</span><br><span class="line">	&#123;</span><br><span class="line">		base.__PostDeserialize();</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>So basically there are two methods that are defined.</p>
+<ol>
+<li>__PreSerialize – Converts the collection in to a byte array which becomes the proto member.</li>
+<li>__PostDeserialize – Converts the byte array back to the collection.</li>
+</ol>
+<p>We can completely avoid defining run time types for this generic type. Instead of protobuf-net being responsible of creating the type, we create the type by ourselves using the same protobuf Serializer.</p>
+<p>This kind of technique can be used for other generic types as well. Please comment your ideas about this approach.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C</a>
+              <a href="/tags/Unity/" rel="tag"># Unity</a>
+              <a href="/tags/UNITY/" rel="tag"># UNITY</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/unity-2020-03-04-unity-startup/" rel="prev" title="unity启动运行脚本流程">
+      <i class="fa fa-chevron-left"></i> unity启动运行脚本流程
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/essay-2020-05-03-yang-cheng-yi-ge-xi-guan/" rel="next" title="如何有效的养成一个习惯">
+      如何有效的养成一个习惯 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  
+  <div class="comments">
+  <script src="https://utteranc.es/client.js" repo="zhepama/igiven.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async></script>
+  </div>
+  
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Base-Derived-Classes"><span class="nav-number">1.</span> <span class="nav-text">Base &#x2F; Derived Classes</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Avoid-duplicate-property-tags"><span class="nav-number">2.</span> <span class="nav-text">Avoid duplicate property tags</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Null-vs-Empty-Collections"><span class="nav-number">3.</span> <span class="nav-text">Null vs. Empty Collections</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Things-to-Remember"><span class="nav-number">4.</span> <span class="nav-text">Things to Remember</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#AllowParseableTypes"><span class="nav-number">5.</span> <span class="nav-text">AllowParseableTypes</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Protobuf-net-Generics-on-Unity3D-IL2CPP"><span class="nav-number">6.</span> <span class="nav-text">Protobuf-net Generics on Unity3D IL2CPP.</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhepama"
+      src="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+  <p class="site-author-name" itemprop="name">zhepama</p>
+  <div class="site-description" itemprop="description">一个不专业的程序员,写着专业的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">139</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhepama" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhepama" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhepama@gmail.com" title="E-Mail → mailto:zhepama@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.godgodgame.com/" title="http:&#x2F;&#x2F;www.godgodgame.com" rel="noopener" target="_blank">GODGODGAME</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.igiven.com/" title="https:&#x2F;&#x2F;www.igiven.com">IGIVEN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhepama.github.io/C-Sharp-Playground/zh/" title="https:&#x2F;&#x2F;zhepama.github.io&#x2F;C-Sharp-Playground&#x2F;zh&#x2F;" rel="noopener" target="_blank">数据结构与算法</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhepama</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

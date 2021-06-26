@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.igiven.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="从架构上说,主动技能都可以拆分为释放条件检测-&gt;释放-&gt;目标选择-&gt;产生效果但是里面很多细节,比如子弹初始位置设置,做成什么样子组合出更多的设计形式,同时可以兼容更多的有效需求比如一个回合制卡牌游戏,要啥飞行子弹,区域只要相对和绝对位置2大类,然后直接填坐标就好了 示例1:玩家释放技能1-&gt;释放子弹1对自身加免疫buff,释放子弹2在1秒后对身前范围最近1个友方击中-&amp;g">
+<meta property="og:type" content="article">
+<meta property="og:title" content="技能系统">
+<meta property="og:url" content="http://www.igiven.com/unity-2020-02-15-skill-system/index.html">
+<meta property="og:site_name" content="IGiven">
+<meta property="og:description" content="从架构上说,主动技能都可以拆分为释放条件检测-&gt;释放-&gt;目标选择-&gt;产生效果但是里面很多细节,比如子弹初始位置设置,做成什么样子组合出更多的设计形式,同时可以兼容更多的有效需求比如一个回合制卡牌游戏,要啥飞行子弹,区域只要相对和绝对位置2大类,然后直接填坐标就好了 示例1:玩家释放技能1-&gt;释放子弹1对自身加免疫buff,释放子弹2在1秒后对身前范围最近1个友方击中-&amp;g">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-02-15-skill-system/20180602102244475.png">
+<meta property="og:image" content="https://github.com/dongweiPeng/SkillSystem/raw/master/Assets/%E6%8A%80%E8%83%BD%E6%B5%81%E7%A8%8B.png">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/36361-5ec18bbce4b863ea.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/544/format/webp">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/36361-392299771fc34192.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/492/format/webp">
+<meta property="article:published_time" content="2020-02-15T00:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-26T08:36:17.946Z">
+<meta property="article:author" content="zhepama">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="游戏">
+<meta property="article:tag" content="GitHub">
+<meta property="article:tag" content="同步">
+<meta property="article:tag" content="代理">
+<meta property="article:tag" content="proxy">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.igiven.com/assets/images/2020-02-15-skill-system/20180602102244475.png">
+
+<link rel="canonical" href="http://www.igiven.com/unity-2020-02-15-skill-system/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>技能系统 | IGiven</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="IGiven" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="IGiven" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">IGiven</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">李九仙的博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">139</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">32</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-留言">
+
+    <a href="/guestbook/" rel="section"><i class="fa fa-sticky-note fa-fw"></i>留言</a>
+
+  </li>
+        <li class="menu-item menu-item-rss">
+
+    <a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/unity-2020-02-15-skill-system/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+      <meta itemprop="name" content="zhepama">
+      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="IGiven">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          技能系统<a href="https://github.com/zhepama/igiven.github.io/edit/master/source/_posts/unity/2020-02-15-skill-system.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil-alt"></i></a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-02-15 08:00:00" itemprop="dateCreated datePublished" datetime="2020-02-15T08:00:00+08:00">2020-02-15</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 16:36:17" itemprop="dateModified" datetime="2021-06-26T16:36:17+08:00">2021-06-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/unity/" itemprop="url" rel="index"><span itemprop="name">unity</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><img src="../../assets/images/2020-02-15-skill-system/20180602102244475.png" alt="img"></p>
+<p>从架构上说,主动技能都可以拆分为释放条件检测-&gt;释放-&gt;目标选择-&gt;产生效果<br>但是里面很多细节,比如子弹初始位置设置,做成什么样子组合出更多的设计形式,同时可以兼容更多的有效需求<br>比如一个回合制卡牌游戏,要啥飞行子弹,区域只要相对和绝对位置2大类,然后直接填坐标就好了</p>
+<p><strong>示例1:</strong><br>玩家释放技能1-&gt;释放子弹1对自身加免疫buff,释放子弹2在1秒后对身前范围最近1个友方击中-&gt;命中后对自身释放子弹-&gt;命令自身对目标释放技能2<br>释放技能1后选择对身前最近一个友方追加释放技能2</p>
+<p><strong>示例2:</strong><br>被动技能-&gt;获得buff-&gt;buff触发器每2秒在自身位置释放单体子弹1清除buff1,aoe子弹击中敌人-&gt;每命中一个敌人对自身叠加1层buff1<br>实际效果:周围敌人越多自身获得越多层buff1</p>
+<p><strong>示例3:</strong><br>玩家释放技能1-&gt;释放子弹1对自身周围友方和敌方击中-&gt;对命中的目标释放3个子弹:子弹1筛选敌人产生伤害,子弹2筛选友方30%血以上造成治疗,子弹3筛选敌人血量大于80%命中后产生子弹4对自身添加buff<br>实际效果:对周围友方残血造成治疗,对敌人造成伤害,如果击中的敌人血量较高,自身获得增益</p>
+<p><strong>示例4</strong><br>玩家有被动技能获得buff1-&gt;buff触发器效果为暴击击中时若双方距离&gt;300则对目标发射子弹1和子弹2-&gt;子弹1对自身添加buff,子弹2筛选有buff2的敌人<br>技能效果:暴击击中距离自身较远的敌人使自身获得增益,触发时若敌人有buff2,则造成额外效果</p>
+<p><strong>示例5</strong><br>玩家释放主动技能-&gt;发射子弹使自身获得6层buff1<br>buff1附带3个触发器<br>触发器1-&gt;释放技能清除所有层数buff1<br>触发器2-&gt;受到攻击失去1层<br>触发器3-&gt;buff1消失时自身获得buff2<br>buff2-&gt;触发器每1秒对自身附近发射子弹筛选1个敌人-&gt;令目标对自身发射子弹添加增益<br>技能效果:主动隐身,受到攻击失去1层,释放技能后解除隐身,隐身结束后一段时间内受到伤害转移给附近一个敌人</p>
+<p>基础内容有这么几个部分：<br>1、Actor，这个是角色本身，它不属于技能系统，但是它要给技能系统开放足够的接口，比如播放动画、播放声音、控制位移、造成伤害、添加buff等等<br>2、Skill，这个就是技能本身，它在合适的时机调用脚本中的相应函数，脚本中可以在OnCreate  OnHit  OnDeath  OnHeroDeath  OnSoldierDeath等事件中写相应代码。由于是脚本，所以代码非常灵活，而由于限定了只处理技能相关功能，所以代码也不会很复杂，有经验的策划绝对搞的定。<br>3、Buff，这个是技能效果的核心。它可以是有时限的，也可以是被动无时限的。在它对应的脚本中，定义了这个Buff会影响哪些角色属性（如血量、暴击、攻击力等等）或者角色状态（如眩晕、隐身、沉默等等），同样，buff脚本也支持事件机制，在脚本的相应事件处理其逻辑功能，可以实现非常丰富的效果。<br>4、Modifier，这个是一个技能修改器。技能修改器可以修改技能的流程和效果（比如技能伤害增加、火球击中人会爆炸等等），具体可以参考风暴英雄中的技能天赋系统。技能修改器并没有脚本与之对应，一个技能如果支持某个修改器，需要在脚本中处理相应功能。</p>
+<p>技能的基类是RoleSkill，然后分近战和远程两个大类，记得不要根据职业来分，而是根据功能来抽象，近战的技能是通过武器来产生伤害，而远程技能是通过发射物来伤害。近战技能可以继续分为：近距离接触攻击单人，近距离范围内接触攻击多人等；远程技能可以分为：单发射物攻击单人，远距离范围内非接触攻击多人等。</p>
+<p><img src="https://github.com/dongweiPeng/SkillSystem/raw/master/Assets/%E6%8A%80%E8%83%BD%E6%B5%81%E7%A8%8B.png" alt="img"></p>
+<p>广义的的说，和战斗结算相关的内容都算技能系统，包括技能信息管理、技能调用接口、技能目标查找、技能表现、技能结算、技能创生体（buff/法术场/弹道）管理，此外还涉及的模块包括：AI模块（技能调用者）、动作模块、寻路/移动模块以及人物属性和伤害数值结算等。</p>
+<p>先说下技能模块每个部分的职责和原理：</p>
+<ul>
+<li>技能信息管理：管理unit所拥有的技能以及技能的等级、cd等。在我们游戏中，这里还需要负责管理符文，符文会对技能信息进行修改。</li>
+<li>技能调用接口：AI或者UI操作触发技能，触发技能时可能选择了一个目标（AI），也可能并没有目标。</li>
+<li>技能流程管理：一个技能可能由多个子技能以移动的执行模式组合而成，而每一个最终执行的技能执行过程也存在一个流程，一般包括：前摇过程-结算点-后摇过程。技能在前摇结束时进入技能真正的结算流程，结算流程可能创建子弹，也可能触发buf或者创建法术场。</li>
+<li>技能目标查找：若技能触发时已经设置了技能目标unit(如怪物AI释放技能)，则直接将其作为目标unit，否则需要根据一定的策略选择一个目标。此外，技能释放的时候还需要释放方向和释放位置等信息，也通过这个模块获取。</li>
+<li>技能表现：技能释放过程中，需要创建相应的特效以及执行相应的动作。</li>
+<li>技能创生体（buf/弹道/法术场）管理：buf挂在unit身上，可能影响unit的一些行为和状态；法术场一般由场景管理，影响场景中某范围内的unit；弹道就是技能创建的一个子弹，这个子弹可能以不同的路线移动（直线／抛物线／直接命中等）</li>
+</ul>
+<h2 id="0技能表"><a href="#0技能表" class="headerlink" title="0技能表"></a>0技能表</h2><p>首先说下实现技能的基本思路。实现技能的基本思路就是通过策划填写表格，来配制成某些技能，在执行某个技能的时候，分别去根据这些表格中的内容，确定技能如何表现。基本的逻辑是：</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> skillTable.<span class="keyword">get</span>(<span class="string">"技能动作"</span>):</span><br><span class="line">     paly 动作</span><br><span class="line"><span class="keyword">if</span> skillTable.<span class="keyword">get</span>(<span class="string">"特效"</span>):</span><br><span class="line">     播放特效</span><br><span class="line"><span class="keyword">if</span> skillTable.<span class="keyword">get</span>(<span class="string">"法术场"</span>):</span><br><span class="line">    创建法术场</span><br><span class="line">....</span><br></pre></td></tr></table></figure>
+
+<h2 id="1-技能信息管理"><a href="#1-技能信息管理" class="headerlink" title="1 技能信息管理"></a>1 技能信息管理</h2><p>unit创建时，此模块管理unit可使用哪些技能，比如游戏中玩家可以选择使用哪些技能。</p>
+<p>游戏中技能的升级、技能加点、技能池管理都在这个模块。</p>
+<p>此模块还需要管理技能等级／符文／装备等外部模块对技能参数的修改。</p>
+<h2 id="2-技能调用接口"><a href="#2-技能调用接口" class="headerlink" title="2 技能调用接口"></a>2 技能调用接口</h2><p>提供技能调用的接口供AI或玩家操作调用，调用时可以提供一个目标unit，也可以不提供让技能自己查找。</p>
+<p>提供三个接口：</p>
+<ul>
+<li>技能开始skill_enter：开始执行技能，若技能不循环进行，则技能可以自动结束。</li>
+<li>技能结束skill_exit：有的技能不能自己结束，比如某些循环技能，对于循环技能玩家可以按住按钮一直释放。当玩家松开按钮，调用技能结束接口，告诉当前技能使其结束，此时技能到达后摇点时，技能不再继续执行。</li>
+<li>技能停止skill_stop：当技能被强制打断时，如被攻击、晕眩、蓝不足等，技能会被强制停止。</li>
+</ul>
+<p>此外，当前一个技能正在执行时新的技能调用启动，此时新的技能调用信息会被保存。一般来说，并不会把所有新的技能调用信息保存下来，那样就成了一个技能执行的序列。我们游戏仅保存一个新的技能调用信息。</p>
+<p>总的来说，技能模块提供尽量少的接口供AI/UI等上层逻辑使用，这样可以有效的与AI和UI进行解耦。</p>
+<h2 id="3-技能流程管理"><a href="#3-技能流程管理" class="headerlink" title="3 技能流程管理"></a>3 技能流程管理</h2><p>技能流程这里分两点讨论：</p>
+<ol>
+<li>一个技能可能由多个子技能以一定的模式组合起来。<br> 一个技能常常由多个子技能以一定的模式组合而成，比如三段击、比如冲锋斩（先冲锋、后斩）等，甚至还存在根据不同的环境选择执行不同的子技能。分析策划需求发现，技能可以分成一个树形结构，这个树形结构非常类似行为树，同样可以将节点分为控制节点和执行节点，甚至可以包括condition节点。为此，我们项目引入一个技能树概念来描述这种数据结构。</li>
+<li>一个具体的技能（技能树执行节点）也有一个固定的执行流程。这个流程一般为：前摇过程、前摇过程结束=技能结算时间点、后摇时间点。</li>
+</ol>
+<h3 id="3-1-技能树"><a href="#3-1-技能树" class="headerlink" title="3.1 技能树"></a>3.1 技能树</h3><p>技能树参考传统行为树的设计，使用树形结构控制技能的执行流程。</p>
+<p>技能树和行为树在结构上比较类似，但是在运行逻辑上有很大的不同。</p>
+<p>首先，技能树的重点并不是根据上下文选择一个合适的节点执行，而是以一定的策略将技能树从头到尾遍历执行一遍。</p>
+<p>其次，技能树没有tick的概念，而是基于回调的，比如一个顺序节点，顺序节点中一个子节点执行完毕后，马上通知顺序节点，顺序节点执行下一个子节点，直至顺序节点的最后一个子节点执行完毕，顺序节点就会通知父节点（如果有）它已经执行完毕。</p>
+<p>此外，为了完成技能的一些需求，控制节点往往存储更多的控制信息来控制子节点的执行流程。具体的信息根据策划需求设置，比如顺序结点包括原子属性和循环属性。如果一个顺序节点具有原子属性，则这个顺树节点在执行的过程中并不会被end，只有全部子节点执行结束才可以end。</p>
+<p>以我们游戏中战士普攻三段击为例：</p>
+<p><img src="https:////upload-images.jianshu.io/upload_images/36361-5ec18bbce4b863ea.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/544/format/webp" alt="img"></p>
+<p>Paste_Image.png</p>
+<p>三段击本身是一个顺序节点，当技能开始时，此节点顺序执行三个子节点。对于第一个子节点，它依然是一个顺序节点，首先冲锋至目标单位身前，然后对目标单位进行挥砍。但是冲锋节点还包括了一个condition，若和目标的距离很近，则跳过冲锋节点，直接挥砍。</p>
+<p>普攻是一个循环技能，这个技能只要玩家点着按钮不放开，技能就会一直执行，因此根节点（普攻）是一个具有循环属性的顺序节点。而对于子技能1（控制节点），他是一个具有原子属性的顺序技能，即当单位正在冲锋时，玩家松开按钮，单位也会执行完挥砍后才会推出技能。</p>
+<hr>
+<p><strong>！关于技能树的使用和思考</strong></p>
+<p>技能树开始的设计思路是，有些技能的执行流程和行为树类似，比如以一定的顺序执行一系列子技能，比如根据不同的上下文确定技能的执行流程。简单的说，技能树的引入有以下好处：1.使技能模块可以获得部分AI的能力，从而将和技能强相关的AI逻辑放在技能模块使技能模块和AI模块降低耦合，2.可以清晰的描述技能流程，3.使用树增加拓展性，策划可以设计出各种各样复杂的技能。</p>
+<p>关于好处1，举个例子：屠夫boss的勾子技能可以将玩家拉过来，若成功的拉过来，boss会执行一个攻击子技能，否则不执行。通过这样可以将勾人和攻击作为两个子技能构成技能树，攻击子技能有一个condition过程，即判断上一个子技能是否成功。</p>
+<p>技能树在使用后慢慢发现一些问题，首先，技能树的同步要求每个树节点都进行同步，增加同步负担，其次，技能本身并不会有太复杂的控制结构。</p>
+<p>为此，后来我们对技能树进行了优化：<br> 1.简化同步信息，不再同步所有节点的enter/exit信息（具体参考文章《技能模块的同步》）。<br> 2.取消并行节点，通过拓展表头实现一个技能同时执行多件事情。</p>
+<p>最终的技能树基本上是只有顺序／随机两种控制类型节点，节点拥有较轻度的condition功能。</p>
+<hr>
+<h3 id="3-2-执行节点的技能流程"><a href="#3-2-执行节点的技能流程" class="headerlink" title="3.2 执行节点的技能流程"></a>3.2 执行节点的技能流程</h3><p>一般来说，技能的执行流程包括：</p>
+<ul>
+<li>前摇时间：技能开始，但是技能真正的结算流程还没开始。技能开始以后，机能相关的特效和动作就开始播放。</li>
+<li>前摇时间结束：技能前摇结束时技能开始真正的释放以及结算，等技能前摇结束以后，技能真正的释放并结算。释放包括创建相应的弹道／法术场和buff。</li>
+<li>技能后摇点：技能播放到后摇点时间时，技能真正的结束。这时，技能对应的特效以及人物动作可能还会继续播放，但是技能流程已经正式结束了。也就是说，下一个技能可以执行。</li>
+</ul>
+<h2 id="4-技能目标查找"><a href="#4-技能目标查找" class="headerlink" title="4 技能目标查找"></a>4 技能目标查找</h2><p>技能释放时，目标可能已经由AI传给了技能模块，也有可能没有一个目标，如玩家控制单位。</p>
+<p>技能在释放法术场、弹道的时候，重要的是技能的方向而不是技能目标一般来说，技能获得一个目标对象以后，技能的方向就是释法者到目标的方向。</p>
+<p>此外，技能方向可能需要一些配置，如前摇锁定（前摇过程中目标移动，技能方向不变），UI可控制（技能释放过程中，玩家可以通过控制UI控制技能的释放方向）。</p>
+<h2 id="5技能表现"><a href="#5技能表现" class="headerlink" title="5技能表现"></a>5技能表现</h2><p>技能的表现包括动作、特效、shader、音效等。其中，特效比较复杂，需要配置的内容也比较多。比如，有些特效挂在模型上，有的特效挂在场景里。对于法术场的特效，分别可以分为法术场开始、结算、结束特效，分别在法术场开始时、结算时、结束时显示。对于buff也类似。</p>
+<h2 id="6-弹道、法术场和buff等技能创生体"><a href="#6-弹道、法术场和buff等技能创生体" class="headerlink" title="6 弹道、法术场和buff等技能创生体"></a>6 弹道、法术场和buff等技能创生体</h2><p>狭义的来说，技能只是负责技能的执行流程（技能树管理以及技能流程管理），而技能真正的结算主要是由其创生体结算的。当技能前摇结束开始生效时，技能创建相应的弹道和法术场，法术场弹道击中敌人时又有可能产生相应的buff。</p>
+<p>一般来说，法术场是一个场景的某块检测区域，每隔一段时间法术场检测此区域的敌人，并对其攻击结算。<br> 弹道是一类子弹移动路径的抽象，创建一个弹道就表示一个子弹特效沿这个弹道移动并检测路径上的敌人。<br> buff就是挂在单位身上的一个具有持续时间的状态，状态对单位产生一些正面或者负面的影响，并且在此段时间内，每隔一段时间进行一次伤害结算 。</p>
+<p>对于技能、法术场、buff之间的功能界定并不是很固定，比如技能能否直接对单位造成伤害，法术场能否对单位造成伤害，甚至技能只能创建法术场，法术场只能检测目标不能造成伤害，只能挂buff，而所有的伤害都是通过buff来结算。当然，这样并不一定好，一般来说，技能和法术场都可以对单位造成伤害。</p>
+<p>总之，创生体功能的界定需要根据策划需求、效率考虑等因素调整。</p>
+<h2 id="6-1-Buff状态"><a href="#6-1-Buff状态" class="headerlink" title="6.1 Buff状态"></a>6.1 Buff状态</h2><p>Buff就是挂在单位身上持续一定时间的有益或者有害的状态，这里状态＝buff。</p>
+<p>Buff模块有个需要注意的是Buff之间的相互关系，如排斥（A状态在，B状态挂不上去），清除（A状态挂上去同时导致B状态消失）等。</p>
+<p>为了实现以上功能，最简单的方式是在状态A中直接填写状态关系状态字段，如状态A排斥状态B/C/D/E…，A状态清除状态X/Y/Z…。</p>
+<p>以上的实现方式有个问题，等游戏做到后期，我们有成千上万个buff状态，那么一个魔法免疫状态，策划需要填表的排斥状态可能成千上万。</p>
+<p>为了解决这个问题，可以使用分类的思想解决。定义某类状态和另一类状态之间的规则。<br> 基于以上思想，引入一个叫buff原子状态的概念，原子状态表示一类状态，如减速、禁魔、魔免、悬空、晕眩、变羊等等等。</p>
+<p>在给单位挂一个新的buff的之前，查询此buff持有的原子状态和单位身上已经有的原子状态之间的关系，根据单位身上已有的原子状态判定新的原子状态应该使用何种行为处理。</p>
+<p>此处的何种行为，代表的就是原子状态之间的规则，如排斥等。这些规则可以让策划填一个名字叫“原子状态关系”的表，此表是一个n*n的二维数组，n为游戏中所有的原子状态的数量。</p>
+<p>原子状态的数量远远小于buff的数量，所以可以很容易的定义这些规则。</p>
+<h3 id="6-2-法术场"><a href="#6-2-法术场" class="headerlink" title="6.2 法术场"></a>6.2 法术场</h3><p>法术场描述对一块区域的影响，这块区域可以每隔一段时间进行一次检测，检测这块区域内的单位并且对单位进行结算。</p>
+<p>法术场需要注意一个问题，就是一个法术场每次结算可能使用不同的参数进行结算，比如一个技能，第一次结算对每个单位进行晕眩，第二次结算对单位进行伤害。</p>
+<p>解决这种问题比较直接的方式是技能直接创建两个法术场，每个法术场结算一次，第二个法术场创建具有延迟时间。但是这种方式有个问题，有可能策划需求做一个结算十次而且每次结算的参数都不同的法术场。那么，一个技能以一定的时间间隔创建是个法术场，同时法术场的管理具有一定的成本，从而导致效率的降低。</p>
+<p>为解决这个问题，我们优化了法术场结算的实现机制，增加了一种新的法术场：序列法术场。这类法术场策划可以配置法术场每次结算之间的时间间隔以及每次结算所使用的法术场参数。</p>
+<p>这里所说的技能模块包括：技能流程、法术场、弹道和buff。</p>
+<p>首先介绍authority和proxy的概念，这两个概念是基于单位unit的基础上进行的区分。<br> authority表示单位的主控端，即此单位是由客户端和还是服务端控制。对于玩家avatar，玩家本地的客户端就是主控端。而对于怪物，他们的行为由服务端控制，主控端就是服务端。<br> proxy表示代理端，表示被主控端控制。如对于怪物来说，所有的客户端都是proxy；对于玩家A来说，服务端和其他玩家的客户端都是proxy。</p>
+<h2 id="0-技能同步的原则"><a href="#0-技能同步的原则" class="headerlink" title="0 技能同步的原则"></a>0 技能同步的原则</h2><p>1.客户端先行<br> 对于玩家控制的单位来说，玩家点击按钮释放一个技能，客户端首先响应，单位播放动作以及相应的技能特效。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">据我了解，有的已上线游戏并没有做客户端先行，而是所有的技能执行请求都发给服务端，然后由服务端发起。</span><br><span class="line">这种模式技能流程控制会比较简单，但是在网络环境差的情况下，体验可能差一些。但是，目测也是可以接受的。</span><br></pre></td></tr></table></figure>
+
+<p>2.技能流程以authority为发起端<br> 玩家单位技能发起是由她的客户端，怪物的技能发起是由AI也就是服务端。<br> 3.技能结算在服务端发起。<br> 技能真正的结算，比如法术场检测、buff结算、伤害结算等，统一在服务端处理。</p>
+<h2 id="1-技能执行流程的同步"><a href="#1-技能执行流程的同步" class="headerlink" title="1 技能执行流程的同步"></a>1 技能执行流程的同步</h2><p>这里所说的技能执行流程指的是技能树的一个执行节点的流程。</p>
+<p>技能流程负责动作、特效以及技能结算，其中技能结算包括：释放法术场、弹道或buff。</p>
+<p>一个技能执行节点的执行流程中，需要同步的有两个时间点：</p>
+<ul>
+<li>技能开始：技能开始播放动作</li>
+<li>技能结算：前摇结束，即能进入结算逻辑。这类同步消息往往并不是由技能本身去同步，而是技能生成了法术场、弹道等，他们去做相应的同步。</li>
+</ul>
+<p>以玩家点击技能按钮开始释放技能为例介绍技能同步流程，如图所示：</p>
+<p><img src="https:////upload-images.jianshu.io/upload_images/36361-392299771fc34192.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/492/format/webp" alt="img"></p>
+<p>Paste_Image.png</p>
+<p>1.主控端点击技能按钮，技能开始播放动作，主控端告诉服务端技能开始。<br> 2.服务端广播给所有的客户端(多玩家场景)，告知其他所有的客户端此玩家开始执行技能。其他客户端收到指令后可是播放技能表现。<br> 3.服务端延迟一段时间后，服务端开始进行技能结算，并且将结算结果通知客户端。</p>
+<blockquote>
+<p>延迟时间=技能前摇时间-上行-下行，下行一半不能确定，所以默认为上行=下行</p>
+</blockquote>
+<blockquote>
+<p>另一种中庸的计算方式是：延迟时间=技能前摇时间-上行，防止要求技能前摇时间过长</p>
+</blockquote>
+<h3 id="使用此同步流程的表现为："><a href="#使用此同步流程的表现为：" class="headerlink" title="使用此同步流程的表现为："></a>使用此同步流程的表现为：</h3><p>1.要求技能前摇时间&gt;2*网络延迟，若前摇时间短，则延迟时间=0，效果可能差一些<br> 2.authority客户端表现完美。<br> 3.proxy client表现一般，即玩家A看玩家B的效果为：玩家B刚开始执行技能动作，没到前摇时间就进行了技能结算。但是因为玩家一般也不会过分关注其他玩家的动作，所以是可以接受的。</p>
+<h2 id="2-技能树的同步"><a href="#2-技能树的同步" class="headerlink" title="2 技能树的同步"></a>2 技能树的同步</h2><p>我上篇文章<a href="https://www.jianshu.com/p/551f02f95727" target="_blank" rel="noopener">技能系统</a>已经介绍，我们游戏使用的是技能树来管理技能流程。那么就面临一个问题，技能树如何同步。</p>
+<p>最简单最暴力的方式，是客户端和服务端同时管理技能树，并且将其状态同步。这样，客户端和服务端的技能树状态统一、完备。</p>
+<p>后来发现，对于proxy端，并不需要完备的技能树信息，最节省的方式是proxy根本不接受技能树同步信息，只是接受播放动作、技能结算等信息。但这样需要告诉其他proxy播放什么动作、特效等。</p>
+<p>在我们系统中，技能同步包括三类同步消息:</p>
+<ul>
+<li>技能根节点enter (root_enter): 表示一个大技能的进入</li>
+<li>技能叶子节点enter(action_enter): 表示一个技能树的执行节点的进入。</li>
+<li>根节点exit(root_exit) ：表示大技能结束</li>
+</ul>
+<p>根节点保存一个完整技能的信息，需要和技能模块外部交互，因此需要知道技能的开始和结束。<br> 叶子节点的执行代表着技能真正的执行逻辑，也需要同步。<br> 而对于其他节点，作为流程控制节点，只需要在主端确保技能流程无误即可</p>
+<blockquote>
+<p>后来这里进行了进一步的优化，对于纯根节点，主控端（玩家控制的客户端）将信息同步给服务端，服务端不再同步给其他客户端。有的技能树只有一个节点，那么按照叶子节点的策略，主控端同步给服务端，服务端广播给所有的其他客户端。</p>
+</blockquote>
+<h2 id="3-技能结算的同步"><a href="#3-技能结算的同步" class="headerlink" title="3 技能结算的同步"></a>3 技能结算的同步</h2><p>技能结算包括创建法术场、buff、弹道、技能直接伤害等。</p>
+<h4 id="法术场、弹道的同步"><a href="#法术场、弹道的同步" class="headerlink" title="法术场、弹道的同步"></a>法术场、弹道的同步</h4><p>法术场、弹道的同步比较类似，他们都作为一个entity（网络同步单元）在服务端创建，创建以后使用entity管理机制服务端通知客户端他们的创建和销毁。</p>
+<p>以法术场为例，法术场的执行和同步流程：</p>
+<ol>
+<li>服务端发起创建一个法术场，并且通知客户端</li>
+<li>法术场每隔一段时间结算一次，注意，法术场结算并不需要同步，每隔一段时间服务端执行检测逻辑，客户端播放结算特效等。两个逻辑互不依赖，也不要求时间一致。</li>
+<li>当法术场结算时检测到攻击目标时，服务端计算攻击伤害等信息，并将攻击信息发给客户端。</li>
+<li>客户端收到伤害信息，客户端播放相应的表现，如法术场受击特效等。此处还包括属于通用模块的跳字等。</li>
+<li>当服务端的法术场时间到了进行destroy时，使用entity的管理机制通知所有客户端destroy法术场。</li>
+</ol>
+<p>弹道的同步类似，唯一的区别就是法术场在某一位置使用攻击盒检测目标，而弹道是一个移动的子弹，客户端表现是一个特效在飞，而服务端每隔一段时间根据飞行速度等使用胶囊攻击盒去检测目标碰撞。</p>
+<p>由以上可以发现，法术场作为一个entity他的管理成本是比较高的，所以若策划想出一些需求需要使用多个法术场实现，一般通过拓展法术场功能使用一个法术场来实现。</p>
+<blockquote>
+<p>比如，策划要做一个冰火两重天法术场，即法术场在每次结算时使用不同的参数，第一次结算使用火焰，第二次结算是冰霜。若这种需求较少，可以使用两个法术场，但是如果要冰火雷毒水电风魔奥术神圣***N重天，则代价太大。一般可以让法术场支持每次使用不同的结算参数来结算即可。</p>
+</blockquote>
+<h4 id="buff同步"><a href="#buff同步" class="headerlink" title="buff同步"></a>buff同步</h4><p>buff是附加在unit身上的东西（没有unit就没有buff，但是没有unit可能有法术场），所以不需要使用entity来同步。</p>
+<ol>
+<li>服务端确定buff是否可以挂在unit上面。</li>
+<li>客户端和服务端都维护一个buff管理器，挂buff的消息通知所有客户端，客户端负责表现，服务端负责结算即可。</li>
+</ol>
+<h2 id="4-伤害、属性的同步"><a href="#4-伤害、属性的同步" class="headerlink" title="4 伤害、属性的同步"></a>4 伤害、属性的同步</h2><p>主要介绍下伤害的同步，顺便附带介绍下属性同步。</p>
+<p>对于伤害结算来说，技能、buff、法术场和弹道都可能造成伤害，当服务端发现造成伤害时，服务端首先根据技能信息计算伤害值，计算以后将信息通过技能模块发送给所有客户端，所有客户端接到信息后首先播放技能伤害相关的表现，如受击特效等，然后播放跳字等通用伤害客户端表现。</p>
+<p>buff可能修改单位属性，如攻击力、攻击速度等。单位的属性由基础成长属性+装备属性+buff属性构成，前两个属性为面板属性，属于玩家信息。而buff属性只在战斗中有效，在面板中并没有表现。<br> 因此装备属性的同步需要通知逻辑服务器（真正的服务器），而buff并不需要通知逻辑服务器。</p>
+<h1 id="技能，说穿了只是一个流程，而不该是一个实体"><a href="#技能，说穿了只是一个流程，而不该是一个实体" class="headerlink" title="技能，说穿了只是一个流程，而不该是一个实体"></a><strong>技能，说穿了只是一个流程，而不该是一个实体</strong></h1><p>1、表的作用实际不是定义流程，而是提供流程中需要的数据。因此不管流程需要数据的是前端还是后端，他们都应该从一个表中调用。<br>2、并不是因为把技能作为实体才导致它的混乱，真正导致混乱是的技能实体的范围扩大化了（从这个意义上说，把技能做为一个流程也没什么错，技能的承载内容应该仅仅是这个流程本身），把后续效果剥离出来会好很多。</p>
+<p>我个人的经验，不评价好坏，大概是这样的：技能的表象数据必须要有，技能效果相应的数据应该仅限于这个技能释放条件和它的直接效果（这个与表象共享技能id，所以最好也放在一起）；直接效果之外的触发效果，单独建立BUFF表，为此建立一套单独的流程，供技能调用（也就是技能效果应该是触发了某个buff）</p>
+<h2 id="就skill和buff的边界问题，"><a href="#就skill和buff的边界问题，" class="headerlink" title="就skill和buff的边界问题，"></a>就skill和buff的边界问题，</h2><p>恰好新的项目里里面我进行了一个比较新的尝试，就是抹除这个边界。 在这次的项目中，因为技能需求足够复杂，所以采用了以前一直只想没实践的想法，就是取消技能在逻辑中的的概念，或者说在基础逻辑中没有技能的设计，技能只在数据层和讨论的概念中出现。 具体的描述也很简单，所谓的技能我们都理解为 施法者一组行为和数据的组合，它包含了技能的icon，类型，动作等一系列和战斗逻辑有直接关系但没有本质关系的概念与数据的总和，用来在游戏概念中定义一个技能的所有特征。 但是在战斗中，真正发挥作用的是buff，在新的设计中，所有的参与战斗逻辑的实体都是buff。 比如 如果要实现一个火球，那么实现方式是技能数据告诉我会播放什么样的施法动画，同时丢出一个弹道，而这个弹道上附着一个buff，叫做燃烧，该buff附带特效火焰和200点的碰撞伤害（在弹道命中敌人时候）。 而这个一整个流程，在概念里，被定义为 施法者释放了一个技能，映射到现实逻辑，就是某人拿起一个石头，点燃，然后把石头丢出去砸到了某人。 至此，核心的技能结算逻辑里，彻底干掉了skill这个类，技能变成了只在概念讨论里才出现的词汇。战斗结算中，不再存在skill的概念。</p>
+<p><strong>表与脚本混合.</strong></p>
+<p>又有两种分支,</p>
+<p><strong>分支一:主表副脚本,</strong>脚本作为字段绑定于表里.表的某个字段就是技能的脚本路径.技能的主流程,框架逻辑有表的字段来决定.</p>
+<p><strong>分支二:主脚本副表</strong>,主逻辑,流程都是有脚本实现.技能的主流程由脚本实现.脚本读表获取数据,进行技能的操作.</p>
+<p>优点:增加奇怪技能,很方便,直接写脚本就可以了.</p>
+<p>缺点:批量处理工作量大,既要改表,又要改技能.每个技能对应独立的脚本,技能越多,脚本越多.批量处理的时候,工作量大.</p>
+<h1 id="相关链接"><a href="#相关链接" class="headerlink" title="相关链接"></a>相关链接</h1><p><a href="https://zhuanlan.zhihu.com/p/147681650" target="_blank" rel="noopener">https://zhuanlan.zhihu.com/p/147681650</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C</a>
+              <a href="/tags/%E6%B8%B8%E6%88%8F/" rel="tag"># 游戏</a>
+              <a href="/tags/GitHub/" rel="tag"># GitHub</a>
+              <a href="/tags/%E5%90%8C%E6%AD%A5/" rel="tag"># 同步</a>
+              <a href="/tags/%E4%BB%A3%E7%90%86/" rel="tag"># 代理</a>
+              <a href="/tags/proxy/" rel="tag"># proxy</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/dotnet-2020-02-13-csharp-run/" rel="prev" title="c#编译和运行启动原理">
+      <i class="fa fa-chevron-left"></i> c#编译和运行启动原理
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/unity-2020-02-16-buff-system/" rel="next" title="游戏buff系统设计">
+      游戏buff系统设计 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  
+  <div class="comments">
+  <script src="https://utteranc.es/client.js" repo="zhepama/igiven.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async></script>
+  </div>
+  
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#0技能表"><span class="nav-number">1.</span> <span class="nav-text">0技能表</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-技能信息管理"><span class="nav-number">2.</span> <span class="nav-text">1 技能信息管理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-技能调用接口"><span class="nav-number">3.</span> <span class="nav-text">2 技能调用接口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-技能流程管理"><span class="nav-number">4.</span> <span class="nav-text">3 技能流程管理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-技能树"><span class="nav-number">4.1.</span> <span class="nav-text">3.1 技能树</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-执行节点的技能流程"><span class="nav-number">4.2.</span> <span class="nav-text">3.2 执行节点的技能流程</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-技能目标查找"><span class="nav-number">5.</span> <span class="nav-text">4 技能目标查找</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5技能表现"><span class="nav-number">6.</span> <span class="nav-text">5技能表现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-弹道、法术场和buff等技能创生体"><span class="nav-number">7.</span> <span class="nav-text">6 弹道、法术场和buff等技能创生体</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-1-Buff状态"><span class="nav-number">8.</span> <span class="nav-text">6.1 Buff状态</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#6-2-法术场"><span class="nav-number">8.1.</span> <span class="nav-text">6.2 法术场</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0-技能同步的原则"><span class="nav-number">9.</span> <span class="nav-text">0 技能同步的原则</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-技能执行流程的同步"><span class="nav-number">10.</span> <span class="nav-text">1 技能执行流程的同步</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#使用此同步流程的表现为："><span class="nav-number">10.1.</span> <span class="nav-text">使用此同步流程的表现为：</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-技能树的同步"><span class="nav-number">11.</span> <span class="nav-text">2 技能树的同步</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-技能结算的同步"><span class="nav-number">12.</span> <span class="nav-text">3 技能结算的同步</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#法术场、弹道的同步"><span class="nav-number">12.0.1.</span> <span class="nav-text">法术场、弹道的同步</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#buff同步"><span class="nav-number">12.0.2.</span> <span class="nav-text">buff同步</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-伤害、属性的同步"><span class="nav-number">13.</span> <span class="nav-text">4 伤害、属性的同步</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#技能，说穿了只是一个流程，而不该是一个实体"><span class="nav-number"></span> <span class="nav-text">技能，说穿了只是一个流程，而不该是一个实体</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#就skill和buff的边界问题，"><span class="nav-number">1.</span> <span class="nav-text">就skill和buff的边界问题，</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#相关链接"><span class="nav-number"></span> <span class="nav-text">相关链接</span></a></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhepama"
+      src="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+  <p class="site-author-name" itemprop="name">zhepama</p>
+  <div class="site-description" itemprop="description">一个不专业的程序员,写着专业的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">139</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhepama" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhepama" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhepama@gmail.com" title="E-Mail → mailto:zhepama@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.godgodgame.com/" title="http:&#x2F;&#x2F;www.godgodgame.com" rel="noopener" target="_blank">GODGODGAME</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.igiven.com/" title="https:&#x2F;&#x2F;www.igiven.com">IGIVEN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhepama.github.io/C-Sharp-Playground/zh/" title="https:&#x2F;&#x2F;zhepama.github.io&#x2F;C-Sharp-Playground&#x2F;zh&#x2F;" rel="noopener" target="_blank">数据结构与算法</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhepama</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

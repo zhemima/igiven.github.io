@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.igiven.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Entitas執行流程 ​      也就是说整个ECS系统的内部数据维护(Group、Collector、EntityIndex)复杂度主要放在Entity的修改上了。​      在给一个Entity添加一个Component时，不仅仅是对Entity进行了修改，还会通过事件将这个添加传递给Context，Context遍历所有Group，找到满足这次修改条件的Group，对所有受到影响的Gr">
+<meta property="og:type" content="article">
+<meta property="og:title" content="一篇文章搞定Entitas">
+<meta property="og:url" content="http://www.igiven.com/unity-2020-01-01-unity-entitas/index.html">
+<meta property="og:site_name" content="IGiven">
+<meta property="og:description" content="Entitas執行流程 ​      也就是说整个ECS系统的内部数据维护(Group、Collector、EntityIndex)复杂度主要放在Entity的修改上了。​      在给一个Entity添加一个Component时，不仅仅是对Entity进行了修改，还会通过事件将这个添加传递给Context，Context遍历所有Group，找到满足这次修改条件的Group，对所有受到影响的Gr">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-01-01-unity-entitas/1362861-20190531225036556-1995562595%5B1%5D.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-01-01-unity-entitas/v2-d49876b0ae0100844a372dfb16508b27_hd.jpg">
+<meta property="article:published_time" content="2020-01-01T00:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-26T08:36:17.946Z">
+<meta property="article:author" content="zhepama">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="C#">
+<meta property="article:tag" content="游戏">
+<meta property="article:tag" content="GitHub">
+<meta property="article:tag" content="Unity">
+<meta property="article:tag" content="UNITY">
+<meta property="article:tag" content="React">
+<meta property="article:tag" content="entitas">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.igiven.com/assets/images/2020-01-01-unity-entitas/1362861-20190531225036556-1995562595%5B1%5D.png">
+
+<link rel="canonical" href="http://www.igiven.com/unity-2020-01-01-unity-entitas/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>一篇文章搞定Entitas | IGiven</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="IGiven" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="IGiven" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">IGiven</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">李九仙的博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">139</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">32</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-留言">
+
+    <a href="/guestbook/" rel="section"><i class="fa fa-sticky-note fa-fw"></i>留言</a>
+
+  </li>
+        <li class="menu-item menu-item-rss">
+
+    <a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/unity-2020-01-01-unity-entitas/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+      <meta itemprop="name" content="zhepama">
+      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="IGiven">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          一篇文章搞定Entitas<a href="https://github.com/zhepama/igiven.github.io/edit/master/source/_posts/unity/2020-01-01-unity-entitas.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil-alt"></i></a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-01-01 08:00:00" itemprop="dateCreated datePublished" datetime="2020-01-01T08:00:00+08:00">2020-01-01</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 16:36:17" itemprop="dateModified" datetime="2021-06-26T16:36:17+08:00">2021-06-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/unity/" itemprop="url" rel="index"><span itemprop="name">unity</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Entitas執行流程"><a href="#Entitas執行流程" class="headerlink" title="Entitas執行流程"></a>Entitas執行流程</h1><p><img src="../../assets/images/2020-01-01-unity-entitas/1362861-20190531225036556-1995562595%5B1%5D.png" alt=""></p>
+<p>​      也就是说整个ECS系统的内部数据维护(Group、Collector、EntityIndex)复杂度主要放在Entity的修改上了。<br>​      在给一个Entity添加一个Component时，不仅仅是对Entity进行了修改，还会通过事件将这个添加传递给Context，Context遍历所有Group，找到满足这次修改条件的Group，对所有受到影响的Group进行修改。然后再通过Group将这次修改事件分发到Collector或其他监听该Group的模块中去。<br>  这种方式带来的好处十分明显，那就是获取一种类型的Entity（也就是一个Group），只有第一次会遍历所有的Entity生成这个Group，之后再获取该类型Entity的复杂度就只有O(1)。<br>  但是也有一定的隐患，当Group和Collector比较少时，这不是一个高消耗操作，但是Group、Collector很多，且在每一帧对Entity进行频繁修改的时候。这可能会成为一个高消耗操作。</p>
+<h1 id="Tips"><a href="#Tips" class="headerlink" title="Tips"></a>Tips</h1><p>  1. 在销毁一个Entity时，会移除Entity身上所有的Component，然后再进行回收。在移除Component时可能会通过Group把这个移除事件发送到监听Remove行为的Collector中，Collector会持有这个被销毁的Entity。所以在filter、或execute时不能直接依赖Collector的收集条件，还需要对Entity的Component做独立的判断。<br>  其实任何时候filter都需要对Entity的Component做判断，因为Collector收集的Entity很可能在其他地方被改变。</p>
+<p>  2. Entity不应该被ECS系统外的模块持有，因为系统外对Entity的持有不会被自动引用计数（可以自己添加）。可能会导致一个Entity被销毁然后又从池子中重新取出来， 外部模块对这个Entity的引用没有改变，但已经可能不是自己持有的那个Entity了。<br>  需要避免在外界持有Entity或通过持有uuid间接从context中持有这个Entity。</p>
+<p>  3. 在replaceComponent时，发送了Remove、Add、Update三个事件，而不是只发送了Update事件。</p>
+<p>  4. 在代码生成时，对单Componet的Matcher进行了缓存，如游戏中常用的Postion和Name等Component，但是对组合Component的Matcher没有进行缓存。所在在两个不同的ReactiveSystem中使用Matcher相同的Collector时，如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F;1,2代表Postion和Name的Index</span><br><span class="line">&#x2F;&#x2F;在使用代码生成时会生成类似Matcher.Position、Matcher.Name的静态函数，方便开发者使用</span><br><span class="line">context.CreateCollector(Matcher.AllOf(1,2));</span><br></pre></td></tr></table></figure>
+
+<p>这样会生成两个Matcher相同的Group实例。<br>如果在意这一点的话可以自己对Matcher进行缓存。</p>
+<ol start="5">
+<li>在Entitas-CSharp中，我们不会真的删除或者添加一个Component。生成出来的代码会先向用户请求新的值，触发移除component的事件，设置一个新的值给这个component，然后触发一次增加component的事件。用这个方法，我们就避免了内存的分配以及模拟了一个在使用<code>不可修改</code>（immutable）component的感觉。</li>
+</ol>
+<h1 id="Group"><a href="#Group" class="headerlink" title="Group"></a>Group</h1><p>在Context中可以对Entity进行快速过滤，它能不断的更新以保持当前的组中的Entity是最新的。假设Context有上千个Entities，但只有两个Entities拥有PositionComponent，那只要向Context询问特定的组就能立刻获取到所有符合的Entity。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gameContext.GetGroup(GameMatcher.Position).GetEntities();</span><br></pre></td></tr></table></figure>
+
+<p>Group和Group所过滤到的entities会被缓存下来，所以即使多次调用GetGroup方法，也是非常高效的。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gameContext.GetEntities(GameMatcher.Movable)</span><br></pre></td></tr></table></figure>
+
+<p>内部也是通过Groups的方式来实现。Groups 拥有以下事件OnEntityAdded, OnEntityRemoved 和 OnEntityUpdated来直接响应Entity的变化。</p>
+<h1 id="Collector"><a href="#Collector" class="headerlink" title="Collector"></a>Collector</h1><p>Collector是Group的一个观察者类,Collector提供了一种简单的方法来处理Group中Entity变化的反应。假设你需要收集和处理所有entities，他们的PositionComponent被添加或替换：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">var group &#x3D; gameContext.GetGroup(GameMatcher.Position);</span><br><span class="line">var collector &#x3D; group.CreateCollector(GroupEvent.Added);</span><br></pre></td></tr></table></figure>
+
+<p>之后：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">foreach (var e in collector.collectedEntities) &#123;</span><br><span class="line">    &#x2F;&#x2F; do something with all the entities</span><br><span class="line">    &#x2F;&#x2F; that have been collected to this point of time</span><br><span class="line">&#125;</span><br><span class="line">collector.ClearCollectedEntities();</span><br></pre></td></tr></table></figure>
+
+<p>我们还可以注销这个Collector</p>
+<p>collector.Deactivate();</p>
+<h1 id="ReactiveSystem"><a href="#ReactiveSystem" class="headerlink" title="ReactiveSystem"></a>ReactiveSystem</h1><ul>
+<li>响应式的系统就像执行式系统一样，会每隔一段时间或是在每一个<code>Update</code>中被触发</li>
+<li>响应式系统的<code>Execute(List entities)</code> 方法只会在收集器距离上一次<code>Execute</code>收集到新的Entity才会被执行。</li>
+<li>gettrigger使用Collector根据event建立一个group的entity列表</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">protected override ICollector&lt;GameEntity&gt; GetTrigger(IContext&lt;GameEntity&gt; context) &#123;</span><br><span class="line">	return context.CreateCollector(GameMatcher.Destroyed);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">protected override bool Filter(GameEntity entity) &#123;</span><br><span class="line">	return entity.isDestroyed;</span><br><span class="line">&#125;</span><br><span class="line">       </span><br><span class="line">public void Execute() &#123;</span><br><span class="line">    if (_collector.count !&#x3D; 0) &#123;</span><br><span class="line">        foreach (var e in _collector.collectedEntities) &#123;</span><br><span class="line">            if (Filter(e)) &#123;</span><br><span class="line">                e.Retain(this);</span><br><span class="line">                _buffer.Add(e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        _collector.ClearCollectedEntities();</span><br><span class="line"></span><br><span class="line">        if (_buffer.Count !&#x3D; 0) &#123;</span><br><span class="line">            try &#123;</span><br><span class="line">                Execute(_buffer);</span><br><span class="line">            &#125; finally &#123;</span><br><span class="line">                for (int i &#x3D; 0; i &lt; _buffer.Count; i++) &#123;</span><br><span class="line">                    _buffer[i].Release(this);</span><br><span class="line">                &#125;</span><br><span class="line">                _buffer.Clear();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如上代码:</p>
+<p>我们在<code>GetTrigger</code>方法中返回了一个监测了<code>Destroyed</code>Entity的Collector。在<code>context.CreateCollector(GameMatcher.Destroyed)</code> 中，我们不需要指定当一个Entity何时应当被收集的事件，因为默认就是会收集在<code>Added</code>情况下被通知到的Entity。所以当我们增加一个<code>Destroyed</code>组件到一个Entity上时，这个Entity会<code>添加</code>到<code>Destroyed</code>的group里面，并因此被对应的collector收集到对应的reactive system里面。</p>
+<p>如下面的代码,AddDebugMessage就会被DebugMessageSystem收集了…</p>
+<p>执行RemoveDebugMessage()但是DebugMessageSystem仍然收集着呢,但是该实体已经没有了组件DebugMessage.所以需要过滤下Filter(GameEntity entity)否则收集的数据会报错</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">using Entitas;</span><br><span class="line"></span><br><span class="line">public class HelloWorldSystem : IInitializeSystem</span><br><span class="line">&#123;</span><br><span class="line">    &#x2F;&#x2F; always handy to keep a reference to the context </span><br><span class="line">    &#x2F;&#x2F; we&#39;re going to be interacting with it</span><br><span class="line">    readonly GameContext _context;</span><br><span class="line"></span><br><span class="line">    public HelloWorldSystem(Contexts contexts)</span><br><span class="line">    &#123;</span><br><span class="line">        &#x2F;&#x2F; get the context from the constructor</span><br><span class="line">        _context &#x3D; contexts.game;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void Initialize()</span><br><span class="line">    &#123;</span><br><span class="line">        &#x2F;&#x2F; create an entity and give it a DebugMessageComponent with</span><br><span class="line">        &#x2F;&#x2F; the text &quot;Hello World!&quot; as its data</span><br><span class="line"></span><br><span class="line">        var e &#x3D; _context.CreateEntity();</span><br><span class="line">        e.AddDebugMessage(&quot;Hello World!&quot;);</span><br><span class="line">        e.RemoveDebugMessage(); </span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">using System.Collections.Generic;</span><br><span class="line">using Entitas;</span><br><span class="line">using UnityEngine;</span><br><span class="line"></span><br><span class="line">public class DebugMessageSystem : ReactiveSystem&lt;GameEntity&gt;</span><br><span class="line">&#123;</span><br><span class="line">    public DebugMessageSystem(Contexts contexts) : base(contexts.game)</span><br><span class="line">    &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    protected override ICollector&lt;GameEntity&gt; GetTrigger(IContext&lt;GameEntity&gt; context)</span><br><span class="line">    &#123;</span><br><span class="line">        &#x2F;&#x2F; we only care about entities with DebugMessageComponent </span><br><span class="line">        return context.CreateCollector(GameMatcher.DebugMessage);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    protected override bool Filter(GameEntity entity)</span><br><span class="line">    &#123;</span><br><span class="line">        &#x2F;&#x2F; good practice to perform a final check in case </span><br><span class="line">        &#x2F;&#x2F; the entity has been altered in a different system.</span><br><span class="line">        return entity.hasDebugMessage;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    protected override void Execute(List&lt;GameEntity&gt; entities)</span><br><span class="line">    &#123;</span><br><span class="line">        &#x2F;&#x2F; this is the list of entities that meet our conditions</span><br><span class="line">        foreach (var e in entities)</span><br><span class="line">        &#123;</span><br><span class="line">            &#x2F;&#x2F; we can safely access their DebugMessage component</span><br><span class="line">            &#x2F;&#x2F; then grab the string data and print it</span><br><span class="line">            Debug.Log(e.debugMessage.message);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h1 id="事件"><a href="#事件" class="headerlink" title="事件"></a>事件</h1><h3 id="关于replace都干了什么"><a href="#关于replace都干了什么" class="headerlink" title="关于replace都干了什么"></a>关于replace都干了什么</h3><p>Group具有事件 <code>OnEntityAdded</code>, <code>OnEntityRemoved</code> and <code>OnEntityUpdated</code> 可以直接对组的更改做出反应。</p>
+<p>看源码</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">public void UpdateEntity(TEntity entity, int index, IComponent previousComponent, IComponent newComponent) &#123;</span><br><span class="line">           if (_entities.Contains(entity)) &#123;</span><br><span class="line">               if (OnEntityRemoved !&#x3D; null) &#123;</span><br><span class="line">                   OnEntityRemoved(this, entity, index, previousComponent);</span><br><span class="line">               &#125;</span><br><span class="line">               if (OnEntityAdded !&#x3D; null) &#123;</span><br><span class="line">                   OnEntityAdded(this, entity, index, newComponent);</span><br><span class="line">               &#125;</span><br><span class="line">               if (OnEntityUpdated !&#x3D; null) &#123;</span><br><span class="line">                   OnEntityUpdated(</span><br><span class="line">                       this, entity, index, previousComponent, newComponent</span><br><span class="line">                   );</span><br><span class="line">               &#125;</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br></pre></td></tr></table></figure>
+
+<p>在Entitas-CSharp中，我们不会真的删除或者添加一个Component。生成出来的代码会先向用户请求新的值，触发移除component的事件，设置一个新的值给这个component，然后触发一次增加component的事件。用这个方法，我们就避免了内存的分配以及模拟了一个在使用<code>不可修改</code>（immutable）component的感觉。</p>
+<h3 id="group和collect-还有event应该在什么地方添加"><a href="#group和collect-还有event应该在什么地方添加" class="headerlink" title="group和collect,还有event应该在什么地方添加."></a>group和collect,还有event应该在什么地方添加.</h3><ul>
+<li>在系统中的构造函数中</li>
+<li>在entitan的system初始化Initialize前</li>
+</ul>
+<p>因为初始化系统大多会有add,remove等动作.为了保持你的group,还有collect,还有event能够监听到.</p>
+<p>所以最好在Initialize前</p>
+<h1 id="Jenny"><a href="#Jenny" class="headerlink" title="Jenny"></a>Jenny</h1><p>jenny使用了roslyn, DataProviders需要更改下,否则会报错..</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line">Jenny.SearchPaths &#x3D; Assets\Plugins\DesperateDevs\Editor\Plugins, \</span><br><span class="line">                    Assets\Plugins\Entitas\Editor\Plugins, \</span><br><span class="line">                    Jenny\Plugins\Entitas.Roslyn</span><br><span class="line"></span><br><span class="line">Jenny.Plugins &#x3D; DesperateDevs.CodeGeneration.Plugins, \</span><br><span class="line">                DesperateDevs.CodeGeneration.Unity.Plugins, \</span><br><span class="line">                Entitas.CodeGeneration.Plugins, \</span><br><span class="line">                Entitas.Roslyn.CodeGeneration.Plugins, \</span><br><span class="line">                Entitas.VisualDebugging.CodeGeneration.Plugins</span><br><span class="line"></span><br><span class="line">Jenny.PreProcessors &#x3D; DesperateDevs.CodeGeneration.Plugins.ValidateProjectPathPreProcessor, \</span><br><span class="line">                      DesperateDevs.CodeGeneration.Plugins.TargetFrameworkProfilePreProcessor</span><br><span class="line"></span><br><span class="line">Jenny.DataProviders &#x3D; Entitas.CodeGeneration.Plugins.ContextDataProvider, \</span><br><span class="line">                      Entitas.Roslyn.CodeGeneration.Plugins.CleanupDataProvider, \</span><br><span class="line">                      Entitas.Roslyn.CodeGeneration.Plugins.ComponentDataProvider, \</span><br><span class="line">                      Entitas.Roslyn.CodeGeneration.Plugins.EntityIndexDataProvider</span><br><span class="line"></span><br><span class="line">Jenny.CodeGenerators &#x3D; Entitas.CodeGeneration.Plugins.ComponentContextApiGenerator, \</span><br><span class="line">                       Entitas.CodeGeneration.Plugins.ComponentEntityApiGenerator, \</span><br><span class="line">                       Entitas.CodeGeneration.Plugins.ComponentEntityApiInterfaceGenerator, \</span><br><span class="line">                       Entitas.CodeGeneration.Plugins.ComponentGenerator, \</span><br><span class="line">                       Entitas.CodeGeneration.Plugins.ComponentLookupGenerator, \</span><br><span class="line">                       Entitas.CodeGeneration.Plugins.ComponentMatcherApiGenerator, \</span><br><span class="line">                       Entitas.CodeGeneration.Plugins.ContextAttributeGenerator, \</span><br><span class="line">                       Entitas.CodeGeneration.Plugins.ContextGenerator, \</span><br><span class="line">                       Entitas.CodeGeneration.Plugins.ContextMatcherGenerator, \</span><br><span class="line">                       Entitas.CodeGeneration.Plugins.ContextsGenerator, \</span><br><span class="line">                       Entitas.CodeGeneration.Plugins.EntityGenerator, \</span><br><span class="line">                       Entitas.CodeGeneration.Plugins.EntityIndexGenerator, \</span><br><span class="line">                       Entitas.CodeGeneration.Plugins.EventEntityApiGenerator, \</span><br><span class="line">                       Entitas.CodeGeneration.Plugins.EventListenerComponentGenerator, \</span><br><span class="line">                       Entitas.CodeGeneration.Plugins.EventListenertInterfaceGenerator, \</span><br><span class="line">                       Entitas.CodeGeneration.Plugins.EventSystemGenerator, \</span><br><span class="line">                       Entitas.CodeGeneration.Plugins.EventSystemsGenerator, \</span><br><span class="line">                       Entitas.Roslyn.CodeGeneration.Plugins.CleanupSystemGenerator, \</span><br><span class="line">                       Entitas.Roslyn.CodeGeneration.Plugins.CleanupSystemsGenerator, \</span><br><span class="line">                       Entitas.VisualDebugging.CodeGeneration.Plugins.ContextObserverGenerator, \</span><br><span class="line">                       Entitas.VisualDebugging.CodeGeneration.Plugins.FeatureClassGenerator</span><br><span class="line"></span><br><span class="line">Jenny.PostProcessors &#x3D; DesperateDevs.CodeGeneration.Plugins.AddFileHeaderPostProcessor, \</span><br><span class="line">                       DesperateDevs.CodeGeneration.Plugins.CleanTargetDirectoryPostProcessor, \</span><br><span class="line">                       DesperateDevs.CodeGeneration.Plugins.MergeFilesPostProcessor, \</span><br><span class="line">                       DesperateDevs.CodeGeneration.Plugins.NewLinePostProcessor, \</span><br><span class="line">                       DesperateDevs.CodeGeneration.Plugins.UpdateCSProjPostProcessor, \</span><br><span class="line">                       DesperateDevs.CodeGeneration.Plugins.WriteToDiskPostProcessor, \</span><br><span class="line">                       DesperateDevs.CodeGeneration.Plugins.ConsoleWriteLinePostProcessor</span><br><span class="line"></span><br><span class="line">Jenny.Server.Port &#x3D; 3333</span><br><span class="line">Jenny.Client.Host &#x3D; localhost</span><br><span class="line">DesperateDevs.CodeGeneration.Plugins.ProjectPath &#x3D; Assembly-CSharp.csproj</span><br><span class="line">Entitas.CodeGeneration.Plugins.Assemblies &#x3D; Library&#x2F;ScriptAssemblies&#x2F;Assembly-CSharp.dll</span><br><span class="line">Entitas.CodeGeneration.Plugins.Contexts &#x3D; Game, \</span><br><span class="line">                                          Unit, \</span><br><span class="line">                                          Combat, \</span><br><span class="line">                                          Config, \</span><br><span class="line">                                          Input</span><br><span class="line"></span><br><span class="line">Entitas.CodeGeneration.Plugins.IgnoreNamespaces &#x3D; true</span><br><span class="line">DesperateDevs.CodeGeneration.Plugins.TargetDirectory &#x3D; Assets&#x2F;Scripts&#x2F;World</span><br></pre></td></tr></table></figure>
+
+<p>一般来说.先运行Jenny-Auto-Import.bat.再运行Jenny-Server.bat就可以了</p>
+<p>查看所有命令:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">.\Jenny\Jenny.exe help</span><br></pre></td></tr></table></figure>
+
+
+
+<p>以VStudio为例，创建一个外部工具：</p>
+<p><img src="../../assets/images/2020-01-01-unity-entitas/v2-d49876b0ae0100844a372dfb16508b27_hd.jpg" alt="img"></p>
+<p>再之后，想要生成代码只需要保持运行<code>Jenny Server</code> 然后在VS中运行<code>工具/Jenny</code> 就可以了，这个方法可以让你专注于VS而无需切换回Unity。</p>
+<p><code>jenny.exe client gen</code>需要服务器才能使用</p>
+<p><code>jenny gen</code> 不开服务器直接可以使用</p>
+<h2 id="相关链接"><a href="#相关链接" class="headerlink" title="相关链接"></a>相关链接</h2><ul>
+<li><a href="https://www.jianshu.com/c/e8e4c3f4280c" target="_blank" rel="noopener">https://www.jianshu.com/c/e8e4c3f4280c</a></li>
+<li><a href="https://github.com/OneYoungMean/Entitas-CSharp-OYM/wiki" target="_blank" rel="noopener">https://github.com/OneYoungMean/Entitas-CSharp-OYM/wiki</a></li>
+<li><a href="https://github.com/sschmid/Entitas-CSharp" target="_blank" rel="noopener">https://github.com/sschmid/Entitas-CSharp</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C</a>
+              <a href="/tags/C/" rel="tag"># C#</a>
+              <a href="/tags/%E6%B8%B8%E6%88%8F/" rel="tag"># 游戏</a>
+              <a href="/tags/GitHub/" rel="tag"># GitHub</a>
+              <a href="/tags/Unity/" rel="tag"># Unity</a>
+              <a href="/tags/UNITY/" rel="tag"># UNITY</a>
+              <a href="/tags/React/" rel="tag"># React</a>
+              <a href="/tags/entitas/" rel="tag"># entitas</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/dotnet-2019-12-01-datetimeoffset/" rel="prev" title="DatetimeOffset和Datetime的区别">
+      <i class="fa fa-chevron-left"></i> DatetimeOffset和Datetime的区别
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/tool-2020-01-02-google-clound-local-login/" rel="next" title="使用 SSH 登陆谷歌云 root 或者 普通账户的方法">
+      使用 SSH 登陆谷歌云 root 或者 普通账户的方法 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  
+  <div class="comments">
+  <script src="https://utteranc.es/client.js" repo="zhepama/igiven.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async></script>
+  </div>
+  
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Entitas執行流程"><span class="nav-number">1.</span> <span class="nav-text">Entitas執行流程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Tips"><span class="nav-number">2.</span> <span class="nav-text">Tips</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Group"><span class="nav-number">3.</span> <span class="nav-text">Group</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Collector"><span class="nav-number">4.</span> <span class="nav-text">Collector</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ReactiveSystem"><span class="nav-number">5.</span> <span class="nav-text">ReactiveSystem</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#事件"><span class="nav-number">6.</span> <span class="nav-text">事件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#关于replace都干了什么"><span class="nav-number">6.0.1.</span> <span class="nav-text">关于replace都干了什么</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#group和collect-还有event应该在什么地方添加"><span class="nav-number">6.0.2.</span> <span class="nav-text">group和collect,还有event应该在什么地方添加.</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Jenny"><span class="nav-number">7.</span> <span class="nav-text">Jenny</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#相关链接"><span class="nav-number">7.1.</span> <span class="nav-text">相关链接</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhepama"
+      src="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+  <p class="site-author-name" itemprop="name">zhepama</p>
+  <div class="site-description" itemprop="description">一个不专业的程序员,写着专业的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">139</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhepama" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhepama" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhepama@gmail.com" title="E-Mail → mailto:zhepama@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.godgodgame.com/" title="http:&#x2F;&#x2F;www.godgodgame.com" rel="noopener" target="_blank">GODGODGAME</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.igiven.com/" title="https:&#x2F;&#x2F;www.igiven.com">IGIVEN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhepama.github.io/C-Sharp-Playground/zh/" title="https:&#x2F;&#x2F;zhepama.github.io&#x2F;C-Sharp-Playground&#x2F;zh&#x2F;" rel="noopener" target="_blank">数据结构与算法</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhepama</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

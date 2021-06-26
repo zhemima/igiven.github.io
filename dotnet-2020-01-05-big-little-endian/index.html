@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.igiven.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="那么何为字节序（Endia）呢？Big Endian是指低地址存放最高有效字节（MSB），而Little Endian则是低地址存放最低有效字节（LSB）。 大端模式">
+<meta property="og:type" content="article">
+<meta property="og:title" content="大小端字节序(Big Endian和Little Endian)">
+<meta property="og:url" content="http://www.igiven.com/dotnet-2020-01-05-big-little-endian/index.html">
+<meta property="og:site_name" content="IGiven">
+<meta property="og:description" content="那么何为字节序（Endia）呢？Big Endian是指低地址存放最高有效字节（MSB），而Little Endian则是低地址存放最低有效字节（LSB）。 大端模式">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-01-05-big-little-endian/20160414225024808">
+<meta property="article:published_time" content="2020-01-05T00:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-26T08:36:17.938Z">
+<meta property="article:author" content="zhepama">
+<meta property="article:tag" content="Linux">
+<meta property="article:tag" content="Win">
+<meta property="article:tag" content="windows">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="C#">
+<meta property="article:tag" content="Java">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.igiven.com/assets/images/2020-01-05-big-little-endian/20160414225024808">
+
+<link rel="canonical" href="http://www.igiven.com/dotnet-2020-01-05-big-little-endian/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>大小端字节序(Big Endian和Little Endian) | IGiven</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="IGiven" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="IGiven" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">IGiven</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">李九仙的博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">139</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">32</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-留言">
+
+    <a href="/guestbook/" rel="section"><i class="fa fa-sticky-note fa-fw"></i>留言</a>
+
+  </li>
+        <li class="menu-item menu-item-rss">
+
+    <a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/dotnet-2020-01-05-big-little-endian/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+      <meta itemprop="name" content="zhepama">
+      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="IGiven">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          大小端字节序(Big Endian和Little Endian)<a href="https://github.com/zhepama/igiven.github.io/edit/master/source/_posts/dotnet/2020-01-05-big-little-endian.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil-alt"></i></a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-01-05 08:00:00" itemprop="dateCreated datePublished" datetime="2020-01-05T08:00:00+08:00">2020-01-05</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 16:36:17" itemprop="dateModified" datetime="2021-06-26T16:36:17+08:00">2021-06-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/dotnet/" itemprop="url" rel="index"><span itemprop="name">dotnet</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="那么何为字节序（Endia）呢？"><a href="#那么何为字节序（Endia）呢？" class="headerlink" title="那么何为字节序（Endia）呢？"></a>那么何为字节序（Endia）呢？</h1><p>Big Endian是指低地址存放最高有效字节（MSB），而Little Endian则是低地址存放最低有效字节（LSB）。</p>
+<p><strong>大端模式</strong></p>
+<p>所谓的大端模式（Big-endian），是指数据的高字节，保存在内存的低地址中，而数据的低字节，保存在内存的高地址中，这样的存储模式有点儿类似于把数据当作字符串顺序处理：地址由小向大增加，而数据从高位往低位放；</p>
+<p>例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">0000430: e684 6c4e 0100 1800 53ef 0100 0100 0000</span><br><span class="line"></span><br><span class="line">0000440: b484 6c4e 004e ed00 0000 0000 0100 0000</span><br></pre></td></tr></table></figure>
+
+<p>在大端模式下，前32位应该这样读:<code>e6 84 6c 4e</code> ( 假设int占4个字节)</p>
+<p>记忆方法: <code>地址的增长顺序与值的增长顺序相反</code></p>
+<p><strong>小端模式</strong></p>
+<p>所谓的小端模式（Little-endian），是指数据的高字节保存在内存的高地址中，而数据的低字节保存在内存的低地址中，这种存储模式将地址的高低和数据位权有效地结合起来，高地址部分权值高，低地址部分权值低，和我们的逻辑方法一致。</p>
+<p>例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">0000430: e684 6c4e 0100 1800 53ef 0100 0100 0000</span><br><span class="line"></span><br><span class="line">0000440: b484 6c4e 004e ed00 0000 0000 0100 0000</span><br></pre></td></tr></table></figure>
+
+<p>在小端模式下，前32位应该这样读: <code>4e 6c 84 e6</code>( 假设int占4个字节)</p>
+<p>记忆方法: <code>地址的增长顺序与值的增长顺序相同</code></p>
+<p>有图有真相，举个例子，数字 <strong>0x12345678</strong> 在两种不同字节序CPU中的存储顺序如下图</p>
+<p><img src="../../assets/images/2020-01-05-big-little-endian/20160414225024808" alt="pic1"></p>
+<h2 id="为什么会有这样的情况呢？"><a href="#为什么会有这样的情况呢？" class="headerlink" title="为什么会有这样的情况呢？"></a>为什么会有这样的情况呢？</h2><p>这是因为在计算机系统中，我们是以字节为单位的，每个地址单元都对应着一个字节，一个字节为8bit。但是在C语言中除了8bit的char之外，还有16bit的short型，32bit的long型（要看具体的编译器），另外，对于位数大于8位的处理器，例如16位或者32位的处理器，由于寄存器宽度大于一个字节，那么必然存在着一个如果将多个字节安排的问题。因此就导致了大端存储模式和小端存储模式。例如一个16bit的short型x，在内存中的地址为0x0010，x的值为0x1122，那么0x11为高字节，0x22为低字节。对于大端模式，就将0x11放在低地址中，即0x0010中，0x22放在高地址中，即0x0011中。小端模式，刚好相反。我们常用的X86结构是小端模式，而KEIL C51则为大端模式。很多的ARM，DSP都为小端模式。有些ARM处理器还可以由硬件来选择是大端模式还是小端模式。</p>
+<ul>
+<li>Motorola的<strong>PowerPC</strong>系列CPU采用Big Endian方式存储数据。</li>
+<li>Intel的<strong>x86</strong>系列CPU采用Little Endian方式存储数据。</li>
+<li>ARM既可以工作在大端模式，也可以工作在小端模式。</li>
+</ul>
+<p><strong>再来说说，一些我所收集到的情况吧。</strong></p>
+<ul>
+<li>Windos(x86,x64)和Linux(x86,x64)都是<strong>Little Endian</strong>操作系统</li>
+<li>在ARM上，我见到的都是用<strong>Little Endian</strong>方式存储数据。</li>
+<li>C/C++语言编写的程序里数据存储顺序是跟编译平台<strong>所在的CPU相关</strong>的。</li>
+<li>JAVA编写的程序则唯一采用<strong>Big Endian</strong>方式来存储数据。</li>
+<li>所有网络协议也都是采用<strong>Big Endian</strong>的方式来传输数据的。所以有时我们也会把<strong>Big Endian</strong>方式称之为<strong>网络字节序</strong>。</li>
+</ul>
+<h2 id="为什么要注意字节序的问题呢？"><a href="#为什么要注意字节序的问题呢？" class="headerlink" title="为什么要注意字节序的问题呢？"></a>为什么要注意字节序的问题呢？</h2><p>你可能这么问。当然，如果你写的程序只在单机环境下面运行，并且不和别人的程序打交道，那么你完全可以忽略字节序的存在。但是，如果你的程序要跟别人的程序产生交互呢？尤其是当你把你在微机上运算的结果运用到计算机群上去的话。在这里我想说说两种语言。C/C++语言编写的程序里数据存储顺序是跟编译平台所在的CPU相关的，而JAVA编写的程序则唯一采用big endian方式来存储数据。试想，如果你用C/C++语言在x86平台下编写的程序跟别人的JAVA程序互通时会产生什么结果？就拿上面的 0x12345678来说，你的程序传递给别人的一个数据，将指向0x12345678的指针传给了JAVA程序，由于JAVA采取big endian方式存储数据，很自然的它会将你的数据翻译为0x78563412。什么？竟然变成另外一个数字了？是的，就是这种后果。因此，在你的C程序传给JAVA程序之前有必要进行字节序的转换工作。</p>
+<h1 id="网络字节序"><a href="#网络字节序" class="headerlink" title="网络字节序"></a>网络字节序</h1><h2 id="一、在进行网络通信时是否需要进行字节序转换？"><a href="#一、在进行网络通信时是否需要进行字节序转换？" class="headerlink" title="一、在进行网络通信时是否需要进行字节序转换？"></a>一、在进行网络通信时是否需要进行字节序转换？</h2><p>   相同字节序的平台在进行网络通信时可以不进行字节序转换，但是跨平台进行网络数据通信时必须进行字节序转换。</p>
+<p>   原因如下：网络协议规定接收到得第一个字节是高字节，存放到低地址，所以发送时会首先去低地址取数据的高字节。小端模式的多字节数据在存放时，低地址存放的是低字节，而被发送方网络协议函数发送时会首先去低地址取数据（想要取高字节，真正取得是低字节），接收方网络协议函数接收时会将接收到的第一个字节存放到低地址（想要接收高字节，真正接收的是低字节），所以最后双方都正确的收发了数据。而相同平台进行通信时，如果双方都进行转换最后虽然能够正确收发数据，但是所做的转换是没有意义的，造成资源的浪费。而不同平台进行通信时必须进行转换，不转换会造成错误的收发数据，字节序转换函数会根据当前平台的存储模式做出相应正确的转换，如果当前平台是大端，则直接返回不进行转换，如果当前平台是小端，会将接收到得网络字节序进行转换。</p>
+<h2 id="二、网络字节序"><a href="#二、网络字节序" class="headerlink" title="二、网络字节序"></a><strong>二、网络字节序</strong></h2><p>​    网络上传输的数据都是字节流,对于一个多字节数值,在进行网络传输的时候,先传递哪个字节?也就是说,当接收端收到第一个字节的时候,它将这个字节作为高位字节还是低位字节处理,是一个比较有意义的问题; UDP/TCP/IP协议规定:把接收到的第一个字节当作高位字节看待,这就要求发送端发送的第一个字节是高位字节;而在发送端发送数据时,发送的第一个字节是该数值在内存中的起始地址处对应的那个字节,也就是说,该数值在内存中的起始地址处对应的那个字节就是要发送的第一个高位字节(即:高位字节存放在低地址处);由此可见,多字节数值在发送之前,在内存中因该是以大端法存放的; 所以说,网络字节序是大端字节序; 比如,我们经过网络发送整型数值0x12345678时,在80X86平台中,它是以小端发存放的,在发送之前需要使用系统提供的字节序转换函数htonl()将其转换成大端法存放的数值;</p>
+<h1 id="c-大端转换"><a href="#c-大端转换" class="headerlink" title="c# 大端转换"></a>c# 大端转换</h1><p>c#在windows平台上是小端字节序(Windos(x86,x64)和Linux(x86,x64)都是<strong>Little Endian</strong>操作系统,不止是c#)。网络发送字节流是按大端序发送，也就是从左到右发送，和c#的小端序相反，造成网关不能正常识别协议。所以需要转换</p>
+<p><strong>大小端转换</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">int x &#x3D; 439041118;  &#x2F;&#x2F; 十六进制为 1A2B3C5E</span><br><span class="line"></span><br><span class="line">string s &#x3D; null;</span><br><span class="line"></span><br><span class="line">byte[] b &#x3D; BitConverter.GetBytes( x );</span><br><span class="line"></span><br><span class="line">s &#x3D; BitConverter.ToString( b ); &#x2F;&#x2F; 小端模式</span><br><span class="line">Console.WriteLine( s ); &#x2F;&#x2F; 小端输出 为 5E-3C-2B-1A</span><br><span class="line"></span><br><span class="line">Array.Reverse( b ); &#x2F;&#x2F; 反转</span><br><span class="line"></span><br><span class="line">s &#x3D; BitConverter.ToString( b ); &#x2F;&#x2F; 大端模式</span><br><span class="line">Console.WriteLine( &quot;&#123;0:x&#125;&quot;, s ); &#x2F;&#x2F; 大端输出 为 1A-2B-3C-5E</span><br><span class="line"></span><br><span class="line">Console.ReadKey();</span><br></pre></td></tr></table></figure>
+
+<p><strong>C# 判断数据在此计算机结构中存储时的字节顺序（“Endian”性质），即大端还是小端</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">int data &#x3D; 439041118; &#x2F;&#x2F; 十六进制为 1A2B3C5E</span><br><span class="line">byte[] bData &#x3D; BitConverter.GetBytes( data );</span><br><span class="line">            </span><br><span class="line">if (BitConverter.IsLittleEndian) &#x2F;&#x2F; 若为 小端模式</span><br><span class="line">&#123;</span><br><span class="line">   Array.Reverse( bData ); &#x2F;&#x2F; 转换为 大端模式               </span><br><span class="line">&#125;</span><br><span class="line">string s &#x3D; BitConverter.ToString( bData );</span><br><span class="line"></span><br><span class="line">Console.WriteLine(s);</span><br><span class="line"></span><br><span class="line">Console.ReadKey();</span><br></pre></td></tr></table></figure>
+
+<p> <strong>一些封装</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">&#x2F;&#x2F;翻转byte数组</span><br><span class="line">public static void ReverseBytes(byte[] bytes)</span><br><span class="line">&#123;</span><br><span class="line">    byte tmp;</span><br><span class="line">    int len &#x3D; bytes.Length;</span><br><span class="line"></span><br><span class="line">    for (int i &#x3D; 0; i &lt; len &#x2F; 2; i++ )</span><br><span class="line">    &#123;</span><br><span class="line">        tmp &#x3D; bytes[len - 1 - i];</span><br><span class="line">        bytes[len - 1 - i] &#x3D; bytes[i];</span><br><span class="line">        bytes[i] &#x3D; tmp;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F;规定转换起始位置和长度</span><br><span class="line"> public static void ReverseBytes(byte[] bytes, int start, int len)</span><br><span class="line"> &#123;</span><br><span class="line">     int end &#x3D; start + len - 1;</span><br><span class="line">     byte tmp;</span><br><span class="line">     int i &#x3D; 0;</span><br><span class="line">     for (int index &#x3D; start; index &lt; start + len&#x2F;2; index++,i++)</span><br><span class="line">     &#123;</span><br><span class="line">         tmp &#x3D; bytes[end - i];</span><br><span class="line">         bytes[end - i] &#x3D; bytes[index];</span><br><span class="line">         bytes[index] &#x3D; tmp;</span><br><span class="line">     &#125;</span><br><span class="line"> &#125;</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 翻转字节顺序 (16-bit)</span><br><span class="line">public static UInt16 ReverseBytes(UInt16 value)</span><br><span class="line">&#123;</span><br><span class="line">  return (UInt16)((value &amp; 0xFFU) &lt;&lt; 8 | (value &amp; 0xFF00U) &gt;&gt; 8);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 翻转字节顺序 (32-bit)</span><br><span class="line">public static UInt32 ReverseBytes(UInt32 value)</span><br><span class="line">&#123;</span><br><span class="line">  return (value &amp; 0x000000FFU) &lt;&lt; 24 | (value &amp; 0x0000FF00U) &lt;&lt; 8 |</span><br><span class="line">         (value &amp; 0x00FF0000U) &gt;&gt; 8 | (value &amp; 0xFF000000U) &gt;&gt; 24;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 翻转字节顺序 (64-bit)</span><br><span class="line">public static UInt64 ReverseBytes(UInt64 value)</span><br><span class="line">&#123;</span><br><span class="line">  return (value &amp; 0x00000000000000FFUL) &lt;&lt; 56 | (value &amp; 0x000000000000FF00UL) &lt;&lt; 40 |</span><br><span class="line">         (value &amp; 0x0000000000FF0000UL) &lt;&lt; 24 | (value &amp; 0x00000000FF000000UL) &lt;&lt; 8 |</span><br><span class="line">         (value &amp; 0x000000FF00000000UL) &gt;&gt; 8 | (value &amp; 0x0000FF0000000000UL) &gt;&gt; 24 |</span><br><span class="line">         (value &amp; 0x00FF000000000000UL) &gt;&gt; 40 | (value &amp; 0xFF00000000000000UL) &gt;&gt; 56;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>另外c#直接提供了网络字节序转换方法。</p>
+<p><code>System.Net.IPAddress.HostToNetworkOrder</code>（本机到网络转换）</p>
+<p><code>System.Net.IPAddress.NetworkToHostOrder</code>(网络字节转成本机)</p>
+<p>推荐使用这种方法，简单有效。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">short x &#x3D; 6;</span><br><span class="line">short b &#x3D; System.Net.IPAddress.HostToNetworkOrder(x); &#x2F;&#x2F;把x转成相应的大端字节数</span><br><span class="line">byte[] bb &#x3D; System.BitConverter.GetBytes(b);&#x2F;&#x2F;这样直接取到的就是大端字节序字节数组。</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h2 id="对于字符串型："><a href="#对于字符串型：" class="headerlink" title="对于字符串型："></a>对于字符串型：</h2><p>使用 System.Text.Encoding.Default.GetBytes();直接取字串对应字节数组。</p>
+<p>不知道为什么这个方法取到的直接就是大端字节数组。不用转换。</p>
+<p>后来查了一下，关于字串的字节序问题，因为gbk和utf-8都是以单个字节表示数字的，所以不存在字节序问题，在多个不同系统架构都用。对于utf-16，则是以双字节表示一个整数，所以为会有字节序问题，分大小端unicode。</p>
+<p>System.Text.Encoding.Default.GetBytes();在我的简体中文系统上是以gb2312的编码，也就是单个字来进行编码的，所以也不会有字节序问题。</p>
+<p>补充：“<strong>对于任何字符编码，编码单元的顺序是由编码方案指定的，与endian无关。</strong>例如GBK的编码单元是字节，用两个字节表示一个汉字。这两个字节的顺序是固定的，不受CPU字节序的影响。UTF-16的编码单元是word（双字节），word之间的顺序是编码方案指定的，word内部的字节排列才会受到endian的影响。”，</p>
+<p>所以utf-8也没有字节序的问题。字节序问题之存在于需要使用两个字节以上来表示整数。而UTF-8只是一串字节流，不存在字节序问题，不过将这些字节流翻译成Unicode比其他的传输方式复杂。以字节为单位编码的，无论一个汉字是多少个字节，都无字节序问题。</p>
+<p>你注意，字节序问题不是指多个字节传输的先后，这个是固定的无异议的。而是指一个多字节编码在机器中的表示方式问题。<br><code>char str[] = &quot;abaksdkakskasklasflk&quot;；</code></p>
+<p>这个无字节序问题。但<br><code>int  str[] = {0x11223344, 2, 3 }</code></p>
+<p>就有字节序问题了。因为str[0]同样数值不同机器中表示不同。</p>
+<p>而剩下的， 就是字符编码内部的字节序了。比如UTF-16是用两个字节表示一个字符，但是这两个字节内部如何排序，系统并不知道，所以必须指定字节序。但是UTF-8由于几个字节表示并不相同，一定要从那个表示长度的字节开始读，相当于一开始就知道该从哪里是队头队尾，所以不存在字节序问题。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+              <a href="/tags/Win/" rel="tag"># Win</a>
+              <a href="/tags/windows/" rel="tag"># windows</a>
+              <a href="/tags/C/" rel="tag"># C</a>
+              <a href="/tags/C/" rel="tag"># C#</a>
+              <a href="/tags/Java/" rel="tag"># Java</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/tool-2020-01-02-google-clound-local-login/" rel="prev" title="使用 SSH 登陆谷歌云 root 或者 普通账户的方法">
+      <i class="fa fa-chevron-left"></i> 使用 SSH 登陆谷歌云 root 或者 普通账户的方法
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/dotnet-2020-01-06-dll-load/" rel="next" title="dll文件的加载">
+      dll文件的加载 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  
+  <div class="comments">
+  <script src="https://utteranc.es/client.js" repo="zhepama/igiven.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async></script>
+  </div>
+  
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#那么何为字节序（Endia）呢？"><span class="nav-number">1.</span> <span class="nav-text">那么何为字节序（Endia）呢？</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么会有这样的情况呢？"><span class="nav-number">1.1.</span> <span class="nav-text">为什么会有这样的情况呢？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么要注意字节序的问题呢？"><span class="nav-number">1.2.</span> <span class="nav-text">为什么要注意字节序的问题呢？</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#网络字节序"><span class="nav-number">2.</span> <span class="nav-text">网络字节序</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#一、在进行网络通信时是否需要进行字节序转换？"><span class="nav-number">2.1.</span> <span class="nav-text">一、在进行网络通信时是否需要进行字节序转换？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二、网络字节序"><span class="nav-number">2.2.</span> <span class="nav-text">二、网络字节序</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#c-大端转换"><span class="nav-number">3.</span> <span class="nav-text">c# 大端转换</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#对于字符串型："><span class="nav-number">3.1.</span> <span class="nav-text">对于字符串型：</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhepama"
+      src="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+  <p class="site-author-name" itemprop="name">zhepama</p>
+  <div class="site-description" itemprop="description">一个不专业的程序员,写着专业的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">139</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhepama" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhepama" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhepama@gmail.com" title="E-Mail → mailto:zhepama@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.godgodgame.com/" title="http:&#x2F;&#x2F;www.godgodgame.com" rel="noopener" target="_blank">GODGODGAME</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.igiven.com/" title="https:&#x2F;&#x2F;www.igiven.com">IGIVEN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhepama.github.io/C-Sharp-Playground/zh/" title="https:&#x2F;&#x2F;zhepama.github.io&#x2F;C-Sharp-Playground&#x2F;zh&#x2F;" rel="noopener" target="_blank">数据结构与算法</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhepama</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

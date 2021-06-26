@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.igiven.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="关于深浅复制大家可参考MSDN：https:&#x2F;&#x2F;msdn.microsoft.com&#x2F;zh-cn&#x2F;library&#x2F;system.object.memberwiseclone.aspx  所谓深浅复制可解读为： 浅复制：C#语言种的MemberwiseClone方法仅仅是再内存种创建一个新对象，然后将原有对象的所有字段直接复制过去，无论是值类型还是引用类型，是值类型的就复制值类型，是应用类型的就复制">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C# 深浅复制">
+<meta property="og:url" content="http://www.igiven.com/dotnet-2020-02-10-Icloneable/index.html">
+<meta property="og:site_name" content="IGiven">
+<meta property="og:description" content="关于深浅复制大家可参考MSDN：https:&#x2F;&#x2F;msdn.microsoft.com&#x2F;zh-cn&#x2F;library&#x2F;system.object.memberwiseclone.aspx  所谓深浅复制可解读为： 浅复制：C#语言种的MemberwiseClone方法仅仅是再内存种创建一个新对象，然后将原有对象的所有字段直接复制过去，无论是值类型还是引用类型，是值类型的就复制值类型，是应用类型的就复制">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-02-10T00:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-26T08:36:17.942Z">
+<meta property="article:author" content="zhepama">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="C#">
+<meta property="article:tag" content="Unity">
+<meta property="article:tag" content="UNITY">
+<meta property="article:tag" content="PHP">
+<meta property="article:tag" content="JS">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://www.igiven.com/dotnet-2020-02-10-Icloneable/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>C# 深浅复制 | IGiven</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="IGiven" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="IGiven" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">IGiven</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">李九仙的博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">139</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">32</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-留言">
+
+    <a href="/guestbook/" rel="section"><i class="fa fa-sticky-note fa-fw"></i>留言</a>
+
+  </li>
+        <li class="menu-item menu-item-rss">
+
+    <a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/dotnet-2020-02-10-Icloneable/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+      <meta itemprop="name" content="zhepama">
+      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="IGiven">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          C# 深浅复制<a href="https://github.com/zhepama/igiven.github.io/edit/master/source/_posts/dotnet/2020-02-10-Icloneable.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil-alt"></i></a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-02-10 08:00:00" itemprop="dateCreated datePublished" datetime="2020-02-10T08:00:00+08:00">2020-02-10</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 16:36:17" itemprop="dateModified" datetime="2021-06-26T16:36:17+08:00">2021-06-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/dotnet/" itemprop="url" rel="index"><span itemprop="name">dotnet</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>关于深浅复制大家可参考MSDN：<a href="https://msdn.microsoft.com/zh-cn/library/system.object.memberwiseclone.aspx" target="_blank" rel="noopener">https://msdn.microsoft.com/zh-cn/library/system.object.memberwiseclone.aspx</a> </p>
+<p>所谓深浅复制可解读为：</p>
+<p>浅复制：C#语言种的MemberwiseClone方法仅仅是再内存种创建一个新对象，然后将原有对象的所有字段直接复制过去，无论是值类型还是引用类型，是值类型的就复制值类型，是应用类型的就复制引用本身（而不会复制所引用的对象），因此，是浅拷贝。</p>
+<p>需要注意的是:  在利用MemberwiseClone()创建新对象的时候，不会像利用new的时候一样，也就是不会先执行字段的创建和构造方法条用的过程。</p>
+<p>深复制：如果字段是值类型的，则对字段执行逐位复制，如果字段是引用类型的，则把引用类型的对象指向<strong>一个全新的对象！</strong></p>
+<h2 id="ICloneable接口"><a href="#ICloneable接口" class="headerlink" title="ICloneable接口"></a>ICloneable接口</h2><p>ICloneable接口包含一个Clone方法，可以用来创建当前对象的拷贝。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">public interface ICloneable </span><br><span class="line">&#123; </span><br><span class="line">    object Clone(); </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>ICloneable的问题是Clone方法并不会显式地指定是执行浅拷贝或深拷贝，因此调用者将无法确定实际情况。因此，有一些关于把ICloneable从.NET框架中淘汰的讨论。MSDN文档似乎暗示Clone方法是进行的深拷贝，但是文档没有明确的说明：</p>
+<p>ICloneable接口包含一个成员方法，Clone，意在支持超过MemberWiseClone所提供的功能… MemberWiseClone进行的是浅拷贝…</p>
+<p>类型安全的克隆</p>
+<p>ICloneable的另一个缺点是Clone方法返回的是一个对象，因此每次调用Clone都要进行一次强制类型转换。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Person joe &#x3D; new Person(); </span><br><span class="line">joe.Name &#x3D; &quot;Joe Smith&quot;; </span><br><span class="line">Person joeClone &#x3D; (Person)joe.Clone();</span><br></pre></td></tr></table></figure>
+
+
+<p>一种可以避免进行强制类型转换的方式是提供你自己的类型安全的Clone方法。注意，你依然要提供ICloneable.Clone方法的以满足iCloneable接口的要求。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">public class Person : ICloneable </span><br><span class="line">&#123; </span><br><span class="line">    public string Name; </span><br><span class="line">    object ICloneable.Clone() </span><br><span class="line">    &#123; </span><br><span class="line">        return this.Clone(); </span><br><span class="line">    &#125; </span><br><span class="line">    public Person Clone() </span><br><span class="line">    &#123; </span><br><span class="line">        return (Person)this.MemberwiseClone(); </span><br><span class="line">    &#125; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>手工克隆</li>
+</ol>
+<p>一个能够保证对象完全按照你所想的那样进行克隆的方式是手工克隆对象的每一个域（field）。这种方式的缺点是麻烦而且容易出错：如果你在类中增 加了一个域，你很可能会忘记更新Clone方法。还要在克隆引用对象指向原始对象的时候，注意避免无限循环引用。下面是一个进行深拷贝的简单例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">public class Person : ICloneable </span><br><span class="line">&#123; </span><br><span class="line">    public string Name; </span><br><span class="line">    public Person Spouse; </span><br><span class="line">    public object Clone() </span><br><span class="line">    &#123; </span><br><span class="line">        Person p &#x3D; new Person(); </span><br><span class="line">        p.Name &#x3D; this.Name; </span><br><span class="line">        if (this.Spouse !&#x3D; null) </span><br><span class="line">            p.Spouse &#x3D; (Person)this.Spouse.Clone(); </span><br><span class="line">        return p; </span><br><span class="line">    &#125; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>使用MemberWiseClone方法</li>
+</ol>
+<p>MemberWiseClone是Object类的受保护方法，能够通过创建一个新对象，并把所有当前对象中的非静态域复制到新对象中，从而创建一 个浅拷贝。对于值类型的域，进行的是按位拷贝。对于引用类型的域，引用会被赋值而引用的对象则不会。因此，原始对象及其克隆都会引用同一个对象。注意，这 种方法对派生类都是有效的，也就是说，你只需在基类中定义一次Clone方法。下面是一个简单的例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">public class Person : ICloneable </span><br><span class="line">&#123; </span><br><span class="line">    public string Name; </span><br><span class="line">    public Person Spouse; </span><br><span class="line">    public object Clone() </span><br><span class="line">    &#123; </span><br><span class="line">        return this.MemberwiseClone(); </span><br><span class="line">    &#125; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>用反射进行克隆</li>
+</ol>
+<p>用反射进行克隆是使用Activator.CreateInstance方法来创建一个相同类型的新对象，然后用反射对所有域进行浅拷贝。这种方法 的优点是它是全自动的，不需要在对象中添加或删除成员的时候修改克隆方法。另外它也能被写成提供深拷贝的方法。缺点是使用了反射，因此会比较慢，而且在部 分受信任的环境中是不可用的。示例代码</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">private static TOut TransReflection&lt;TIn, TOut&gt;(TIn tIn)</span><br><span class="line">        &#123;</span><br><span class="line">            TOut tOut &#x3D; Activator.CreateInstance&lt;TOut&gt;();</span><br><span class="line">            var tInType &#x3D; tIn.GetType();</span><br><span class="line">            foreach (var itemOut in tOut.GetType().GetProperties())</span><br><span class="line">            &#123;</span><br><span class="line">                var itemIn &#x3D; tInType.GetProperty(itemOut.Name); ;</span><br><span class="line">                if (itemIn !&#x3D; null)</span><br><span class="line">                &#123;</span><br><span class="line">                    itemOut.SetValue(tOut, itemIn.GetValue(tIn));</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            return tOut;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>调用一百万次耗时：2464毫秒</strong></p>
+<ol start="4">
+<li>使用序列化进行克隆</li>
+</ol>
+<p>克隆一个对象的最简单的方法是将它序列化并立刻反序列化为一个新对象。和反射方法一样，序列化方法是自动的，无需在对对象成员进行增删的时候做出修 改。缺点是序列化比其他方法慢，甚至比用反射还慢，所有引用的对象都必须是可序列化的（Serializable）。另外，取决于你所使用的序列化的类型 （XML，SOAP，二进制）的不同，私有成员可能不能像期望的那样被克隆。示例代码在这里，这里和这里。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">StudentSecond ss&#x3D; JsonConvert.DeserializeObject&lt;StudentSecond&gt;(JsonConvert.SerializeObject(s));</span><br></pre></td></tr></table></figure>
+
+<p><strong>调用一百万次耗时：</strong>2984毫秒</p>
+<p><a href="http://wiki.unity3d.com/index.php/ObjectCopier" target="_blank" rel="noopener">http://wiki.unity3d.com/index.php/ObjectCopier</a></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line">using System;</span><br><span class="line">using System.Collections;</span><br><span class="line">using System.Runtime.Serialization;</span><br><span class="line">using System.Runtime.Serialization.Formatters.Binary;</span><br><span class="line">using System.IO;</span><br><span class="line"> </span><br><span class="line">&#x2F;&#x2F;&#x2F; &lt;summary&gt;</span><br><span class="line">&#x2F;&#x2F;&#x2F; Reference Article http:&#x2F;&#x2F;www.codeproject.com&#x2F;KB&#x2F;tips&#x2F;SerializedObjectCloner.aspx</span><br><span class="line">&#x2F;&#x2F;&#x2F; </span><br><span class="line">&#x2F;&#x2F;&#x2F; Provides a method for performing a deep copy of an object.</span><br><span class="line">&#x2F;&#x2F;&#x2F; Binary Serialization is used to perform the copy.</span><br><span class="line">&#x2F;&#x2F;&#x2F; &lt;&#x2F;summary&gt;</span><br><span class="line">public static class ObjectCopier</span><br><span class="line">&#123;</span><br><span class="line">    &#x2F;&#x2F;&#x2F; &lt;summary&gt;</span><br><span class="line">    &#x2F;&#x2F;&#x2F; Perform a deep Copy of the object.</span><br><span class="line">    &#x2F;&#x2F;&#x2F; &lt;&#x2F;summary&gt;</span><br><span class="line">    &#x2F;&#x2F;&#x2F; &lt;typeparam name&#x3D;&quot;T&quot;&gt;The type of object being copied.&lt;&#x2F;typeparam&gt;</span><br><span class="line">    &#x2F;&#x2F;&#x2F; &lt;param name&#x3D;&quot;source&quot;&gt;The object instance to copy.&lt;&#x2F;param&gt;</span><br><span class="line">    &#x2F;&#x2F;&#x2F; &lt;returns&gt;The copied object.&lt;&#x2F;returns&gt;</span><br><span class="line">    public static T Clone&lt;T&gt;(this T source)</span><br><span class="line">    &#123;</span><br><span class="line">        if (!typeof(T).IsSerializable)</span><br><span class="line">        &#123;</span><br><span class="line">            throw new ArgumentException(&quot;The type must be serializable.&quot;, &quot;source&quot;);</span><br><span class="line">        &#125;</span><br><span class="line"> </span><br><span class="line">        &#x2F;&#x2F; Don&#39;t serialize a null object, simply return the default for that object</span><br><span class="line">        if (Object.ReferenceEquals(source, null))</span><br><span class="line">        &#123;</span><br><span class="line">            return default(T);</span><br><span class="line">        &#125;</span><br><span class="line"> </span><br><span class="line">        IFormatter formatter &#x3D; new BinaryFormatter();</span><br><span class="line">        Stream stream &#x3D; new MemoryStream();</span><br><span class="line">        using (stream)</span><br><span class="line">        &#123;</span><br><span class="line">            formatter.Serialize(stream, source);</span><br><span class="line">            stream.Seek(0, SeekOrigin.Begin);</span><br><span class="line">            return (T)formatter.Deserialize(stream);</span><br><span class="line">        &#125;</span><br><span class="line">     &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<ol start="5">
+<li>使用IL进行克隆</li>
+</ol>
+<p>一种罕见的解决方案是使用IL（中间语言）来进行对象克隆。这种方式创建一个动态方法（DynamicMethod），获取中间语言生成器 （ILGenerator），向方法中注入代码，把它编译成一个委托，然后执行这个委托。委托会被缓存，因此中间语言只在初次克隆的时候才会生成，后续的 克隆都不会重新生成一遍。尽管这种方法比使用反射快，但是这种方法难以理解和维护。示例代码</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">　 public static class TransExpV2&lt;TIn, TOut&gt;</span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">    private static readonly Func&lt;TIn, TOut&gt; cache &#x3D; GetFunc();</span><br><span class="line">    private static Func&lt;TIn, TOut&gt; GetFunc()</span><br><span class="line">    &#123;</span><br><span class="line">        ParameterExpression parameterExpression &#x3D; Expression.Parameter(typeof(TIn), &quot;p&quot;);</span><br><span class="line">        List&lt;MemberBinding&gt; memberBindingList &#x3D; new List&lt;MemberBinding&gt;();</span><br><span class="line"></span><br><span class="line">        foreach (var item in typeof(TOut).GetProperties())</span><br><span class="line">        &#123;</span><br><span class="line">　　　　　　　　　if (!item.CanWrite)</span><br><span class="line">　　　　　　　　　　    continue;</span><br><span class="line"></span><br><span class="line">            MemberExpression property &#x3D; Expression.Property(parameterExpression, typeof(TIn).GetProperty(item.Name));</span><br><span class="line">            MemberBinding memberBinding &#x3D; Expression.Bind(item, property);</span><br><span class="line">            memberBindingList.Add(memberBinding);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        MemberInitExpression memberInitExpression &#x3D; Expression.MemberInit(Expression.New(typeof(TOut)), memberBindingList.ToArray());</span><br><span class="line">        Expression&lt;Func&lt;TIn, TOut&gt;&gt; lambda &#x3D; Expression.Lambda&lt;Func&lt;TIn, TOut&gt;&gt;(memberInitExpression, new ParameterExpression[] &#123; parameterExpression &#125;);</span><br><span class="line"></span><br><span class="line">        return lambda.Compile();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public static TOut Trans(TIn tIn)</span><br><span class="line">    &#123;</span><br><span class="line">        return cache(tIn);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>调用：<strong>StudentSecond ss= TransExpV2.Trans(s);</strong></p>
+<p><strong>调用一百万次耗时：107毫秒\</strong></p>
+<ol start="6">
+<li>使用扩展方法进行克隆</li>
+</ol>
+<p>Havard Stranden用扩展方法（extention method）创建了一个自定义的克隆框架。这个框架能够创建对象及其引用的对象的深拷贝，不管对象结构有多复杂。缺点是，这是一个不提供源代码的自定义 框架（更新：现在已经包括源代码了，参见本文评论），并且它不能在不使用无参数构造器的时候，拷贝由私有方法创建的对象。另一个问题，也是所有自动化的深 克隆方法共有的问题是，深拷贝通常需要灵活地处理不能进行简单自动化特殊情况（例如未受管理的资源）。</p>
+<h3 id="一个测试类"><a href="#一个测试类" class="headerlink" title="一个测试类"></a>一个测试类</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">using Microsoft.VisualStudio.TestTools.UnitTesting;</span><br><span class="line">using System.Collections.Generic;</span><br><span class="line">using System.Linq;</span><br><span class="line">using System;</span><br><span class="line">namespace dotnet_samples_test</span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">    public class Person : ICloneable </span><br><span class="line">    &#123;</span><br><span class="line">        public IdInfo IdInfo;</span><br><span class="line">        public int Age &#123; get; set; &#125;</span><br><span class="line">        public string Name &#123; get; set; &#125;</span><br><span class="line">        public string Address &#123; get; set; &#125;</span><br><span class="line">        public List&lt;string&gt; Phones &#123; get; set; &#125; &#x3D; new List&lt;string&gt;();</span><br><span class="line">        public object Clone()</span><br><span class="line">        &#123;</span><br><span class="line">            return this.MemberwiseClone();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        public Person ShallowCopy()</span><br><span class="line">        &#123;</span><br><span class="line">            return (Person)this.Clone();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        public Person DeepCopy()</span><br><span class="line">        &#123;</span><br><span class="line">            var result &#x3D;  (Person)this.Clone();</span><br><span class="line">            result.IdInfo &#x3D; result.IdInfo.DeepCopy();</span><br><span class="line">            result.Phones &#x3D; result.Phones.ToList();</span><br><span class="line">            return result;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    public class IdInfo</span><br><span class="line">    &#123;</span><br><span class="line">        public int IdNumber;</span><br><span class="line">        public IdInfo(int IdNumber)</span><br><span class="line">        &#123;</span><br><span class="line">            this.IdNumber &#x3D; IdNumber;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        public object Clone()</span><br><span class="line">        &#123;</span><br><span class="line">            return this.MemberwiseClone();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        public IdInfo ShallowCopy()</span><br><span class="line">        &#123;</span><br><span class="line">            return (IdInfo)this.Clone();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        public IdInfo DeepCopy()</span><br><span class="line">        &#123;</span><br><span class="line">            var result &#x3D;  (IdInfo)this.Clone();</span><br><span class="line"></span><br><span class="line">            return result;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    [TestClass]</span><br><span class="line">    public class CloneTest1</span><br><span class="line">    &#123;</span><br><span class="line">        [TestMethod]</span><br><span class="line">        public void TestMethod1()</span><br><span class="line">        &#123;</span><br><span class="line">            var person1 &#x3D; new Person</span><br><span class="line">            &#123;</span><br><span class="line">                Name &#x3D; &quot;長澤雅美&quot;,</span><br><span class="line">                Age &#x3D; 30,</span><br><span class="line">                Address &#x3D; &quot;日本静岡縣磐田市&quot;,</span><br><span class="line">                Phones &#x3D; new List&lt;string&gt; &#123; &quot;9&quot;, &quot;1&quot;, &quot;1&quot; &#125;,</span><br><span class="line">                IdInfo &#x3D; new IdInfo(1)</span><br><span class="line">            &#125;;</span><br><span class="line">            var person2 &#x3D; person1.ShallowCopy();</span><br><span class="line">            person2.IdInfo.IdNumber &#x3D; 2;</span><br><span class="line">            person2.Phones.RemoveAt(0);</span><br><span class="line">            person2.Name&#x3D;&quot;冈本伊朗&quot;;</span><br><span class="line">            Console.WriteLine(&quot;person1的名字:&quot;+person1.Name);</span><br><span class="line">            Console.WriteLine(&quot;person1第一个数字是:&quot;+person1.Phones[0]);</span><br><span class="line">            Console.WriteLine(&quot;person1id是:&quot;+person1.IdInfo.IdNumber);</span><br><span class="line"></span><br><span class="line">                      Console.WriteLine(&quot;person2的名字:&quot;+person2.Name);</span><br><span class="line">            Console.WriteLine(&quot;person2第一个数字是:&quot;+person2.Phones[0]);</span><br><span class="line">            Console.WriteLine(&quot;person2id是:&quot;+person2.IdInfo.IdNumber);</span><br><span class="line">            Assert.AreEqual(person1.IdInfo.IdNumber,person2.IdInfo.IdNumber);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        [TestMethod]</span><br><span class="line">        public void TestMethod2()</span><br><span class="line">        &#123;</span><br><span class="line">            var person1 &#x3D; new Person</span><br><span class="line">            &#123;</span><br><span class="line">                Name &#x3D; &quot;長澤雅美&quot;,</span><br><span class="line">                Age &#x3D; 30,</span><br><span class="line">                Address &#x3D; &quot;日本静岡縣磐田市&quot;,</span><br><span class="line">                Phones &#x3D; new List&lt;string&gt; &#123; &quot;9&quot;, &quot;1&quot;, &quot;1&quot; &#125;,</span><br><span class="line">                IdInfo &#x3D; new IdInfo(1)</span><br><span class="line">            &#125;;</span><br><span class="line">            var person2 &#x3D; person1.DeepCopy();</span><br><span class="line">            person2.IdInfo.IdNumber &#x3D; 2;</span><br><span class="line">            person2.Phones.RemoveAt(0);</span><br><span class="line">            </span><br><span class="line">            Console.WriteLine(&quot;person1的名字:&quot;+person1.Name);</span><br><span class="line">            Console.WriteLine(&quot;person1第一个数字是:&quot;+person1.Phones[0]);</span><br><span class="line">            Console.WriteLine(&quot;person1id是:&quot;+person1.IdInfo.IdNumber);</span><br><span class="line"></span><br><span class="line">            Console.WriteLine(&quot;person2的名字:&quot;+person2.Name);</span><br><span class="line">            Console.WriteLine(&quot;person2第一个数字是:&quot;+person2.Phones[0]);</span><br><span class="line">            Console.WriteLine(&quot;person2id是:&quot;+person2.IdInfo.IdNumber);</span><br><span class="line"></span><br><span class="line">            Assert.AreEqual(person1.IdInfo.IdNumber,person2.IdInfo.IdNumber);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C</a>
+              <a href="/tags/C/" rel="tag"># C#</a>
+              <a href="/tags/Unity/" rel="tag"># Unity</a>
+              <a href="/tags/UNITY/" rel="tag"># UNITY</a>
+              <a href="/tags/PHP/" rel="tag"># PHP</a>
+              <a href="/tags/JS/" rel="tag"># JS</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/dotnet-2020-02-09-room-elo/" rel="prev" title="游戏的匹配机制ELO">
+      <i class="fa fa-chevron-left"></i> 游戏的匹配机制ELO
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/dotnet-2020-02-11-gc/" rel="next" title="C#引用类型对象在循环引用时会不会内存泄漏">
+      C#引用类型对象在循环引用时会不会内存泄漏 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  
+  <div class="comments">
+  <script src="https://utteranc.es/client.js" repo="zhepama/igiven.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async></script>
+  </div>
+  
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#ICloneable接口"><span class="nav-number">1.</span> <span class="nav-text">ICloneable接口</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#一个测试类"><span class="nav-number">1.1.</span> <span class="nav-text">一个测试类</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhepama"
+      src="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+  <p class="site-author-name" itemprop="name">zhepama</p>
+  <div class="site-description" itemprop="description">一个不专业的程序员,写着专业的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">139</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhepama" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhepama" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhepama@gmail.com" title="E-Mail → mailto:zhepama@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.godgodgame.com/" title="http:&#x2F;&#x2F;www.godgodgame.com" rel="noopener" target="_blank">GODGODGAME</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.igiven.com/" title="https:&#x2F;&#x2F;www.igiven.com">IGIVEN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhepama.github.io/C-Sharp-Playground/zh/" title="https:&#x2F;&#x2F;zhepama.github.io&#x2F;C-Sharp-Playground&#x2F;zh&#x2F;" rel="noopener" target="_blank">数据结构与算法</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhepama</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

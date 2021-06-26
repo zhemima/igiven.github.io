@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.igiven.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="什么是视差背景？视差效果，原本是一个天文学术语，当我们观察星空时，离我们远的星星移动速度较慢，离我们近的星星移动速度则较快。当我们坐在车上向车窗外看时，也会有这样的感觉，远处的群山似乎没有在动，而近处的稻田却在飞速掠过。 简单地说，视差背景其实就是通过多层次的背景来模拟透视视差效果：就是当发生移动时，离照相机越近的背景移动越快；反之越慢。这样，我们的背景就会形成类似于透视视差的效果。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="2D游戏视差背景的实现">
+<meta property="og:url" content="http://www.igiven.com/unity-2019-09-13-Parallax-2d/index.html">
+<meta property="og:site_name" content="IGiven">
+<meta property="og:description" content="什么是视差背景？视差效果，原本是一个天文学术语，当我们观察星空时，离我们远的星星移动速度较慢，离我们近的星星移动速度则较快。当我们坐在车上向车窗外看时，也会有这样的感觉，远处的群山似乎没有在动，而近处的稻田却在飞速掠过。 简单地说，视差背景其实就是通过多层次的背景来模拟透视视差效果：就是当发生移动时，离照相机越近的背景移动越快；反之越慢。这样，我们的背景就会形成类似于透视视差的效果。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-13-Parallax-2d/u-101952876756Yj6.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-13-Parallax-2d/u-101952876820zdg.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-13-Parallax-2d/u-101952876827Lvz.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-13-Parallax-2d/u-101952876811twL.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-13-Parallax-2d/u-101952876924lOw.gif">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-13-Parallax-2d/u-10195287789913d.gif">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-13-Parallax-2d/u-101952878215omm.gif">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-13-Parallax-2d/u-101952878467iBp.gif">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-13-Parallax-2d/424-1024x415.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-13-Parallax-2d/181708eqz39rii9vrvuopx.png.thumb.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-13-Parallax-2d/camera.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-13-Parallax-2d/cameraview.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-13-Parallax-2d/0%5B1%5D.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-13-Parallax-2d/181709gdpgid33t93vjfyf.png.thumb.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2019-09-13-Parallax-2d/181711j5s29z585k932ot6.gif">
+<meta property="article:published_time" content="2019-09-13T00:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-26T08:36:17.946Z">
+<meta property="article:author" content="zhepama">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="C#">
+<meta property="article:tag" content="游戏">
+<meta property="article:tag" content="GitHub">
+<meta property="article:tag" content="Unity">
+<meta property="article:tag" content="同步">
+<meta property="article:tag" content="UNITY">
+<meta property="article:tag" content="PHP">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.igiven.com/assets/images/2019-09-13-Parallax-2d/u-101952876756Yj6.png">
+
+<link rel="canonical" href="http://www.igiven.com/unity-2019-09-13-Parallax-2d/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>2D游戏视差背景的实现 | IGiven</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="IGiven" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="IGiven" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">IGiven</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">李九仙的博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">139</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">32</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-留言">
+
+    <a href="/guestbook/" rel="section"><i class="fa fa-sticky-note fa-fw"></i>留言</a>
+
+  </li>
+        <li class="menu-item menu-item-rss">
+
+    <a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/unity-2019-09-13-Parallax-2d/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+      <meta itemprop="name" content="zhepama">
+      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="IGiven">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          2D游戏视差背景的实现<a href="https://github.com/zhepama/igiven.github.io/edit/master/source/_posts/unity/2019-09-13-Parallax-2d.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil-alt"></i></a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-09-13 08:00:00" itemprop="dateCreated datePublished" datetime="2019-09-13T08:00:00+08:00">2019-09-13</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 16:36:17" itemprop="dateModified" datetime="2021-06-26T16:36:17+08:00">2021-06-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/unity/" itemprop="url" rel="index"><span itemprop="name">unity</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h4 id="什么是视差背景？"><a href="#什么是视差背景？" class="headerlink" title="什么是视差背景？"></a>什么是视差背景？</h4><p>视差效果，原本是一个天文学术语，当我们观察星空时，离我们远的星星移动速度较慢，离我们近的星星移动速度则较快。当我们坐在车上向车窗外看时，也会有这样的感觉，远处的群山似乎没有在动，而近处的稻田却在飞速掠过。</p>
+<p>简单地说，视差背景其实就是通过多层次的背景来模拟透视视差效果：就是当发生移动时，离照相机越近的背景移动越快；反之越慢。这样，我们的背景就会形成类似于透视视差的效果。</p>
+<p>那么，既然需要透视效果，为何不直接使用透视投影来做呢？这个原因是如果使用透视投影来产生视差的话，我们的远景必须真的是一个非常大的背景，你如果想模拟出一百倍于近景的远景，那么可能就需要相应尺寸的背景贴图。这种做法显然是做不到的。当然，如果是3D 背景的话有其他方式，不过对于2D 游戏而言，最直接有效的还是多层次背景模拟出视差效果。我们这里也主要聊聊如果通过多层次背景滚动的方式实现视差效果。</p>
+<p>在整个视差背景实现过程中，需要完成两个主要工作：</p>
+<ol>
+<li>实现单层背景的滚动；</li>
+<li>复合多层背景的滚动，实现视差效果；</li>
+</ol>
+<h4 id="实现单层背景的滚动"><a href="#实现单层背景的滚动" class="headerlink" title="实现单层背景的滚动"></a>实现单层背景的滚动</h4><p>背景滚动是实现视差效果的核心也是最重要的问题。背景滚动存在横向和纵向两种。所有使用视差背景的游戏都会有横向滚动的情况，而纵向滚动则未必都会有。我们这里以横向滚动来介绍背景滚动。我们有四种常规方式可以实现背景的滚动：</p>
+<ol>
+<li>通过移动一个四边形顶点的 UV 移动形成滚动，之后就称之为 UV 滚动方式；</li>
+<li>通过滚动移动多个连续的背景精灵形成滚动，之后就称之为精灵滚动方式；</li>
+<li>添加背景层照相机，移动照相机形成滚动，之后就称之为照相机移动方式；</li>
+<li>精灵滚动方式和照相机移动方式混合使用，之后就称之为混合滚动方式；</li>
+</ol>
+<p>为了更好地解释这几种实现方式，需要几张图片用于介绍：</p>
+<p>我们使用一个黄框精灵代表屏幕取景区域：</p>
+<p><img src="../../assets/images/2019-09-13-Parallax-2d/u-101952876756Yj6.png" alt="img"></p>
+<p>接下来是三张可拼接的背景精灵：</p>
+<p><img src="../../assets/images/2019-09-13-Parallax-2d/u-101952876820zdg.png" alt="img">)<img src="../../assets/images/2019-09-13-Parallax-2d/u-101952876827Lvz.png" alt="img">)<img src="../../assets/images/2019-09-13-Parallax-2d/u-101952876811twL.png" alt="img"></p>
+<h5 id="UV-滚动方式："><a href="#UV-滚动方式：" class="headerlink" title="UV 滚动方式："></a>UV 滚动方式：</h5><p>使用 UV 坐标移动形成滚动的效果看起来是这样的：</p>
+<p><img src="../../assets/images/2019-09-13-Parallax-2d/u-101952876924lOw.gif" alt="img"></p>
+<p>在 UV 坐标移动的方法中，我们只是用一个和照相机取景区域一样大的精灵作为背景渲染区域。然后通过调整它的 UV 坐标和采样方式实现平铺背景以及背景滚动。具体实现步骤：</p>
+<ol>
+<li>准备一个覆盖整个屏幕的四边形顶点，并使用它显示背景贴图；</li>
+<li>调整 UV 坐标和纹理之间的采样方式，以实现纹理连续显示；</li>
+<li>移动时，修改四个顶点的 UV 坐标形成滚动；</li>
+</ol>
+<p>因为我们只使用一张精灵，我们区域采样的方式就是通过 UV 坐标。因此此方式下 UV 坐标存在两个作用：</p>
+<ol>
+<li>UV 坐标的整数部分标记了当前采样位置使用哪一张背景贴图；</li>
+<li>UV 坐标小数部分为选中背景贴图的采样 UV 坐标；</li>
+</ol>
+<p>因此，此精灵的 UV 坐标必定会大于[0,1]区间。</p>
+<p>如果背景使用的背景贴图只有一张的话，这个问题很容易解决。我们只要设置图形 API（OpenGL 或 DirectX，这里以 OpenGL 为例）的纹理包装类型（即所谓的 wrapping 类型）即可。所谓的包装类型即指定了当 UV 坐标值在[ 0,1 ]区间之外时，如何获取纹理。那么这里，我们需要让一张纹理重复出现。在 OpenGL 中，我们需要调用此函数来完成包装类型的设置：glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );稍微解释一下此函数：glTexParameteri 函数会对指定的纹理的参数进行设置。我们这里针对2D 纹理（第一参数 GL_TEXTURE_2D）的 x 方向即横向（第二参数 GL_TEXTURE_WRAP_S）的包装模式设置为重复出现的方式（第三参数 GL_REPEAT）。</p>
+<p>不过如果背景是多张不同的纹理连续出现的话，就不能使用上面的方法解决了。这个时候我们需要编写一个简单的 shader 在 shader 中完成 UV 坐标映射。这里截取出演示 demo 中，获取纹理相关的 shader 代码（GLSL 代码）提供大家参考：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F;我们有三张背景贴图，对 UV 坐标对3取模，得到使用哪一种背景贴图。             </span><br><span class="line">int _index &#x3D; int( mod( v_TexCoord.x, 3.0 ));</span><br><span class="line">&#x2F;&#x2F;使用此贴图并使用 UV 坐标的小数部分进行像素采样。            </span><br><span class="line">gl_FragData[0] &#x3D; texture( u_BackgroundTextures[_index], fract(v_TexCoord));</span><br></pre></td></tr></table></figure>
+
+<p>UV 方式有着非常良好的性能，但是缺点就是只能处理简单的平铺背景，对于有着复杂结构或是效果的滚动背景没有办法使用。</p>
+<h5 id="精灵滚动方式："><a href="#精灵滚动方式：" class="headerlink" title="精灵滚动方式："></a>精灵滚动方式：</h5><p>使用精灵滚动形成滚动的效果看起来是这样的：</p>
+<p><img src="../../assets/images/2019-09-13-Parallax-2d/u-10195287789913d.gif" alt="img"></p>
+<p>这种方式应该是比较直接的。我们首先使用背景精灵拼接出背景取景区域覆盖到的背景区域。然后在发生背景移动时，我们依然不需要移动背景取景区域，而是通过滚动移动所有的背景精灵来实现背景移动的效果。</p>
+<p>这种方式实现简单直接，但缺点是发生背景移动时，需要对所有的背景精灵进行移动。对于结构复杂元素较多的背景需要占用更多的性能。</p>
+<h5 id="照相机移动方式："><a href="#照相机移动方式：" class="headerlink" title="照相机移动方式："></a>照相机移动方式：</h5><p>使用照相机移动形成滚动的效果看起来是这样的：</p>
+<p><img src="../../assets/images/2019-09-13-Parallax-2d/u-101952878215omm.gif" alt="img"></p>
+<p>这种方式与精灵滚动方式正好相反。在这种方式下，我们需要使用背景精灵拼接出完整的背景。同时在背景移动时，不移动背景精灵转而移动背景取景区域来实现背景移动效果。</p>
+<p>这种方式在移动过程中由于只需要移动背景照相机，所以有种很好的移动性能。但是为了使用此方法。我们需要预先将整个背景全部拼接。这样导致同时存在过多的背景精灵在场景中。如果使用的游戏引擎没有场景管理器或是场景管理器性能不佳的情况下，此方式反而会带来额外的性能消耗。</p>
+<h5 id="混合滚动方式："><a href="#混合滚动方式：" class="headerlink" title="混合滚动方式："></a>混合滚动方式：</h5><p>使用混合滚动方式形成的滚动效果看起来是这样的：</p>
+<p><img src="../../assets/images/2019-09-13-Parallax-2d/u-101952878467iBp.gif" alt="img"></p>
+<p>顾名思义，混合移动混合了精灵移动和照相机移动两种方式。我们在移动背景取景区域的同时，适时地滚动背景精灵。使得背景取景区域内的背景正确。</p>
+<p>这种方式结合了精灵滚动方式和照相机移动方式。避免了精灵滚动方式移动过程中，因为需要移动所有背景精灵带来的额外性能开销；也避免了照相机移动方式中，需要预先构建完整的背景而导致场景中存在过多的背景精灵带来的额外性能开销。当然，和照相机移动方式一样，避免不了每一层背景都需要有一个独立的背景照相机。同时在代码实现良好的情况下，性能比前两者都要好。</p>
+<h4 id="四种方式的优劣"><a href="#四种方式的优劣" class="headerlink" title="四种方式的优劣"></a>四种方式的优劣</h4><h5 id="平均性能："><a href="#平均性能：" class="headerlink" title="平均性能："></a>平均性能：</h5><p>UV 滚动方式只使用了一个四边形并且移动时也只是单纯改变了 UV 采样方式。它的性能是最好的；其次是混合滚动方式；照相机移动方式有更多的空间开销，同时此开销对性能的影响与游戏引擎的场景管理模块密切关联；精灵方式则有最大的移动性能消耗。</p>
+<h5 id="对复杂背景的支持："><a href="#对复杂背景的支持：" class="headerlink" title="对复杂背景的支持："></a>对复杂背景的支持：</h5><p>即四种方式所实现的背景可以有多复杂。UV 滚动方式碍于实现只能做简单的平铺背景的滚动效果；精灵滚动方式和混合滚动方式可以实现更为复杂一点的背景，可以在简单的平铺背景之上加入一些其他背景精灵元素；而照相机移动方式对背景的构建没有要求，它可以支持非常复杂的背景。</p>
+<h5 id="是否可以无限延伸："><a href="#是否可以无限延伸：" class="headerlink" title="是否可以无限延伸："></a>是否可以无限延伸：</h5><p>理论上四种方式都可以实现无限延伸。但是对于照相机移动方式来说，实现起来会比较麻烦。而另外三种方式都是循环利用同一个背景，所以天然支持无限延伸的背景。</p>
+<h5 id="复合多层背景的滚动，实现视差效果："><a href="#复合多层背景的滚动，实现视差效果：" class="headerlink" title="复合多层背景的滚动，实现视差效果："></a>复合多层背景的滚动，实现视差效果：</h5><p>有了上面的工作，这一步也是顺其自然就可以完成：</p>
+<p>我们首先要构建多层背景，多层背景可以同时只是用一种滚动方式；也可以不同层背景使用不同的滚动方式。比如最远的背景由于基本上都是简单的平铺可以使用 UV 滚动方式构建；而再近一点细节较多的背景层可以考虑后几种滚动方式构建背景。</p>
+<p>之后是移动，我们需要根据每一层背景的距离决定其在移动过程中的移动速度。速度如何决定并没有统一的方法或是模式。总之，这一点听听美术们的意见是比较合适的。</p>
+<h3 id="Unity混合模式1"><a href="#Unity混合模式1" class="headerlink" title="Unity混合模式1"></a>Unity混合模式1</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br></pre></td><td class="code"><pre><span class="line">using System.Collections;</span><br><span class="line">using System.Collections.Generic;</span><br><span class="line">using UnityEngine;</span><br><span class="line">&#x2F;&#x2F;&#x2F; &lt;summary&gt;</span><br><span class="line">&#x2F;&#x2F;&#x2F; Weiva Parallax</span><br><span class="line">&#x2F;&#x2F;&#x2F; 2D 视差效果</span><br><span class="line">&#x2F;&#x2F;&#x2F; 本组件背景视差效果是根据背景对象的世界坐标z值来计算。默认参数中的背景数组第一个元素为最远平面，</span><br><span class="line">&#x2F;&#x2F;&#x2F; 既与摄像机同步的平面，该对象之间的背景根据z值进行视差计算。也可以单独设置参数 synZ 强制设置最</span><br><span class="line">&#x2F;&#x2F;&#x2F; 远平面。大于最远平面的 z 值将会反超摄像机移动。</span><br><span class="line">&#x2F;&#x2F;&#x2F; weivain@qq.com</span><br><span class="line">&#x2F;&#x2F;&#x2F; www.weiva.com</span><br><span class="line">&#x2F;&#x2F;&#x2F; &lt;&#x2F;summary&gt;</span><br><span class="line">public class WVParallax : MonoBehaviour &#123;</span><br><span class="line"> </span><br><span class="line">    [Header(&quot;背景图片对象，Element 0 为与摄像机同步的背景层&quot;)]</span><br><span class="line">    public Transform[] backgrounds;</span><br><span class="line"> </span><br><span class="line">    &#x2F;&#x2F; 主摄像机</span><br><span class="line">    private Transform cam;</span><br><span class="line">    &#x2F;&#x2F; 上一帧摄像机的位置</span><br><span class="line">    private Vector3 previousCamPos;</span><br><span class="line">    &#x2F;&#x2F; 摄像机同步背景层的 z 值</span><br><span class="line">    [Header(&quot;摄像机同步背景层Z值，若0为背景层0&quot;)]</span><br><span class="line">    public float synZ&#x3D;0f;</span><br><span class="line">    [Header(&quot;偏移x系数&quot;)]</span><br><span class="line">    public float parallaxScaleX&#x3D;1f;</span><br><span class="line">    [Header(&quot;偏移y系数&quot;)]</span><br><span class="line">    public float parallaxScaleY&#x3D;1f;</span><br><span class="line"> </span><br><span class="line"> </span><br><span class="line">    &#x2F;&#x2F; 初始化</span><br><span class="line">    void Start ()</span><br><span class="line">    &#123;</span><br><span class="line">        cam &#x3D; Camera.main.transform;</span><br><span class="line">        &#x2F;&#x2F; 上一帧摄像机的位置</span><br><span class="line">        previousCamPos &#x3D; cam.position;</span><br><span class="line">        if(synZ &#x3D;&#x3D; 0 &amp;&amp; null !&#x3D; backgrounds[0])</span><br><span class="line">        &#123;</span><br><span class="line">            synZ &#x3D; backgrounds[0].position.z;</span><br><span class="line">        &#125;</span><br><span class="line">        if(synZ &#x3D;&#x3D; 0)</span><br><span class="line">        &#123;</span><br><span class="line">            synZ &#x3D; 100f;</span><br><span class="line">        &#125;</span><br><span class="line">         </span><br><span class="line">    &#125;</span><br><span class="line">     </span><br><span class="line">    &#x2F;&#x2F; 每一帧执行</span><br><span class="line">    void Update ()</span><br><span class="line">    &#123;</span><br><span class="line">        &#x2F;&#x2F; 获得摄像机和上一帧的偏移值</span><br><span class="line">        float parallax &#x3D; previousCamPos.x - cam.position.x;</span><br><span class="line"> </span><br><span class="line">        &#x2F;&#x2F;摄像机偏移矢量</span><br><span class="line">        Vector3 camMove &#x3D; cam.position - previousCamPos;</span><br><span class="line">        camMove.x *&#x3D; parallaxScaleX;</span><br><span class="line">        camMove.y *&#x3D; parallaxScaleY;</span><br><span class="line"> </span><br><span class="line">        &#x2F;&#x2F;同步背景</span><br><span class="line">        for (int i &#x3D; 0; i &lt; backgrounds.Length; i++)</span><br><span class="line">        &#123;</span><br><span class="line">            if (null &#x3D;&#x3D; backgrounds[i]) continue;</span><br><span class="line"> </span><br><span class="line">            Vector3 targetToMove &#x3D; backgrounds[i].position + camMove * (backgrounds[i].position.z&#x2F;synZ);</span><br><span class="line">            backgrounds[i].position &#x3D; targetToMove;</span><br><span class="line"> </span><br><span class="line">        &#125;</span><br><span class="line"> </span><br><span class="line">        &#x2F;&#x2F; 更新上一帧摄像机的位置</span><br><span class="line">        previousCamPos &#x3D; cam.position;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Unity混合模式2"><a href="#Unity混合模式2" class="headerlink" title="Unity混合模式2"></a>Unity混合模式2</h3><p>在Unity官方2D游戏Demo中已使用到了视差滚动技术，笔者对此 Demo 中的视差滚动技术进行了研究，Demo 中使用 BackgroundParallax 脚本实现了视差功能，笔者编写此脚本代码说明。</p>
+<p><img src="../../assets/images/2019-09-13-Parallax-2d/424-1024x415.jpg" alt="4"></p>
+<p>官方 demo <a href="https://assetstore.unity.com/packages/essentials/tutorial-projects/2d-platformer-11228" target="_blank" rel="noopener">链接</a></p>
+<p>BackgroundParallax脚本代码说明：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line">using UnityEngine;</span><br><span class="line">using System.Collections;</span><br><span class="line"></span><br><span class="line">public class BackgroundParallax : MonoBehaviour</span><br><span class="line">&#123;</span><br><span class="line">	public Transform[] backgrounds;				&#x2F;&#x2F; Array of all the backgrounds to be parallaxed.</span><br><span class="line">	public float parallaxScale;					&#x2F;&#x2F; The proportion of the camera&#39;s movement to move the backgrounds by.</span><br><span class="line">	public float parallaxReductionFactor;		&#x2F;&#x2F; How much less each successive layer should parallax.</span><br><span class="line">	public float smoothing;						&#x2F;&#x2F; How smooth the parallax effect should be.</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	private Transform cam;						&#x2F;&#x2F; Shorter reference to the main camera&#39;s transform.</span><br><span class="line">	private Vector3 previousCamPos;				&#x2F;&#x2F; The postion of the camera in the previous frame.</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	void Awake ()</span><br><span class="line">	&#123;</span><br><span class="line">		&#x2F;&#x2F; Setting up the reference shortcut.</span><br><span class="line">		cam &#x3D; Camera.main.transform;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	void Start ()</span><br><span class="line">	&#123;</span><br><span class="line">		&#x2F;&#x2F; The &#39;previous frame&#39; had the current frame&#39;s camera position.</span><br><span class="line">		previousCamPos &#x3D; cam.position;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	void Update ()</span><br><span class="line">	&#123;</span><br><span class="line">		&#x2F;&#x2F; The parallax is the opposite of the camera movement since the previous frame multiplied by the scale.</span><br><span class="line">		float parallax &#x3D; (previousCamPos.x - cam.position.x) * parallaxScale;</span><br><span class="line"></span><br><span class="line">		&#x2F;&#x2F; For each successive background...</span><br><span class="line">		for(int i &#x3D; 0; i &lt; backgrounds.Length; i++)</span><br><span class="line">		&#123;</span><br><span class="line">			&#x2F;&#x2F; ... set a target x position which is their current position plus the parallax multiplied by the reduction.</span><br><span class="line">			float backgroundTargetPosX &#x3D; backgrounds[i].position.x + parallax * (i * parallaxReductionFactor + 1);</span><br><span class="line"></span><br><span class="line">			&#x2F;&#x2F; Create a target position which is the background&#39;s current position but with it&#39;s target x position.</span><br><span class="line">			Vector3 backgroundTargetPos &#x3D; new Vector3(backgroundTargetPosX, backgrounds[i].position.y, backgrounds[i].position.z);</span><br><span class="line"></span><br><span class="line">			&#x2F;&#x2F; Lerp the background&#39;s position between itself and it&#39;s target position.</span><br><span class="line">			backgrounds[i].position &#x3D; Vector3.Lerp(backgrounds[i].position, backgroundTargetPos, smoothing * Time.deltaTime);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		&#x2F;&#x2F; Set the previousCamPos to the camera&#39;s position at the end of this frame.</span><br><span class="line">		previousCamPos &#x3D; cam.position;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="结合透视和正交相机在Unity2D游戏中制作视差效果"><a href="#结合透视和正交相机在Unity2D游戏中制作视差效果" class="headerlink" title="结合透视和正交相机在Unity2D游戏中制作视差效果"></a>结合透视和正交相机在Unity2D游戏中制作视差效果</h2><p>在开发MimpiDreams时，我们知道我们想用背景和前景做丰富的视差层。在Steam版本中，有几个图层来管理。所以我们想出了一个可能并不是独一无二的方法，不过在这里还是想概括一下。</p>
+<p>在unity中有好多使用一个正交相机并用脚本移动图层来设置视差层级的教程。还有一些建议用透视相机和对象的Z轴深度。如果这么做了，设置合适的精灵排序就会变的困难，并且还不能使用优化技术和其他想在MimpiDreams中使用的透视相机的特性。经典的 Mimpi 只用了透视相机来创建，对此我们还有一些<a href="http://www.manew.com/forum-ask-1.html" target="_blank" rel="noopener">问题</a>。为了节省填充率我们使用了不透明的对象，不过不得不用Z轴偏移来放置它们以免Z方向有冲突。然而，由于对它们应用了透视视角，它们就以不同的速度移动了。</p>
+<p>最好的方法是获得两者的优势。设置透视相机来渲染视差层，用正交相机来渲染有角色，平台，拼图等的主平面。</p>
+<p>当为视差使用透视相机时，就很容易设置它们了。在正交视差中，需要基于相机的距离来缩放每一个对象并放在适当的位置。Toby: The SecretMine的作者Lukáš Navrátil告诉我他差不多会花掉一半的工作时间来设置正交视差层。随着我们技术的结合，他可以做的更快。</p>
+<p>我和我的同事Jaroslav Stehlík一起开发了这种技术。现在让我们看一下如何设置。</p>
+<p><strong>Camera and Scene Setup</strong> <strong>相机和场景设置</strong><br>层级视图很简单。将视差相机放在主相机的下边，这样它们会一起移动。</p>
+<p><img src="../../assets/images/2019-09-13-Parallax-2d/181708eqz39rii9vrvuopx.png.thumb.jpg" alt="img"></p>
+<p><strong>Main Camera</strong></p>
+<p><strong>主相机</strong></p>
+<p>Clear Flags: Don’tclear</p>
+<p>Culling Mask:everything except parallax layer</p>
+<p>Projection:Orthographic</p>
+<p>Depth: -1</p>
+<p><strong>Parallax Camera Near</strong></p>
+<p><strong>近距离视差相机</strong></p>
+<p>Clear Flags: Depthonly</p>
+<p>Culling Mask:Parallax</p>
+<p>Projection:Perspective</p>
+<p>Clipping Planes</p>
+<p>Near: 0.01</p>
+<p>Far: 10</p>
+<p>Depth: 0</p>
+<p><strong>Parallax Camera Far</strong></p>
+<p><strong>远距离视差相机</strong></p>
+<p>Clear Flags: SolidColor (or whatever else you want to use as a background)</p>
+<p>Culling Mask:Parallax</p>
+<p>Projection:Perspective</p>
+<p>Clipping Planes</p>
+<p>Near: 10</p>
+<p>Far: 500</p>
+<p>Depth: -2</p>
+<p><img src="../../assets/images/2019-09-13-Parallax-2d/camera.png" alt="img"></p>
+<p>主相机会渲染除正交模式中视差层级之外的所有东西。这需要熟练使用“CullingMask”。“Clipping Planes”解决基于Z轴方向哪个视差对象被哪个视差相机渲染的问题，因此前景在正交平面之前，背景则在它的后边。相机放在Z轴-10的位置，所以在Z &lt; 0的视差中的所有东西都会被近处的相机渲染，在Z &gt; 0位置的对象就会被远处的相机渲染。“Depth”决定相机被渲染的正确顺序。</p>
+<p>现在在编辑器中需要把所有的视差对象放入视差层中，并将其他所有对象移出该层。</p>
+<p><img src="../../assets/images/2019-09-13-Parallax-2d/cameraview.png" alt="img"></p>
+<p>你需要考虑正交相机的尺寸和视角设置的透视区域。尤其想在游戏中使用变焦的时候，需要基于主相机的正交尺寸来设置视差的相机视角区域。关键是通常有一个特殊的平面（这个案例中为Z = 0），即视差层会和正交透视有同样的移动速度。这点很重要，因为稍后可以移动和缩放相机并且它会表现的很自然。在Mimpi Dreams开发初期，我们没有意识到那些并在视差设置中出现一些错误。我们不可以稍后更改它，因为它会复位所有的视差层。最后，由于我们没有过多的使用缩放，所以并没有产生多大影响。在下一个工程中，我们肯定会用这个设置。</p>
+<p>这里有一段可以设置缩放的代码。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">public float GetFieldOfView(float orthoSize, float distanceFromOrigin)</span><br><span class="line">&#123;</span><br><span class="line">    &#x2F;&#x2F; orthoSize</span><br><span class="line">    float a &#x3D; orthoSize;</span><br><span class="line">    &#x2F;&#x2F; distanceFromOrigin</span><br><span class="line">    float b &#x3D; Mathf.Abs(distanceFromOrigin);</span><br><span class="line"> </span><br><span class="line">    float fieldOfView &#x3D; Mathf.Atan(a &#x2F; b)  * Mathf.Rad2Deg * 2f;</span><br><span class="line">    return fieldOfView;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果想在Z轴移动相机，则需要更新视差相机的裁剪平面。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F; distanceFromOrigin</span><br><span class="line">float b &#x3D; Mathf.Abs(mainCamera.transform.position.z);</span><br><span class="line"> </span><br><span class="line">&#x2F;&#x2F;change clipping planes based on main camera z-position</span><br><span class="line">farCamera.nearClipPlane &#x3D; b;</span><br><span class="line">farCamera.farClipPlane &#x3D; mainCamera.farClipPlane;</span><br><span class="line">nearCamera.farClipPlane &#x3D; b;</span><br><span class="line">nearCamera.nearClipPlane &#x3D; mainCamera.nearClipPlane;</span><br></pre></td></tr></table></figure>
+
+<p>如何变焦相机有两个选择。</p>
+<p>可以在Z轴移动主相机（并重新计算裁剪平面），或者可以改变主相机的正交尺寸（并重新计算视差相机的视角区域）。两个选择给出不同的效果，改变正交尺寸是更自然的选择。或者，可以结合这两种技术，看下边的视频。</p>
+<p><strong>unity 实例</strong></p>
+<p>Jaroslav准备并给出了你们可以尝试并学习的unity工程。感谢unity提供精选案例的免费资源！</p>
+<p>可以从Github下载案例工程。</p>
+<p>工程是用Unity 5.3.3f1制作的。</p>
+<p>还要看一下展示案例的视频。</p>
+<p><a href="https://www.youtube.com/watch?v=ptdweDDyB8o&feature=youtu.be" target="_blank" rel="noopener"><img src="../../assets/images/2019-09-13-Parallax-2d/0%5B1%5D.jpg" alt=""></a></p>
+<p><strong>编辑工作流程</strong><br>在视差层设置对象最好的方法是在编辑模式下去播放游戏。可以移动角色（和相机）让玩家看到它并调整对象至实际视口。唯一的问题是播放模式下在unity中做出的更改不会保存。然而可以在播放模式下拷贝编辑过的对象并粘贴到编辑器中然后保存。我们创建一个有子集的“content”。这个content是在播放模式下编辑和复制过的。退出播放模式后，这个原始的content会被删除，新的content从剪切板粘贴过来，然后预制件就可以使用了。</p>
+<p><img src="../../assets/images/2019-09-13-Parallax-2d/181709gdpgid33t93vjfyf.png.thumb.jpg" alt="img"></p>
+<p>还有，不要忘记将新的对象放到视差层中。还可以编写或者使用一些编辑器工具来帮助你保存和自动完成对象层级设置。</p>
+<p>上边的案例实在编辑模式下执行的，所以可以在编辑器中用它来设置。不过我们在MimpiDreams中使用了这个工作流程，因为这对于美术设计在场景中移动很容易，并且他可以自己调整层级。</p>
+<p><strong>Summary</strong> <strong>总结</strong></p>
+<p><img src="../../assets/images/2019-09-13-Parallax-2d/181711j5s29z585k932ot6.gif" alt="img"></p>
+<p><strong>Some advantages of this solution</strong> <strong>这种解决方案的优势：</strong></p>
+<p>本地基本设置（脚本仅仅为了变焦）</p>
+<p>案例中更好的表现</p>
+<p>静态批处理，因为层级不会移动</p>
+<p>简单的编辑工作流程</p>
+<p><strong>Disadvantages</strong> <strong>劣势:</strong></p>
+<p>会产生更多的draw calls</p>
+<p>我们介绍了和Mimpi Dreams中制作视差效果不同的制作方法。你可能需要自定义一些东西。例如，我们显示所有摄像机的渲染纹理，不过在这边文章中，我想介绍最简单的设置。</p>
+  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br></pre></td><td class="code"><pre><span class="line">using UnityEngine;</span><br><span class="line">using System.Collections;</span><br><span class="line"></span><br><span class="line">[ExecuteInEditMode]</span><br><span class="line">public class CameraParallax : MonoBehaviour &#123;</span><br><span class="line"></span><br><span class="line">    public Camera mainCamera;</span><br><span class="line">    public Camera farCamera;</span><br><span class="line">    public Camera nearCamera;</span><br><span class="line"></span><br><span class="line">    void OnEnable()</span><br><span class="line">    &#123;</span><br><span class="line">        InitCameras();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    void LateUpdate()</span><br><span class="line">    &#123;</span><br><span class="line">        UpdateCameras();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void InitCameras()</span><br><span class="line">    &#123;</span><br><span class="line">        if(farCamera !&#x3D; null)</span><br><span class="line">        &#123;</span><br><span class="line">            farCamera.transform.localPosition &#x3D; Vector3.zero;</span><br><span class="line">            farCamera.transform.rotation &#x3D; Quaternion.identity;</span><br><span class="line">            farCamera.transform.localScale &#x3D; Vector3.one;</span><br><span class="line">            farCamera.orthographic &#x3D; false;</span><br><span class="line">            farCamera.clearFlags &#x3D; CameraClearFlags.SolidColor;</span><br><span class="line">            farCamera.depth &#x3D; -2;</span><br><span class="line">            farCamera.transparencySortMode &#x3D; TransparencySortMode.Orthographic;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        if(mainCamera !&#x3D; null)</span><br><span class="line">        &#123;</span><br><span class="line">            mainCamera.orthographic &#x3D; true;</span><br><span class="line">            mainCamera.clearFlags &#x3D; CameraClearFlags.Nothing;</span><br><span class="line">            mainCamera.depth &#x3D; -1;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        if(nearCamera !&#x3D; null)</span><br><span class="line">        &#123;</span><br><span class="line">            nearCamera.transform.localPosition &#x3D; Vector3.zero;</span><br><span class="line">            nearCamera.transform.rotation &#x3D; Quaternion.identity;</span><br><span class="line">            nearCamera.transform.localScale &#x3D; Vector3.one;</span><br><span class="line">            nearCamera.orthographic &#x3D; false;</span><br><span class="line">            nearCamera.clearFlags &#x3D; CameraClearFlags.Depth;</span><br><span class="line">            nearCamera.depth &#x3D; 0;</span><br><span class="line">            nearCamera.transparencySortMode &#x3D; TransparencySortMode.Orthographic;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void UpdateCameras()</span><br><span class="line">    &#123;</span><br><span class="line">        if(mainCamera &#x3D;&#x3D; null || farCamera &#x3D;&#x3D; null || nearCamera &#x3D;&#x3D; null) return;</span><br><span class="line"></span><br><span class="line">        &#x2F;&#x2F; orthoSize</span><br><span class="line">        float a &#x3D; mainCamera.orthographicSize;</span><br><span class="line">        &#x2F;&#x2F; distanceFromOrigin</span><br><span class="line">        float b &#x3D; Mathf.Abs(mainCamera.transform.position.z);</span><br><span class="line"></span><br><span class="line">        &#x2F;&#x2F;change clipping planes based on main camera z-position</span><br><span class="line">        farCamera.nearClipPlane &#x3D; b;</span><br><span class="line">        farCamera.farClipPlane &#x3D; mainCamera.farClipPlane;</span><br><span class="line">        nearCamera.farClipPlane &#x3D; b;</span><br><span class="line">        nearCamera.nearClipPlane &#x3D; mainCamera.nearClipPlane;</span><br><span class="line"></span><br><span class="line">        &#x2F;&#x2F;update field fo view for parallax cameras</span><br><span class="line">        float fieldOfView &#x3D; Mathf.Atan(a &#x2F; b)  * Mathf.Rad2Deg * 2f;</span><br><span class="line">        nearCamera.fieldOfView &#x3D; farCamera.fieldOfView &#x3D; fieldOfView;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>原文链接：</p>
+<ul>
+<li><p><a href="http://www.gamasutra.com/blogs/MichalBerlinger/20160323/268657/Combining_Perspective_and_Orthographic_Camera_for_Parallax_Effect_in_2D_Game.php" target="_blank" rel="noopener">http://www.gamasutra.com/blogs/MichalBerlinger/20160323/268657/Combining_Perspective_and_Orthographic_Camera_for_Parallax_Effect_in_2D_Game.php</a></p>
+</li>
+<li><p><a href="https://github.com/MichalBerlinger/ParallaxDemo" target="_blank" rel="noopener">https://github.com/MichalBerlinger/ParallaxDemo</a></p>
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C</a>
+              <a href="/tags/C/" rel="tag"># C#</a>
+              <a href="/tags/%E6%B8%B8%E6%88%8F/" rel="tag"># 游戏</a>
+              <a href="/tags/GitHub/" rel="tag"># GitHub</a>
+              <a href="/tags/Unity/" rel="tag"># Unity</a>
+              <a href="/tags/%E5%90%8C%E6%AD%A5/" rel="tag"># 同步</a>
+              <a href="/tags/UNITY/" rel="tag"># UNITY</a>
+              <a href="/tags/PHP/" rel="tag"># PHP</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/unity-2019-09-04-mono-cecil-inject/" rel="prev" title="如何快速的注入汇编">
+      <i class="fa fa-chevron-left"></i> 如何快速的注入汇编
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/dotnet-2019-10-29-time-wheel/" rel="next" title="时间轮的引入">
+      时间轮的引入 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  
+  <div class="comments">
+  <script src="https://utteranc.es/client.js" repo="zhepama/igiven.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async></script>
+  </div>
+  
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#什么是视差背景？"><span class="nav-number">1.</span> <span class="nav-text">什么是视差背景？</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#实现单层背景的滚动"><span class="nav-number">2.</span> <span class="nav-text">实现单层背景的滚动</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#UV-滚动方式："><span class="nav-number">2.1.</span> <span class="nav-text">UV 滚动方式：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#精灵滚动方式："><span class="nav-number">2.2.</span> <span class="nav-text">精灵滚动方式：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#照相机移动方式："><span class="nav-number">2.3.</span> <span class="nav-text">照相机移动方式：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#混合滚动方式："><span class="nav-number">2.4.</span> <span class="nav-text">混合滚动方式：</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#四种方式的优劣"><span class="nav-number">3.</span> <span class="nav-text">四种方式的优劣</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#平均性能："><span class="nav-number">3.1.</span> <span class="nav-text">平均性能：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#对复杂背景的支持："><span class="nav-number">3.2.</span> <span class="nav-text">对复杂背景的支持：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#是否可以无限延伸："><span class="nav-number">3.3.</span> <span class="nav-text">是否可以无限延伸：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#复合多层背景的滚动，实现视差效果："><span class="nav-number">3.4.</span> <span class="nav-text">复合多层背景的滚动，实现视差效果：</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Unity混合模式1"><span class="nav-number"></span> <span class="nav-text">Unity混合模式1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Unity混合模式2"><span class="nav-number"></span> <span class="nav-text">Unity混合模式2</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#结合透视和正交相机在Unity2D游戏中制作视差效果"><span class="nav-number"></span> <span class="nav-text">结合透视和正交相机在Unity2D游戏中制作视差效果</span></a></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhepama"
+      src="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+  <p class="site-author-name" itemprop="name">zhepama</p>
+  <div class="site-description" itemprop="description">一个不专业的程序员,写着专业的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">139</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhepama" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhepama" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhepama@gmail.com" title="E-Mail → mailto:zhepama@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.godgodgame.com/" title="http:&#x2F;&#x2F;www.godgodgame.com" rel="noopener" target="_blank">GODGODGAME</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.igiven.com/" title="https:&#x2F;&#x2F;www.igiven.com">IGIVEN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhepama.github.io/C-Sharp-Playground/zh/" title="https:&#x2F;&#x2F;zhepama.github.io&#x2F;C-Sharp-Playground&#x2F;zh&#x2F;" rel="noopener" target="_blank">数据结构与算法</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhepama</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

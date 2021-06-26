@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.igiven.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="假如有类型 Show 的定义如下 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051十進位表示法[Flags]enum Days&amp;#123;    None      &#x3D; 0,  &#x2F;&#x2F; 0000 0000    Sunday    &amp;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C＃枚举中使用Flags特性">
+<meta property="og:url" content="http://www.igiven.com/dotnet-2020-11-24-flags/index.html">
+<meta property="og:site_name" content="IGiven">
+<meta property="og:description" content="假如有类型 Show 的定义如下 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051十進位表示法[Flags]enum Days&amp;#123;    None      &#x3D; 0,  &#x2F;&#x2F; 0000 0000    Sunday    &amp;">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-11-24-flags/image-20210404182659146.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-11-24-flags/image-20210404182718872.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-11-24-flags/image-20210404182742701.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-11-24-flags/image-20210404182802570.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-11-24-flags/image-20210404182612251.png">
+<meta property="article:published_time" content="2020-11-24T00:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-26T08:36:17.942Z">
+<meta property="article:author" content="zhepama">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="C#">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.igiven.com/assets/images/2020-11-24-flags/image-20210404182659146.png">
+
+<link rel="canonical" href="http://www.igiven.com/dotnet-2020-11-24-flags/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>C＃枚举中使用Flags特性 | IGiven</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="IGiven" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="IGiven" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">IGiven</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">李九仙的博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">139</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">32</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-留言">
+
+    <a href="/guestbook/" rel="section"><i class="fa fa-sticky-note fa-fw"></i>留言</a>
+
+  </li>
+        <li class="menu-item menu-item-rss">
+
+    <a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/dotnet-2020-11-24-flags/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+      <meta itemprop="name" content="zhepama">
+      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="IGiven">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          C＃枚举中使用Flags特性<a href="https://github.com/zhepama/igiven.github.io/edit/master/source/_posts/dotnet/2020-11-24-flags.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil-alt"></i></a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-11-24 08:00:00" itemprop="dateCreated datePublished" datetime="2020-11-24T08:00:00+08:00">2020-11-24</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 16:36:17" itemprop="dateModified" datetime="2021-06-26T16:36:17+08:00">2021-06-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/dotnet/" itemprop="url" rel="index"><span itemprop="name">dotnet</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>假如有类型 Show 的定义如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line">十進位表示法</span><br><span class="line">[Flags]</span><br><span class="line">enum Days</span><br><span class="line">&#123;</span><br><span class="line">    None      &#x3D; 0,  &#x2F;&#x2F; 0000 0000</span><br><span class="line">    Sunday    &#x3D; 1,  &#x2F;&#x2F; 0000 0001</span><br><span class="line">    Monday    &#x3D; 2,  &#x2F;&#x2F; 0000 0010</span><br><span class="line">    Tuesday   &#x3D; 4,  &#x2F;&#x2F; 0000 0100</span><br><span class="line">    Wednesday &#x3D; 8,  &#x2F;&#x2F; 0000 1000</span><br><span class="line">    Thursday  &#x3D; 16, &#x2F;&#x2F; 0001 0000</span><br><span class="line">    Friday    &#x3D; 32, &#x2F;&#x2F; 0010 0000</span><br><span class="line">    Saturday  &#x3D; 64  &#x2F;&#x2F; 0100 0000</span><br><span class="line">&#125;</span><br><span class="line">位元移位表示法</span><br><span class="line">[Flags]</span><br><span class="line">enum Days</span><br><span class="line">&#123;</span><br><span class="line">    None      &#x3D; 0,      &#x2F;&#x2F; 0000 0000</span><br><span class="line">    Sunday    &#x3D; 1 &lt;&lt; 0, &#x2F;&#x2F; 0000 0001</span><br><span class="line">    Monday    &#x3D; 1 &lt;&lt; 1, &#x2F;&#x2F; 0000 0010</span><br><span class="line">    Tuesday   &#x3D; 1 &lt;&lt; 2, &#x2F;&#x2F; 0000 0100</span><br><span class="line">    Wednesday &#x3D; 1 &lt;&lt; 3, &#x2F;&#x2F; 0000 1000</span><br><span class="line">    Thursday  &#x3D; 1 &lt;&lt; 4, &#x2F;&#x2F; 0001 0000</span><br><span class="line">    Friday    &#x3D; 1 &lt;&lt; 5, &#x2F;&#x2F; 0010 0000</span><br><span class="line">    Saturday  &#x3D; 1 &lt;&lt; 6  &#x2F;&#x2F; 0100 0000</span><br><span class="line">&#125;</span><br><span class="line">二進位表示法 (C# 7.2新增)</span><br><span class="line">[Flags]</span><br><span class="line">enum Days</span><br><span class="line">&#123;</span><br><span class="line">    None      &#x3D; 0b_0000_0000, &#x2F;&#x2F; 0000 0000</span><br><span class="line">    Sunday    &#x3D; 0b_0000_0001, &#x2F;&#x2F; 0000 0001</span><br><span class="line">    Monday    &#x3D; 0b_0000_0010, &#x2F;&#x2F; 0000 0010</span><br><span class="line">    Tuesday   &#x3D; 0b_0000_0100, &#x2F;&#x2F; 0000 0100</span><br><span class="line">    Wednesday &#x3D; 0b_0000_1000, &#x2F;&#x2F; 0000 1000</span><br><span class="line">    Thursday  &#x3D; 0b_0001_0000, &#x2F;&#x2F; 0001 0000</span><br><span class="line">    Friday    &#x3D; 0b_0010_0000, &#x2F;&#x2F; 0010 0000</span><br><span class="line">    Saturday  &#x3D; 0b_0100_0000  &#x2F;&#x2F; 0100 0000</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">十六進位表示法</span><br><span class="line">[Flags]</span><br><span class="line">enum RenderType</span><br><span class="line">&#123;</span><br><span class="line">   None &#x3D; 0x0,</span><br><span class="line">   DataUri &#x3D; 0x1,</span><br><span class="line">   GZip &#x3D; 0x2,</span><br><span class="line">   ContentPage &#x3D; 0x4,</span><br><span class="line">   ViewPage &#x3D; 0x8,</span><br><span class="line">   HomePage &#x3D; 0x10 &#x2F;&#x2F; Next two values could be 0x20, 0x40</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<ul>
+<li>&amp; 按位与</li>
+<li>| 按位或</li>
+<li>^ 按位异或</li>
+<li>~取反</li>
+</ul>
+<h2 id="并集"><a href="#并集" class="headerlink" title="并集"></a>并集</h2><p>a|b: 并集(所有的和,相同部分只算一次);</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt;&gt; A &#x3D; &#123;&#39;数学&#39;,&#39;语文&#39;,&#39;英语&#39;,&#39;物理&#39;,&#39;化学&#39;,&#39;生物&#39;&#125;</span><br><span class="line">&gt;&gt;&gt; B &#x3D; &#123;&#39;数学&#39;,&#39;语文&#39;,&#39;英语&#39;,&#39;政治&#39;,&#39;地理&#39;,&#39;历史&#39;&#125;</span><br><span class="line">&gt;&gt;&gt; A | B</span><br><span class="line">&#123;&#39;英语&#39;, &#39;物理&#39;, &#39;语文&#39;, &#39;政治&#39;, &#39;化学&#39;, &#39;数学&#39;, &#39;生物&#39;, &#39;地理&#39;, &#39;历史&#39;&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="../../assets/images/2020-11-24-flags/image-20210404182659146.png" alt="image-20210404182659146"></p>
+<h2 id="差集"><a href="#差集" class="headerlink" title="差集"></a>差集</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt;&gt; A &#x3D; &#123;&#39;数学&#39;,&#39;语文&#39;,&#39;英语&#39;,&#39;物理&#39;,&#39;化学&#39;,&#39;生物&#39;&#125;</span><br><span class="line">&gt;&gt;&gt; B &#x3D; &#123;&#39;数学&#39;,&#39;语文&#39;,&#39;英语&#39;,&#39;政治&#39;,&#39;地理&#39;,&#39;历史&#39;&#125;</span><br><span class="line">&gt;&gt;&gt; A &amp; (~B)</span><br><span class="line">&#123;&#39;物理&#39;, &#39;生物&#39;, &#39;化学&#39;&#125;</span><br><span class="line">&gt;&gt;&gt; B &amp; (~A)</span><br><span class="line">&#123;&#39;政治&#39;, &#39;历史&#39;, &#39;地理&#39;&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="../../assets/images/2020-11-24-flags/image-20210404182718872.png" alt="image-20210404182718872"></p>
+<h2 id="补集-对称差集"><a href="#补集-对称差集" class="headerlink" title="补集(对称差集)"></a>补集(对称差集)</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt;&gt; A &#x3D; &#123;&#39;数学&#39;,&#39;语文&#39;,&#39;英语&#39;,&#39;物理&#39;,&#39;化学&#39;,&#39;生物&#39;&#125;</span><br><span class="line">&gt;&gt;&gt; B &#x3D; &#123;&#39;数学&#39;,&#39;语文&#39;,&#39;英语&#39;,&#39;政治&#39;,&#39;地理&#39;,&#39;历史&#39;&#125;</span><br><span class="line">&gt;&gt;&gt; A ^ B</span><br><span class="line">&#123;&#39;物理&#39;, &#39;生物&#39;, &#39;化学&#39;, &#39;政治&#39;, &#39;历史&#39;, &#39;地理&#39;&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><img src="../../assets/images/2020-11-24-flags/image-20210404182742701.png" alt="image-20210404182742701"></p>
+<p><img src="../../assets/images/2020-11-24-flags/image-20210404182802570.png" alt="image-20210404182802570"></p>
+<h2 id="交集"><a href="#交集" class="headerlink" title="交集"></a>交集</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt;&gt; A &#x3D; &#123;&#39;数学&#39;,&#39;语文&#39;,&#39;英语&#39;,&#39;物理&#39;,&#39;化学&#39;,&#39;生物&#39;&#125;</span><br><span class="line">&gt;&gt;&gt; B &#x3D; &#123;&#39;数学&#39;,&#39;语文&#39;,&#39;英语&#39;,&#39;政治&#39;,&#39;地理&#39;,&#39;历史&#39;&#125;</span><br><span class="line">&gt;&gt;&gt; A &amp; B</span><br><span class="line">&#123;&#39;英语&#39;, &#39;语文&#39;, &#39;数学&#39;&#125;</span><br></pre></td></tr></table></figure>
+<p>或者</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Show show &#x3D; Show.A | Show.B;</span><br><span class="line">show.HasFlag(Show.A);</span><br></pre></td></tr></table></figure>
+<p>从性能上看通过 <code>&amp;</code> 的性能会比 HasFlag 高，但是从可读性上 HasFlag 更友好，如果你的代码没有性能问题推荐使用 HasFlag 方法</p>
+<p><img src="../../assets/images/2020-11-24-flags/image-20210404182612251.png" alt="image-20210404182612251"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C</a>
+              <a href="/tags/C/" rel="tag"># C#</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/unity-2020-11-18-netcode-sourcecode/" rel="prev" title="netcode源代码解读">
+      <i class="fa fa-chevron-left"></i> netcode源代码解读
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/unity-2020-11-29-pitch-yaw-roll/" rel="next" title="pitch yaw roll是什么">
+      pitch yaw roll是什么 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  
+  <div class="comments">
+  <script src="https://utteranc.es/client.js" repo="zhepama/igiven.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async></script>
+  </div>
+  
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#并集"><span class="nav-number">1.</span> <span class="nav-text">并集</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#差集"><span class="nav-number">2.</span> <span class="nav-text">差集</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#补集-对称差集"><span class="nav-number">3.</span> <span class="nav-text">补集(对称差集)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#交集"><span class="nav-number">4.</span> <span class="nav-text">交集</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhepama"
+      src="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+  <p class="site-author-name" itemprop="name">zhepama</p>
+  <div class="site-description" itemprop="description">一个不专业的程序员,写着专业的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">139</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhepama" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhepama" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhepama@gmail.com" title="E-Mail → mailto:zhepama@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.godgodgame.com/" title="http:&#x2F;&#x2F;www.godgodgame.com" rel="noopener" target="_blank">GODGODGAME</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.igiven.com/" title="https:&#x2F;&#x2F;www.igiven.com">IGIVEN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhepama.github.io/C-Sharp-Playground/zh/" title="https:&#x2F;&#x2F;zhepama.github.io&#x2F;C-Sharp-Playground&#x2F;zh&#x2F;" rel="noopener" target="_blank">数据结构与算法</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhepama</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

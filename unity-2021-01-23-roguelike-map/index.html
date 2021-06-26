@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.igiven.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="引言文章作者：Mike Anderson 随机生成的地图是 Roguelike 类游戏最独特的一点，它让游戏变得很有乐趣，因为玩家永远要面对新的挑战。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="roguelike地牢生成算法">
+<meta property="og:url" content="http://www.igiven.com/unity-2021-01-23-roguelike-map/index.html">
+<meta property="og:site_name" content="IGiven">
+<meta property="og:description" content="引言文章作者：Mike Anderson 随机生成的地图是 Roguelike 类游戏最独特的一点，它让游戏变得很有乐趣，因为玩家永远要面对新的挑战。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-01-23T00:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-26T08:36:17.950Z">
+<meta property="article:author" content="zhepama">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="C#">
+<meta property="article:tag" content="游戏">
+<meta property="article:tag" content="地图">
+<meta property="article:tag" content="Java">
+<meta property="article:tag" content="PHP">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://www.igiven.com/unity-2021-01-23-roguelike-map/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>roguelike地牢生成算法 | IGiven</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="IGiven" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="IGiven" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">IGiven</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">李九仙的博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">139</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">32</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-留言">
+
+    <a href="/guestbook/" rel="section"><i class="fa fa-sticky-note fa-fw"></i>留言</a>
+
+  </li>
+        <li class="menu-item menu-item-rss">
+
+    <a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/unity-2021-01-23-roguelike-map/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+      <meta itemprop="name" content="zhepama">
+      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="IGiven">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          roguelike地牢生成算法<a href="https://github.com/zhepama/igiven.github.io/edit/master/source/_posts/unity/2021-01-23-roguelike-map.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil-alt"></i></a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-01-23 08:00:00" itemprop="dateCreated datePublished" datetime="2021-01-23T08:00:00+08:00">2021-01-23</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 16:36:17" itemprop="dateModified" datetime="2021-06-26T16:36:17+08:00">2021-06-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/unity/" itemprop="url" rel="index"><span itemprop="name">unity</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h4 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h4><p>文章作者：<a href="http://www.roguebasin.com/index.php?title=Mike_Anderson" target="_blank" rel="noopener">Mike Anderson</a></p>
+<p>随机生成的地图是 <a href="https://indienova.com/tag/roguelike/" target="_blank" rel="noopener">Roguelike</a> 类游戏最独特的一点，它让游戏变得很有乐趣，因为玩家永远要面对新的挑战。</p>
+<p>但是随机地图却不是那么容易生成的。在传统的游戏中，一般你都会有一个地图编辑器，可以自由的创建地图。在任何一款称得上是“Roguelike”的游戏中，开发者都要自己创造一个“虚拟地图编辑器”，这样才能随机创建无限的动态地图，从而让玩家在其中流连忘返。</p>
+<p>在这篇文章里，我会将自己在开发一款名为 <a href="http://sourceforge.net/projects/tyrant/" target="_blank" rel="noopener">Tyrant</a> 的 Roguelike 游戏中使用的方法记录下来。我怀疑这可能只能算是一个原型，但是我之前也没有见过什么一本正经讲述生成 Roguelike 地图算法的文章。而且，它工作得还是比较令人满意的，所以，我愿意将它分享给大家。</p>
+<h4 id="这款算法的目标"><a href="#这款算法的目标" class="headerlink" title="这款算法的目标"></a>这款算法的目标</h4><p>在写任何代码之前，了解自己的目标总是很重要的，这对编程很有帮助，哪怕你随后会做无数的修改。</p>
+<p>一个地牢（<a href="https://indienova.com/tag/dungeon/" target="_blank" rel="noopener">Dungeon</a>）应该包含以下要点：</p>
+<ul>
+<li>一组相互连通的房间、门和通道</li>
+<li>一个入口（向上走的楼梯）</li>
+<li>一个出口（向下走的楼梯）</li>
+<li>所有的空间必须能够到达</li>
+</ul>
+<p>最后一点尤其重要。要知道，你的玩家在契而不舍的努力之后，应该能够顺利通过这一层，不要让他们失望。另外，如果放了某个物品到地图上的某个空间，它应该不会被藏在无法到达的地方。</p>
+<h4 id="计划"><a href="#计划" class="headerlink" title="计划"></a>计划</h4><p>在我写 Tyrant 的时候，我尝试了很多种不同的算法来生成地图，这里所讲的是我能做到的最好的一个，也是目前游戏中使用的那个。</p>
+<p>我的灵感来自于此：“如果我是地下城的一个居民，那么我该怎么去建设我的地牢呢？”</p>
+<p>显然，我并不会将我的地下城建造成一个一个看起来不错的小房间，然后在中间用长长的通道连接起来。所以，当我需要为我的小怪物们提供更多空间的时候，我应该是拿起我的斧头，挖一个更大一些的洞。这样当他们有所需要的时候就会增加一些新房间——尽管它们看起来可能杂乱无章。</p>
+<p>有些地下城主可能想要用吊桥呀、陷阱呀什么的来守护比较“有趣”的房间，但是这些需求都异曲同工。由一个小的地牢开始，慢慢向四周扩散，直到整个地牢形成。这就是我们的计划。</p>
+<h4 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h4><p>在这个算法里面，“元素”代表着某种地图元素，比如：大房间、小房间、通道、圆形竞技场、保险柜等等。</p>
+<ol>
+<li>将整个地图填满土</li>
+<li>在地图中间挖一个房间出来</li>
+<li>选中某一房间（如果有多个的话）的墙壁</li>
+<li>确定要修建某种新元素</li>
+<li>查看从选中的墙延伸出去是否有足够的空间承载新的元素</li>
+<li>如果有的话继续，不然就返回第 3 步</li>
+<li>从选中的墙处增加新的元素</li>
+<li>返回第 3 步，直到地牢建设完成</li>
+<li>在地图的随机点上安排上楼和下楼的楼梯</li>
+<li>最后，放进去怪兽和物品</li>
+</ol>
+<p>第 1、2 步很简单。只要你创建好地图就可以去做到。我发现，写一个 <code>fillRect</code> 指令用来填充一个区域是比较有效的做法。</p>
+<p>第 3 步麻烦一些。你不能随意的寻找一个方块区域去添加你的元素，因为规则是要将元素添加到当前的地牢当中。这样会使得连接看起来比较不错，也确保了所有的区域都可以到达。Tyrant 的做法是：在地图上随机选择一个方块，直到找到横向或者纵向毗邻一个干净的方块那个。这样做的好处是：它给了你一个近乎公平的方式去选择某一面墙。</p>
+<p>第 4 步不太困难。我自己写了一个随机方法来决定建造哪一种元素。你可以自己定义它们，调整某些元素出现的权重，这会让你的地牢有自己的特点和侧重点。一个规划比较好的地牢会有很多规矩的房间，中间有长而且直的走廊连接。而洞穴则可能有一堆打洞以及曲折的小道等等。</p>
+<p>第 5 步更复杂一些，而且也是整个算法的核心。针对每一种元素，你需要知道它会占用的空间大小。然后你要去判断它是否和已经有的元素相交。Tyrant 使用了相对简单的一种方法：它会先得到要创建的元素所占用的空间大小，得到这个空间的数据，然后检查是否这个空间由土填满。</p>
+<p>第 6 步决定是否创建这个元素。如果这个待确定的空间包含有除了土之外的内容，那么就回到第 3 步继续。注意，大部分元素在这步都会被打回。不过这不是个问题，因为处理时间可以忽略。Tyrant 尝试着将某个元素加入 300 次左右到地牢中去，一般只有 40 次左右会通过这步。</p>
+<p>第 7 步会将新元素添加到地图上去。在这步，你还可以增加一些有趣的元素，比如动物、居民、秘道门和财宝什么的。</p>
+<p>第 8 步返回去创建更多的房间。确切的次数跟你地牢的尺寸以及其它参数有关。</p>
+<p>第 9 步要看个人喜好了。最简单的方法就是随机的去查找方块，直到找到一个空的位置去放置楼梯。</p>
+<p>第 10 步就是随机的创建怪兽。Tyrant 在这一步才加入游戏中大多数的怪兽，由少量的特殊怪兽或者生物会在生成房间的时候添加进去。</p>
+<p>就这样啦，这里所说的只是算法的规则，具体还要您自己去实现啦。</p>
+<h4 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h4><p>好了，在看了半天算法之后，我们来一个例子吧：</p>
+<p>Key:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"># &#x3D; 地板</span><br><span class="line">D &#x3D; 门</span><br><span class="line">W &#x3D; 正在考查中的墙</span><br><span class="line">C &#x3D; 宝箱</span><br></pre></td></tr></table></figure>
+
+<p>\1. 第一个房间</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">#####</span><br><span class="line">#####</span><br><span class="line">#####</span><br></pre></td></tr></table></figure>
+
+<p>\2. 随机选择一面墙</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">#####</span><br><span class="line">#####W</span><br><span class="line">#####</span><br></pre></td></tr></table></figure>
+
+<p>\3. 为新的通道元素进行区域搜索（包括两边的空间）</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">#####**********</span><br><span class="line">#####W*********</span><br><span class="line">#####**********</span><br></pre></td></tr></table></figure>
+
+<p>\4. 是空的，可以添加元素</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">#####</span><br><span class="line">#####D########</span><br><span class="line">#####</span><br></pre></td></tr></table></figure>
+
+<p>\5. 选择另外一面墙</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">#####     W</span><br><span class="line">#####D########</span><br><span class="line">#####</span><br></pre></td></tr></table></figure>
+
+<p>\6. 扫描寻找新的房间所占用空间：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">       ******</span><br><span class="line">       ******</span><br><span class="line">       ******</span><br><span class="line">       ******</span><br><span class="line">       ******</span><br><span class="line">#####  ***W**</span><br><span class="line">#####D########</span><br><span class="line">#####</span><br></pre></td></tr></table></figure>
+
+<p>\7. 这个地区也可以，那就添加一个新房间，再往里面扔一个宝箱 C（Chest）：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">        ####</span><br><span class="line">        ###C</span><br><span class="line">        ####</span><br><span class="line">        ####</span><br><span class="line">#####     D  </span><br><span class="line">#####D########</span><br><span class="line">#####</span><br></pre></td></tr></table></figure>
+
+<p>\8. 跟前面做法一样，我们增加一个新的通道元素</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">             #</span><br><span class="line">             #</span><br><span class="line">        #### #</span><br><span class="line">        ###C #</span><br><span class="line">        #### #</span><br><span class="line">        #### #</span><br><span class="line">#####     D  #</span><br><span class="line">#####D########</span><br><span class="line">#####</span><br></pre></td></tr></table></figure>
+
+<p>\9. 这一次，我们试着为第二个房间增加一个通道元素</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">             #</span><br><span class="line">             #</span><br><span class="line">        #### #</span><br><span class="line">        ###C*******</span><br><span class="line">        ####W******</span><br><span class="line">        ####*******</span><br><span class="line">#####     D  #</span><br><span class="line">#####D########</span><br><span class="line">#####</span><br></pre></td></tr></table></figure>
+
+<p>\10. 扫描失败了，已经被占用</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">             #</span><br><span class="line">             #</span><br><span class="line">        #### #</span><br><span class="line">        ###C #</span><br><span class="line">        #### #</span><br><span class="line">        #### #</span><br><span class="line">#####     D  #</span><br><span class="line">#####D########</span><br><span class="line">#####</span><br></pre></td></tr></table></figure>
+
+<p>\11. 比较特别的元素，一个菱形的房间</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">             #</span><br><span class="line">             #   ###</span><br><span class="line">        #### #  #####</span><br><span class="line">        ###C # #######</span><br><span class="line">        #### #D#######</span><br><span class="line">        #### # #######</span><br><span class="line">#####     D  #  #####</span><br><span class="line">#####D########   ###</span><br><span class="line">#####</span><br></pre></td></tr></table></figure>
+
+<p>\12. 添加一个隐藏的暗门，以及充满陷阱的通道：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">             #</span><br><span class="line">             #   ###</span><br><span class="line">        #### #  #####</span><br><span class="line">        ###C # #######S###T##TT#T##</span><br><span class="line">        #### #D#######</span><br><span class="line">        #### # #######</span><br><span class="line">#####     D  #  #####</span><br><span class="line">#####D########   ###</span><br><span class="line">#####</span><br></pre></td></tr></table></figure>
+
+<p>\13. 继续……</p>
+<h4 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h4><p>好了，这就是我的算法，我希望它对你有用，或者从一个有趣的角度去看如何解决一个问题。</p>
+<h4 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h4><p><strong>Java 代码实现</strong><br><a href="http://www.roguebasin.com/index.php?title=Java_Example_of_Dungeon-Building_Algorithm" target="_blank" rel="noopener">Java 代码实现</a><br>你可以通过 <a href="http://openprocessing.org/visuals/?visualID=18822" target="_blank" rel="noopener">Open Processing</a> 在浏览器里面运行它（需要做一些小修改）。它会创建一个图形化的地牢。</p>
+<p><strong>Python Curses 代码实现</strong><br><a href="http://www.roguebasin.com/index.php?title=Python_Curses_Example_of_Dungeon-Building_Algorithm" target="_blank" rel="noopener">Python Curses 代码实现</a></p>
+<p><strong>C++ 代码实现</strong><br><a href="http://www.roguebasin.com/index.php?title=C%2B%2B_Example_of_Dungeon-Building_Algorithm" target="_blank" rel="noopener">C++ 代码实现</a></p>
+<p><strong>C# 代码实现</strong><br><a href="http://www.roguebasin.com/index.php?title=CSharp_Example_of_a_Dungeon-Building_Algorithm" target="_blank" rel="noopener">C# 代码实现</a></p>
+<p>原文地址：<a href="http://www.roguebasin.com/index.php?title=Dungeon-Building_Algorithm" target="_blank" rel="noopener">链接</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C</a>
+              <a href="/tags/C/" rel="tag"># C#</a>
+              <a href="/tags/%E6%B8%B8%E6%88%8F/" rel="tag"># 游戏</a>
+              <a href="/tags/%E5%9C%B0%E5%9B%BE/" rel="tag"># 地图</a>
+              <a href="/tags/Java/" rel="tag"># Java</a>
+              <a href="/tags/PHP/" rel="tag"># PHP</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/unity-2021-01-22-civ-map/" rel="prev" title="文明6地图生成算法">
+      <i class="fa fa-chevron-left"></i> 文明6地图生成算法
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/unity-2021-01-23-Spelunky-map/" rel="next" title="Spelunky关卡生成">
+      Spelunky关卡生成 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  
+  <div class="comments">
+  <script src="https://utteranc.es/client.js" repo="zhepama/igiven.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async></script>
+  </div>
+  
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#引言"><span class="nav-number">1.</span> <span class="nav-text">引言</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#这款算法的目标"><span class="nav-number">2.</span> <span class="nav-text">这款算法的目标</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#计划"><span class="nav-number">3.</span> <span class="nav-text">计划</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#算法"><span class="nav-number">4.</span> <span class="nav-text">算法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#例子"><span class="nav-number">5.</span> <span class="nav-text">例子</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#总结"><span class="nav-number">6.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#代码实现"><span class="nav-number">7.</span> <span class="nav-text">代码实现</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhepama"
+      src="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+  <p class="site-author-name" itemprop="name">zhepama</p>
+  <div class="site-description" itemprop="description">一个不专业的程序员,写着专业的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">139</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhepama" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhepama" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhepama@gmail.com" title="E-Mail → mailto:zhepama@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.godgodgame.com/" title="http:&#x2F;&#x2F;www.godgodgame.com" rel="noopener" target="_blank">GODGODGAME</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.igiven.com/" title="https:&#x2F;&#x2F;www.igiven.com">IGIVEN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhepama.github.io/C-Sharp-Playground/zh/" title="https:&#x2F;&#x2F;zhepama.github.io&#x2F;C-Sharp-Playground&#x2F;zh&#x2F;" rel="noopener" target="_blank">数据结构与算法</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhepama</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

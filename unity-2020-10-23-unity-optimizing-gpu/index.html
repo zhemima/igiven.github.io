@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.igiven.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="静态批处理[1] 定义  标明为 Static 的静态物件，如果在使用相同材质球的条件下，在Build（项目打包）的时候Unity会自动地提取这些共享材质的静态模型的Vertex buffer和Index buffer。根据其摆放在场景中的位置等最终状态信息，将这些模型的顶点数据变换到世界空间下，存储在新构建的大Vertex buffer和Index buffer中。并且记录每一个子模型的Inde">
+<meta property="og:type" content="article">
+<meta property="og:title" content="关于静态批处理&#x2F;动态批处理&#x2F;GPU Instancing &#x2F;SRP Batcher的详细剖析">
+<meta property="og:url" content="http://www.igiven.com/unity-2020-10-23-unity-optimizing-gpu/index.html">
+<meta property="og:site_name" content="IGiven">
+<meta property="og:description" content="静态批处理[1] 定义  标明为 Static 的静态物件，如果在使用相同材质球的条件下，在Build（项目打包）的时候Unity会自动地提取这些共享材质的静态模型的Vertex buffer和Index buffer。根据其摆放在场景中的位置等最终状态信息，将这些模型的顶点数据变换到世界空间下，存储在新构建的大Vertex buffer和Index buffer中。并且记录每一个子模型的Inde">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-10-23-unity-optimizing-gpu/v2-48b948e088a2310817c67c6530637a95_720w.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-10-23-unity-optimizing-gpu/v2-9e2e1e5df3ad1b37ebe0dc1af4712005_720w.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-10-23-unity-optimizing-gpu/v2-37b225e02afe6dca369647e4a3bf3bd4_720w.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-10-23-unity-optimizing-gpu/v2-177f53a633d2eac753abe07805367d4d_720w.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-10-23-unity-optimizing-gpu/v2-8c69d718432ba4045155c700fda6f6b6_720w.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-10-23-unity-optimizing-gpu/v2-b06a0dbdf07544a4d0687a8917611afd_180x120.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-10-23-unity-optimizing-gpu/v2-5c97567b099e9d98ca9d957282b1922e_720w.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-10-23-unity-optimizing-gpu/v2-0dde54b930bef9c768c10d3c79126e16_720w.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-10-23-unity-optimizing-gpu/v2-7b93309c00f2866639a2f7c529495608_720w.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-10-23-unity-optimizing-gpu/v2-b0599861b3304d19979816413cb13a43_720w.jpg">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-10-23-unity-optimizing-gpu/v2-6125b513800939912bb07853ae0a1f90_720w.jpg">
+<meta property="article:published_time" content="2020-10-23T00:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-26T08:36:17.950Z">
+<meta property="article:author" content="zhepama">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="Unity">
+<meta property="article:tag" content="UNITY">
+<meta property="article:tag" content="mesh">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.igiven.com/assets/images/2020-10-23-unity-optimizing-gpu/v2-48b948e088a2310817c67c6530637a95_720w.jpg">
+
+<link rel="canonical" href="http://www.igiven.com/unity-2020-10-23-unity-optimizing-gpu/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>关于静态批处理/动态批处理/GPU Instancing /SRP Batcher的详细剖析 | IGiven</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="IGiven" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="IGiven" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">IGiven</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">李九仙的博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">139</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">32</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-留言">
+
+    <a href="/guestbook/" rel="section"><i class="fa fa-sticky-note fa-fw"></i>留言</a>
+
+  </li>
+        <li class="menu-item menu-item-rss">
+
+    <a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/unity-2020-10-23-unity-optimizing-gpu/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+      <meta itemprop="name" content="zhepama">
+      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="IGiven">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          关于静态批处理/动态批处理/GPU Instancing /SRP Batcher的详细剖析<a href="https://github.com/zhepama/igiven.github.io/edit/master/source/_posts/unity/2020-10-23-unity-optimizing-gpu.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil-alt"></i></a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-10-23 08:00:00" itemprop="dateCreated datePublished" datetime="2020-10-23T08:00:00+08:00">2020-10-23</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 16:36:17" itemprop="dateModified" datetime="2021-06-26T16:36:17+08:00">2021-06-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/unity/" itemprop="url" rel="index"><span itemprop="name">unity</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="静态批处理-1"><a href="#静态批处理-1" class="headerlink" title="静态批处理[1]"></a>静态批处理<a href="https://zhuanlan.zhihu.com/p/98642798#ref_1" target="_blank" rel="noopener">[1]</a></h2><ul>
+<li><strong>定义</strong></li>
+</ul>
+<p>标明为 Static 的静态物件，如果在使用<strong>相同材质球</strong>的条件下，在<strong>Build（项目打包）</strong>的时候Unity会自动地提取这些共享材质的静态模型的Vertex buffer和Index buffer。根据其摆放在场景中的位置等最终状态信息，将这些模型的顶点数据变换到世界空间下，存储在新构建的大Vertex buffer和Index buffer中。并且记录每一个子模型的Index buffer数据在构建的大Index buffer中的起始及结束位置。</p>
+<p><img src="../../assets/images/2020-10-23-unity-optimizing-gpu/v2-48b948e088a2310817c67c6530637a95_720w.jpg" alt="img"></p>
+<p>在后续的绘制过程中，一次性提交整个合并模型的顶点数据，根据引擎的场景管理系统判断各个子模型的可见性。然后设置一次渲染状态，调用多次Draw call分别绘制每一个子模型。</p>
+<p><img src="../../assets/images/2020-10-23-unity-optimizing-gpu/v2-9e2e1e5df3ad1b37ebe0dc1af4712005_720w.jpg" alt="img"></p>
+<p>Static batching并<strong>不减少Draw call的数量（</strong>但是在编辑器时由于计算方法区别Draw call数量是会显示减少了的<a href="https://zhuanlan.zhihu.com/p/98642798#ref_2" target="_blank" rel="noopener">[2]</a>），但是由于我们预先把所有的子模型的顶点变换到了世界空间下，所以在运行时cpu不需要再次执行顶点变换操作，节约了少量的计算资源，并且这些子模型共享材质，所以在多次Draw call调用之间并没有渲染状态的切换，渲染API（Command Buffer）会缓存绘制命令，起到了渲染优化的目的 。</p>
+<p>但Static batching也会带来一些性能的负面影响。Static batching会导致应用打包之后体积增大，应用运行时所占用的内存体积也会增大。</p>
+<p>另外，在很多不同的GameObject引用同一模型的情况下，如果不开启Static batching，GameObject共享的模型会在应用程序包内或者内存中只存在一份，绘制的时候提交模型顶点信息，然后设置每一个GameObjec的材质信息，分别调用渲染API绘制。开启Static batching，在Unity执行Build的时候，场景中所有引用相同模型的GameObject都必须将模型顶点信息复制，并经过计算变化到最终在世界空间中，存储在最终生成的Vertex buffer中。这就导致了打包的体积及运行时内存的占用增大。例如，在茂密的森林级别将树标记为静态会严重影响内存<a href="https://zhuanlan.zhihu.com/p/98642798#ref_3" target="_blank" rel="noopener">[3]</a>。</p>
+<ul>
+<li><strong>无法参与批处理情况</strong></li>
+</ul>
+<ol>
+<li>改变Renderer.material将会造成一份材质的拷贝，因此会打断批处理，你应该使用Renderer.sharedMaterial来保证材质的共享状态。</li>
+</ol>
+<ul>
+<li><strong>相同材质批处理断开情况</strong></li>
+</ul>
+<ol>
+<li>位置不相邻且中间夹杂着不同材质的其他物体，不会进行同批处理，这种情况比较特殊，涉及到批处理的顺序，我的另一篇文章有详解。</li>
+<li>拥有lightmap的物体含有额外（隐藏）的材质属性，比如：lightmap的偏移和缩放系数等。所以，拥有lightmap的物体将不会进行同批处理（除非他们指向lightmap的同一部分）。</li>
+</ol>
+<ul>
+<li><strong>流程原理</strong></li>
+</ul>
+<p><img src="../../assets/images/2020-10-23-unity-optimizing-gpu/v2-37b225e02afe6dca369647e4a3bf3bd4_720w.jpg" alt="img"></p>
+<hr>
+<h2 id="动态批处理-4"><a href="#动态批处理-4" class="headerlink" title="动态批处理[4]"></a>动态批处理<a href="https://zhuanlan.zhihu.com/p/98642798#ref_4" target="_blank" rel="noopener">[4]</a></h2><ul>
+<li><strong>定义</strong></li>
+</ul>
+<p>在使用<strong>相同材质球</strong>的情况下，Unity会在运行时对于<strong>正在视野中</strong>的符合条件的动态对象在一个Draw call内绘制，所以<strong>会降低Draw Calls</strong>的数量。</p>
+<p>Dynamic batching的原理也很简单，在进行场景绘制之前将所有的共享同一材质的模型的顶点信息变换到世界空间中，然后通过一次Draw call绘制多个模型，达到合批的目的。模型顶点变换的操作是由CPU完成的，所以这会带来一些CPU的性能消耗。并且计算的模型顶点数量不宜太多，否则CPU串行计算耗费的时间太长会造成场景渲染卡顿，所以Dynamic batching只能处理一些小模型。</p>
+<p>Dynamic batching在降低Draw call的同时会导致额外的CPU性能消耗，所以仅仅在合批操作的性能消耗小于不合批，Dynamic batching才会有意义。而新一代图形API（ Metal、Vulkan）在批次间的消耗降低了很多，所以在这种情况下使用Dynamic batching很可能不能获得性能提升。Dynamic batching相对于Static batching不需要预先复制模型顶点，所以在内存占用和发布的程序体积方面要优于Static batching。但是Dynamic batching会带来一些运行时CPU性能消耗，Static batching在这一点要比Dynamic batching更加高效。</p>
+<ul>
+<li><strong>无法参与批处理情况</strong></li>
+</ul>
+<ol>
+<li>物件Mesh大于等于900个面。</li>
+<li>代码动态改变材质变量后不算同一个材质，会不参与合批。</li>
+<li>如果你的着色器使用顶点位置，法线和UV值三种属性，那么你只能批处理300顶点以下的物体；如果你的着色器需要使用顶点位置，法线，UV0，UV1和切向量，那你只能批处理180顶点以下的物体，否则都无法参与合批。</li>
+<li>改变Renderer.material将会造成一份材质的拷贝，因此会打断批处理，你应该使用Renderer.sharedMaterial来保证材质的共享状态。</li>
+</ol>
+<ul>
+<li><strong>批处理中断情况</strong></li>
+</ul>
+<ol>
+<li>位置不相邻且中间夹杂着不同材质的其他物体，不会进行同批处理，这种情况比较特殊，涉及到批处理的顺序，我的另一篇文章有详解。</li>
+<li>物体如果都符合条件会优先参与静态批处理，再是GPU Instancing，然后才到动态批处理，假如物体符合前两者，此次批处理都会被打断。</li>
+<li>GameObject之间如果有镜像变换不能进行合批，例如，”GameObject A with +1 scale and GameObject B with –1 scale cannot be batched together”。</li>
+<li>拥有lightmap的物体含有额外（隐藏）的材质属性，比如：lightmap的偏移和缩放系数等。所以，拥有lightmap的物体将不会进行批处理（除非他们指向lightmap的同一部分）。</li>
+<li>使用Multi-pass Shader的物体会禁用Dynamic batching，因为Multi-pass Shader通常会导致一个物体要连续绘制多次，并切换渲染状态。这会打破其跟其他物体进行Dynamic batching的机会。</li>
+<li>我们知道能够进行合批的前提是多个GameObject共享同一材质，但是对于Shadow casters的渲染是个例外。仅管Shadow casters使用不同的材质，但是只要它们的材质中给Shadow Caster Pass使用的参数是相同的，他们也能够进行Dynamic batching。</li>
+<li>Unity的Forward Rendering Path中如果一个GameObject接受多个光照会为每一个per-pixel light产生多余的模型提交和绘制，从而附加了多个Pass导致无法合批，如下图:</li>
+</ol>
+<p><img src="../../assets/images/2020-10-23-unity-optimizing-gpu/v2-177f53a633d2eac753abe07805367d4d_720w.jpg" alt="img">可以接收多个光源的shader，在受到多个光源是无法合批</p>
+<ul>
+<li><strong>流程原理</strong></li>
+</ul>
+<p><img src="../../assets/images/2020-10-23-unity-optimizing-gpu/v2-8c69d718432ba4045155c700fda6f6b6_720w.jpg" alt="img"></p>
+<hr>
+<h2 id="GPU-Instancing"><a href="#GPU-Instancing" class="headerlink" title="GPU Instancing"></a>GPU Instancing</h2><ul>
+<li><strong>定义</strong></li>
+</ul>
+<p>在使用<strong>相同材质球、相同Mesh(预设体的实例会自动地使用相同的网格模型和材质)</strong>的情况下，Unity会在运行时对于<strong>正在视野中</strong>的符合要求的所有对象使用<strong>Constant Buffer</strong><a href="https://zhuanlan.zhihu.com/p/98642798#ref_5" target="_blank" rel="noopener">[5]</a>将其位置、缩放、uv偏移、<em>lightmapindex</em>等相关信息保存在显存中的<strong>“统一/常量缓冲器”</strong><a href="https://zhuanlan.zhihu.com/p/98642798#ref_6" target="_blank" rel="noopener">[6]</a>中，然后从中抽取一个对象作为实例送入渲染流程，当在执行DrawCall操作后，从显存中取出实例的部分共享信息与从GPU常量缓冲器中取出对应对象的相关信息一并传递到下一渲染阶段，与此同时，不同的着色器阶段可以从缓存区中直接获取到需要的常量，不用设置两次常量。比起以上两种批处理，GPU Instancing可以<strong>规避合并Mesh导致的内存与性能上升</strong>的问题，但是由于场景中所有符合该合批条件的渲染物体的信息每帧都要被重新创建，放入“统一/常量缓冲区”中，而碍于缓存区的大小限制，每一个Constant Buffer的大小要严格限制（不得大于64k）。详细请阅读：</p>
+<p><a href="https://zhuanlan.zhihu.com/p/34499251" target="_blank" rel="noopener">Testplus：U3D优化批处理-GPU Instancing了解一下zhuanlan.zhihu.com<img src="../../assets/images/2020-10-23-unity-optimizing-gpu/v2-b06a0dbdf07544a4d0687a8917611afd_180x120.jpg" alt="图标"></a></p>
+<ul>
+<li><strong>无法参与加速情况</strong></li>
+</ul>
+<ol>
+<li>缩放为负值的情况下，会不参与加速。</li>
+<li>代码动态改变材质变量后不算同一个材质，会不参与加速，但可以通过将颜色变化等变量加入常量缓冲器中实现<a href="https://zhuanlan.zhihu.com/p/98642798#ref_7" target="_blank" rel="noopener">[7]</a>。</li>
+<li>受限于常量缓冲区在不同设备上的大小的上限，移动端支持的个数可能较低。</li>
+<li>只支持一盏实时光，要在多个光源的情况下使用实例化，我们别无选择，只能切换到延迟渲染路径。为了能够让这套机制运作起来，请将所需的编译器指令添加到我们着色器的延迟渲染通道中。</li>
+</ol>
+<p><img src="../../assets/images/2020-10-23-unity-optimizing-gpu/v2-5c97567b099e9d98ca9d957282b1922e_720w.jpg" alt="img">当在多个光源开启GPU Instancing</p>
+<ul>
+<li><strong>批处理中断情况</strong></li>
+</ul>
+<ol>
+<li>位置不相邻且中间夹杂着不同材质的其他物体，不会进行同批处理，这种情况比较特殊，涉及到批处理的顺序，我的另一篇文章有详解。</li>
+<li>一个批次超过125个物体（受限于常量缓冲区在不同设备上的大小的上限，移动端数量有浮动）的时候会新建另一个加速流程。</li>
+<li>物体如果都符合条件会优先参与静态批处理，然后才到GPU Instancing，假如物体符合前者，此次加速都会被打断。</li>
+</ol>
+<ul>
+<li><strong>流程原理</strong></li>
+</ul>
+<p><img src="../../assets/images/2020-10-23-unity-optimizing-gpu/v2-0dde54b930bef9c768c10d3c79126e16_720w.jpg" alt="img"></p>
+<hr>
+<h2 id="SRP-Batcher-8"><a href="#SRP-Batcher-8" class="headerlink" title="SRP Batcher[8]"></a>SRP Batcher<a href="https://zhuanlan.zhihu.com/p/98642798#ref_8" target="_blank" rel="noopener">[8]</a></h2><ul>
+<li><strong>定义</strong></li>
+</ul>
+<p>在使用LWRP或者HWRP时，开启SRP Batcher的情况下，只要物体的<strong>Shader中变体</strong>一致，就可以启用SRP Batcher加速。它与上文GPU Instancing实现的原理相近，Unity会在运行时对于正在视野中的符合要求的所有对象使用<strong>“Per Object” GPU BUFFER（一个独立的Buffer）</strong> 将其位置、缩放、uv偏移、<em>lightmapindex</em>等相关信息保存在GPU内存中，同时也会将正在视野中的符合要求的所有对象使用<strong>Constant Buffer</strong><a href="https://zhuanlan.zhihu.com/p/98642798#ref_5" target="_blank" rel="noopener">[5]</a>将材质信息保存在保存在显存中的<strong>“统一/常量缓冲器”</strong><a href="https://zhuanlan.zhihu.com/p/98642798#ref_6" target="_blank" rel="noopener">[6]</a>中。与GPU Instancing相比，因为数据不再每帧被重新创建，而且需要保存进“统一/常量缓冲区”的数据排除了各自的位置、缩放、uv偏移、<em>lightmapindex</em>等相关信息，所以缓冲区内有更多的空间可以<strong>动态地</strong>存储场景中所有渲染物体的材质信息。由于数据不再每帧被重新创建，而是动态更新，所以SRP Batcher的本质并不会降低Draw Calls的数量，它只会降低Draw Calls之间的GPU设置成本。</p>
+<p><img src="../../assets/images/2020-10-23-unity-optimizing-gpu/v2-7b93309c00f2866639a2f7c529495608_720w.jpg" alt="img">因为不用重新创建Constant Buffer，所以本质上SRP Batcher不会降低Draw Calls的数量，它只会降低Draw Calls之间的GPU设置成本</p>
+<ul>
+<li><strong>无法参与加速情况</strong></li>
+</ul>
+<ol>
+<li>对象不可以是粒子或蒙皮网格。</li>
+<li>Shader中<strong>变体</strong>不一致，如下图两个<strong>相同Shader</strong>的材质，但是因为Surface Options不一致，导致<strong>变体不一样</strong>而无法合并。</li>
+</ol>
+<p><img src="../../assets/images/2020-10-23-unity-optimizing-gpu/v2-b0599861b3304d19979816413cb13a43_720w.jpg" alt="img">变体不同的不同材质</p>
+<ul>
+<li><strong>批处理中断情况</strong></li>
+</ul>
+<ol>
+<li>位置不相邻且中间夹杂着<strong>不同Shader</strong>，或者<strong>不同变体</strong>的其他物体，不会进行同批处理，这种情况比较特殊，涉及到批处理的顺序，我的另一篇文章有详解。</li>
+</ol>
+<ul>
+<li><strong>流程原理</strong></li>
+</ul>
+<p><img src="../../assets/images/2020-10-23-unity-optimizing-gpu/v2-6125b513800939912bb07853ae0a1f90_720w.jpg" alt="img"></p>
+<hr>
+<h2 id="2020年2月13日-更新：-更改对”统一-常量缓冲器“的描述，对SRP-Batcher与GPU-Instancing的实现原理进行了比较大的修改。"><a href="#2020年2月13日-更新：-更改对”统一-常量缓冲器“的描述，对SRP-Batcher与GPU-Instancing的实现原理进行了比较大的修改。" class="headerlink" title="2020年2月13日-更新： 更改对”统一/常量缓冲器“的描述，对SRP Batcher与GPU Instancing的实现原理进行了比较大的修改。"></a><strong><em>2020年2月13日-更新： 更改对”统一/常量缓冲器“的描述，对SRP Batcher与GPU Instancing的实现原理进行了比较大的修改。</em></strong></h2><blockquote>
+<p><em>^ ^ 以上只是我工作中的一些小总结</em><br><em>有什么不正确的地方可以在评论告诉我</em><br><em>我的微信号是：sam2b2b</em><br><em>有想一起进步的小伙伴可以加微信逛逛圈</em></p>
+</blockquote>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ol>
+<li><a href="https://zhuanlan.zhihu.com/p/98642798#ref_1_0" target="_blank" rel="noopener">^</a><a href="https://gameinstitute.qq.com/community/detail/114323" target="_blank" rel="noopener">https://gameinstitute.qq.com/community/detail/114323</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/98642798#ref_2_0" target="_blank" rel="noopener">^</a><a href="https://forum.unity.com/threads/regression-feature-not-bug-static-dynamic-batching-combining-v-buffers-but-not-draw-calls.360143/" target="_blank" rel="noopener">https://forum.unity.com/threads/regression-feature-not-bug-static-dynamic-batching-combining-v-buffers-but-not-draw-calls.360143/</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/98642798#ref_3_0" target="_blank" rel="noopener">^</a><a href="https://docs.unity3d.com/Manual/DrawCallBatching.html" target="_blank" rel="noopener">https://docs.unity3d.com/Manual/DrawCallBatching.html</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/98642798#ref_4_0" target="_blank" rel="noopener">^</a><a href="https://gameinstitute.qq.com/community/detail/114323" target="_blank" rel="noopener">https://gameinstitute.qq.com/community/detail/114323</a></li>
+<li>^<a href="https://zhuanlan.zhihu.com/p/98642798#ref_5_0" target="_blank" rel="noopener">a</a><a href="https://zhuanlan.zhihu.com/p/98642798#ref_5_1" target="_blank" rel="noopener">b</a>Constant Buffer <a href="https://zhuanlan.zhihu.com/p/35830868" target="_blank" rel="noopener">https://zhuanlan.zhihu.com/p/35830868</a></li>
+<li>^<a href="https://zhuanlan.zhihu.com/p/98642798#ref_6_0" target="_blank" rel="noopener">a</a><a href="https://zhuanlan.zhihu.com/p/98642798#ref_6_1" target="_blank" rel="noopener">b</a>unity将常量存储在4M的缓冲池里，并每帧循环池（这个池子被绑定到GPU上，可以在截帧工具比如XCode或者Snapdragon上看到）</li>
+<li><a href="https://zhuanlan.zhihu.com/p/98642798#ref_7_0" target="_blank" rel="noopener">^</a><a href="https://blog.csdn.net/lzhq1982/article/details/88119283" target="_blank" rel="noopener">https://blog.csdn.net/lzhq1982/article/details/88119283</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/98642798#ref_8_0" target="_blank" rel="noopener">^</a>SRP Batcher 官方文档： <a href="https://mp.weixin.qq.com/s/-4Bhxtm_L5paFFAv8co4Xw" target="_blank" rel="noopener">https://mp.weixin.qq.com/s/-4Bhxtm_L5paFFAv8co4Xw</a></li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C</a>
+              <a href="/tags/Unity/" rel="tag"># Unity</a>
+              <a href="/tags/UNITY/" rel="tag"># UNITY</a>
+              <a href="/tags/mesh/" rel="tag"># mesh</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/unity-2020-10-22-unity-render-order/" rel="prev" title="Unity rendering order渲染顺序">
+      <i class="fa fa-chevron-left"></i> Unity rendering order渲染顺序
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/unity-2020-10-24-unity-urp-performance/" rel="next" title="URP性能测试">
+      URP性能测试 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  
+  <div class="comments">
+  <script src="https://utteranc.es/client.js" repo="zhepama/igiven.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async></script>
+  </div>
+  
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#静态批处理-1"><span class="nav-number">1.</span> <span class="nav-text">静态批处理[1]</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#动态批处理-4"><span class="nav-number">2.</span> <span class="nav-text">动态批处理[4]</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GPU-Instancing"><span class="nav-number">3.</span> <span class="nav-text">GPU Instancing</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SRP-Batcher-8"><span class="nav-number">4.</span> <span class="nav-text">SRP Batcher[8]</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2020年2月13日-更新：-更改对”统一-常量缓冲器“的描述，对SRP-Batcher与GPU-Instancing的实现原理进行了比较大的修改。"><span class="nav-number">5.</span> <span class="nav-text">2020年2月13日-更新： 更改对”统一&#x2F;常量缓冲器“的描述，对SRP Batcher与GPU Instancing的实现原理进行了比较大的修改。</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">6.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhepama"
+      src="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+  <p class="site-author-name" itemprop="name">zhepama</p>
+  <div class="site-description" itemprop="description">一个不专业的程序员,写着专业的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">139</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhepama" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhepama" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhepama@gmail.com" title="E-Mail → mailto:zhepama@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.godgodgame.com/" title="http:&#x2F;&#x2F;www.godgodgame.com" rel="noopener" target="_blank">GODGODGAME</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.igiven.com/" title="https:&#x2F;&#x2F;www.igiven.com">IGIVEN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhepama.github.io/C-Sharp-Playground/zh/" title="https:&#x2F;&#x2F;zhepama.github.io&#x2F;C-Sharp-Playground&#x2F;zh&#x2F;" rel="noopener" target="_blank">数据结构与算法</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhepama</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

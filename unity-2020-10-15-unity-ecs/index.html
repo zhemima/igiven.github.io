@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"www.igiven.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="DOTS面向数据栈编程  ecs   在OOP方法中，数据不会被组织起来，而是会分散再整个内存中，这是因为使用了自动内存管理功能。 job system 传统只使用了单线程,配合ecs提供了多线程解决方案 brust compiler 将c#直接转换为汇编  ECS核心概念">
+<meta property="og:type" content="article">
+<meta property="og:title" content="UNITY ECS 详解">
+<meta property="og:url" content="http://www.igiven.com/unity-2020-10-15-unity-ecs/index.html">
+<meta property="og:site_name" content="IGiven">
+<meta property="og:description" content="DOTS面向数据栈编程  ecs   在OOP方法中，数据不会被组织起来，而是会分散再整个内存中，这是因为使用了自动内存管理功能。 job system 传统只使用了单线程,配合ecs提供了多线程解决方案 brust compiler 将c#直接转换为汇编  ECS核心概念">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-10-15-unity-ecs/ECSBlockDiagram.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-10-15-unity-ecs/ArchetypeDiagram.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2020-10-15-unity-ecs/ArchetypeChunkDiagram.png">
+<meta property="article:published_time" content="2020-10-15T00:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-26T08:36:17.946Z">
+<meta property="article:author" content="zhepama">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="C#">
+<meta property="article:tag" content="Unity">
+<meta property="article:tag" content="UNITY">
+<meta property="article:tag" content="mesh">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.igiven.com/assets/images/2020-10-15-unity-ecs/ECSBlockDiagram.png">
+
+<link rel="canonical" href="http://www.igiven.com/unity-2020-10-15-unity-ecs/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>UNITY ECS 详解 | IGiven</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="IGiven" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="IGiven" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">IGiven</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">李九仙的博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">139</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">32</span></a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-留言">
+
+    <a href="/guestbook/" rel="section"><i class="fa fa-sticky-note fa-fw"></i>留言</a>
+
+  </li>
+        <li class="menu-item menu-item-rss">
+
+    <a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/unity-2020-10-15-unity-ecs/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+      <meta itemprop="name" content="zhepama">
+      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="IGiven">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          UNITY ECS 详解<a href="https://github.com/zhepama/igiven.github.io/edit/master/source/_posts/unity/2020-10-15-unity-ecs.md" class="post-edit-link" title="编辑" rel="noopener" target="_blank"><i class="fa fa-pencil-alt"></i></a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-10-15 08:00:00" itemprop="dateCreated datePublished" datetime="2020-10-15T08:00:00+08:00">2020-10-15</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 16:36:17" itemprop="dateModified" datetime="2021-06-26T16:36:17+08:00">2021-06-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/unity/" itemprop="url" rel="index"><span itemprop="name">unity</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>DOTS面向数据栈编程</p>
+<ul>
+<li>ecs   在OOP方法中，数据不会被组织起来，而是会分散再整个内存中，这是因为使用了自动内存管理功能。</li>
+<li>job system 传统只使用了单线程,配合ecs提供了多线程解决方案</li>
+<li>brust compiler 将c#直接转换为汇编</li>
+</ul>
+<h1 id="ECS核心概念"><a href="#ECS核心概念" class="headerlink" title="ECS核心概念"></a>ECS核心概念</h1><p><img src="../../assets/images/2020-10-15-unity-ecs/ECSBlockDiagram.png" alt="img"></p>
+<p>这个图中，System读取了多个实体的<code>Translation</code>和<code>Rotation</code>组件，然后经过计算处理，将结果更新到<code>LocalToWorld</code>组件中。</p>
+<p>从图中你可以看到，实体A和B还有Renderer组件，但是C并没有。不过这并不会影响System的计算逻辑，因为这个系统不关心<code>Renderer</code>组件。</p>
+<h2 id="原型-Archetypes"><a href="#原型-Archetypes" class="headerlink" title="原型 Archetypes"></a>原型 Archetypes</h2><p>多个组件的组合叫做一个原型。</p>
+<p>比如一个3D物体可能会包含用于transform的组件，包括移动、旋转、渲染，每个3D物体对应一个实体，但是他们都有同样的组件，所以ECS会把他们分类成是一类原型。</p>
+<p><img src="../../assets/images/2020-10-15-unity-ecs/ArchetypeDiagram.png" alt="img"></p>
+<p>在上图中，实体A和B的原型都是M，实体C的原型是N。</p>
+<p>你也可以通过在运行时添加或者移除component来改变一个实体的原型。例如：如果将实体B的Renderer组件移除，实体B的原型就会变成N。</p>
+<p>一个实体的原型是什么，决定了ECS会将实体的components也就是数据存在什么地方。<strong>ECS按块分配内存，每块用一个<code>ArchetypeChunk</code>对象表示。</strong></p>
+<p>一个块只包含一种原型，可以包含的多个实体的数据。如果一个块的内存满了，ECS会分配一个新的块来存储新的实体的components。</p>
+<p>如果你修改了实体的组件，那就相当于修改了实体的原型，这时候ECS会将实体的组件数据移到另外一个块中。</p>
+<p><img src="../../assets/images/2020-10-15-unity-ecs/ArchetypeChunkDiagram.png" alt="img"></p>
+<p>原型和内存块的关系是一对多的关系。这就意味着，如果想查询给定的一组component类型的所有实体，只需要在这些原型中搜索即可。这样会比在所有的实体中查找效率高很多。</p>
+<p>ECS在存储实体到内存块中没有特殊的排序，当创建一个实体或者实体的原型发生变化时，ECS会将它放到对应原型的第一个还有空间的内存块中。内存块中的数据会紧密排列。如果一个实体要被移出当前原型的内存块，这时候会有个空位，ECS会把这个内存块最后的实体数据移动到这个空位中。</p>
+<p><strong>注意</strong>：原型中的<strong>共享组件</strong>（后面会具体说这是个什么东东）的数据也会影响实体会被存在哪个内存块。同一个内存块中的所有实体的共享组件中的数据值都是相同的。如果你修改了共享组件中的数据，这个实体会被移到另外一个块中，有点类似修改了实体的原型。</p>
+<p>将共享组件的实体分到一个内存块中会提高处理他们的速度。比如Hybird Renderer（混合渲染）定义了RenderMesh组件来达成这个目的。</p>
+<h2 id="实体-Entity"><a href="#实体-Entity" class="headerlink" title="实体 Entity"></a>实体 Entity</h2><p>在代码层面，你就可以了解到，实体非常非常的简单。它的核心部分：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">public struct Entity</span><br><span class="line">&#123;</span><br><span class="line">  public int Index;</span><br><span class="line">  public int Version; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Index表示这个实体的ID，和身份证一样用于实体与实体之间区分。Version用于描述这个实体的生命周期，由于实体是可以重用的，那么就需要用Version来区分这个Entity是新生实体，还是即将销毁的实体。</p>
+<p>ECS中有一个<code>EntityManager</code>类来管理一个World中的所有实体。<code>EntityManager</code>使用列表维护所有实体以及和实体关联的数据，以便达到最优的性能。</p>
+<p>虽然entity没有类型，但是可以根据entity关联的component将他们分组，也就是上一节讲的实体原型（EntityArchetype），EntityManager会持续跟踪这些实体原型。你可以使用已有的<code>EntityArchetype</code>来创建entity，也可以提前创建<code>EntityArchetype</code>，以便后面的使用。</p>
+<h3 id="创建Entity"><a href="#创建Entity" class="headerlink" title="创建Entity"></a>创建Entity</h3><p>通过以下方法可以一次创建一个Entity：</p>
+<ul>
+<li>使用ComponentType的数组来创建一个entity</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">EntityManager.CreateEntity(ComponentType[])</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>使用EntityArchetype来创建一个entity</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">EntityManager.CreateEntity(EntityArchetype)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>通过<code>EntityManager.Instantiate</code>复制一个已有的entity，包括它里面的数据</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">EntityManager.Instantiate(Entity srcEntity);</span><br><span class="line">EntityManager.Instantiate(NativeArray&lt;Entity&gt; srcEntities, NativeArray&lt;Entity&gt; outputEntities)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>也可以创建一个空的Entity，在需要的时候在加上components。(您可以立即添加组件，也可以根据需要添加其他组件。)<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">var entity &#x3D; EntityManager.CreateEntity();</span><br><span class="line">EntityManager.AddComponent(Entity entity, ComponentType componentType)</span><br></pre></td></tr></table></figure>
+
+
+</li>
+</ul>
+<p>你也可以通过下面的方法一次创建多个Entity：</p>
+<ul>
+<li>使用<code>CreateEntity</code>方法一次性填充多个新的Entity到一个NativeArry中，这些entity用同样的原型</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">EntityManager.CreateEntity(EntityArchetype archetype, NativeArray&lt;Entity&gt; entities)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>使用<code>Instantiate</code>方法一次性复制多个entity，包含数据</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">EntityManager.Instantiate(NativeArray&lt;Entity&gt; srcEntities, NativeArray&lt;Entity&gt; outputEntities)</span><br></pre></td></tr></table></figure>
+<ul>
+<li>显式创建使用指定数量的实体填充的块，并使用CreateChunk创建给定原型<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">EntityManager.CreateChunk(EntityArchetype, NativeArray&lt;ArchetypeChunk&gt;, Int32)</span><br></pre></td></tr></table></figure>
+<h3 id="添加-删除-component"><a href="#添加-删除-component" class="headerlink" title="添加/删除 component"></a>添加/删除 component</h3></li>
+</ul>
+<p>创建完Entity后，你可以添加或者移除component。注意添加或移除component时，entity的原型会发生变化，这时候EntityManager需要将entity移到其他内存块，并将当前内存块的空位补上。</p>
+<p>对实体的更改导致结构性更改-会造成Entity原型变化的操作不能在Job里面执行，比如添加移除component、修改<code>SharedComponentData</code>中的值、销毁entity。你可以将前面说的这几种操作放进<code>EntityCommandBuffer</code>中，在job执行完成后执行这个command buffer。后面还会具体讲解CommandBuffer。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">struct Lifetime : IComponentData</span><br><span class="line">&#123;</span><br><span class="line">    public byte Value;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">class LifetimeSystem : SystemBase</span><br><span class="line">&#123;</span><br><span class="line">    EndSimulationEntityCommandBufferSystem m_EndSimulationEcbSystem;</span><br><span class="line">    protected override void OnCreate()</span><br><span class="line">    &#123;</span><br><span class="line">        base.OnCreate();</span><br><span class="line">        &#x2F;&#x2F; 从World中获取ECS系统并且存起来</span><br><span class="line">        m_EndSimulationEcbSystem &#x3D; World</span><br><span class="line">            .GetOrCreateSystem&lt;EndSimulationEntityCommandBufferSystem&gt;();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    protected override void OnUpdate()</span><br><span class="line">    &#123;</span><br><span class="line">        &#x2F;&#x2F; 请求一个ECB并且转换成可并行的</span><br><span class="line">        var ecb &#x3D; m_EndSimulationEcbSystem.CreateCommandBuffer().AsParallelWriter();</span><br><span class="line">        Entities</span><br><span class="line">            .ForEach((Entity entity, int entityInQueryIndex, ref Lifetime lifetime) &#x3D;&gt;</span><br><span class="line">        &#123;</span><br><span class="line">            &#x2F;&#x2F; 检测entity的lifetime，如果为0则销毁它</span><br><span class="line">            if (lifetime.Value &#x3D;&#x3D; 0)</span><br><span class="line">            &#123;</span><br><span class="line">                &#x2F;&#x2F; 将entityInQueryIndex传给操作，这样ECS回放时能保证正确的顺序</span><br><span class="line">                ecb.DestroyEntity(entityInQueryIndex, entity);</span><br><span class="line">            &#125;</span><br><span class="line">            else</span><br><span class="line">            &#123;</span><br><span class="line">                lifetime.Value -&#x3D; 1;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;).ScheduleParallel();</span><br><span class="line"></span><br><span class="line">        &#x2F;&#x2F; 保证ECB system依赖当前这个Job</span><br><span class="line">        m_EndSimulationEcbSystem.AddJobHandleForProducer(this.Dependency);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>EntityManager也提供了方法用来添加、移除单个entity中的组件，也可以移除一个entity的NativeArray中的组件。后面组件部分会详细说明。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">EntityManager.AddComponent(Entity entity, ComponentType componentType)</span><br></pre></td></tr></table></figure>
+
+<h3 id="访问实体数据"><a href="#访问实体数据" class="headerlink" title="访问实体数据"></a>访问实体数据</h3><p>遍历实体和组件最有效的方式时在一个并行化的Job中按顺序处理组件 . 这利用了CPU的多核性能，并避免CPU的缓存丢失</p>
+<p>ECS API提供了多种遍历的方式，每个都有自己的性能影响和限制. 下面是方法:</p>
+<h4 id="SystemBase-Entities-ForEach"><a href="#SystemBase-Entities-ForEach" class="headerlink" title="SystemBase.Entities.ForEach"></a><a href="https://docs.unity3d.com/Packages/com.unity.entities@0.14/api/Unity.Entities.SystemBase.html#Unity_Entities_SystemBase_Entities" target="_blank" rel="noopener">SystemBase.Entities.ForEach</a></h4><p>使用一个job结构来有效的遍历实体. </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">Entities</span><br><span class="line">    .WithName(&quot;Update_Position&quot;) &#x2F;&#x2F; Shown in error messages and profiler</span><br><span class="line">    .WithAll&lt;LocalToWorld&gt;() &#x2F;&#x2F; Require the LocalToWorld component</span><br><span class="line">    .ForEach(</span><br><span class="line">        &#x2F;&#x2F; Write to Displacement (ref), read Velocity (in)</span><br><span class="line">        (ref Position position, in Velocity velocity) &#x3D;&gt;</span><br><span class="line">        &#123;</span><br><span class="line">            &#x2F;&#x2F;Execute for each selected entity</span><br><span class="line">            position &#x3D; new Position()</span><br><span class="line">            &#123;</span><br><span class="line">                &#x2F;&#x2F; dT is a captured variable</span><br><span class="line">                Value &#x3D; position.Value + velocity.Value * dT</span><br><span class="line">            &#125;;</span><br><span class="line">        &#125;</span><br><span class="line">    )</span><br><span class="line">    .ScheduleParallel(); &#x2F;&#x2F; Schedule as a parallel job</span><br></pre></td></tr></table></figure>
+<p><strong>实体查询</strong></p>
+<ul>
+<li><strong><code>WithAll&lt;T&gt;</code></strong> — 一个实体必须具有所有这些组件类型 (除了在lambda参数列表中找到所有组件类型之外)</li>
+<li><strong><code>WithAny&lt;T,U&gt;</code></strong> — 一个实体必须有一个或多个这样的组件类型.注意，允许使用WithAny指定单个组件类型;但是，由于实体必须有一个或多个这样的“可选”组件类型供查询选择，因此使用带有单个类型的WithAny等同于将该类型放在WithAll语句中。</li>
+<li><strong><code>WithNone&lt;T&gt;</code></strong> — 实体不能具有任何这些组件类型</li>
+<li><strong><code>WithChangeFilter&lt;T&gt;</code></strong> — 只选择子上次 <a href="https://docs.unity3d.com/Packages/com.unity.entities@0.6/api/Unity.Entities.JobComponentSystem.html" target="_blank" rel="noopener">JobComponentSystem</a> 更新以来，特性组件发生变化的实体</li>
+<li><strong><code>WithSharedComponentFilter</code></strong> — 只选择拥有特定值的share component的块</li>
+<li><strong><code>WithStoreEntityQueryInField</code></strong> — 把Entities.ForEach生成的 <a href="https://docs.unity3d.com/Packages/com.unity.entities@0.6/api/Unity.Entities.EntityQuery.html" target="_blank" rel="noopener">EntityQuery</a> 对象存储在一个 EntityQuery 字段里. 您可以使用这个EntityQuery对象用于获取符合条件的实体的数量.注意，这个函数在创建JobComponentSystem时将EntityQuery实例分配给您的字段. 这意味着您可以在第一次执行lambda函数之前使用查询。</li>
+</ul>
+<p>不要使用WithAny&lt;T、U&gt;或WithNone<T>向查询添加参数列表中的组件。所有添加到lambda函数参数列表中的组件都会自动添加到实体查询的WithAll列表中;向WithAll列表和WithAny或WithNone列表添加组件会创建一个不合逻辑的查询。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"> Entities.WithAll&lt;LocalToWorld&gt;()</span><br><span class="line">    .WithAny&lt;Rotation, Translation, Scale&gt;()</span><br><span class="line">    .WithNone&lt;LocalToParent&gt;()</span><br><span class="line">    .ForEach((ref Destination outputData, in Source inputData) &#x3D;&gt;</span><br><span class="line">    &#123;</span><br><span class="line">        &#x2F;* do some work *&#x2F;</span><br><span class="line">    &#125;)</span><br><span class="line">    .Schedule(inputDeps);</span><br><span class="line">    </span><br><span class="line">Entities</span><br><span class="line">    .WithChangeFilter&lt;Source&gt;()</span><br><span class="line">    .ForEach((ref Destination outputData,</span><br><span class="line">    in Source inputData) &#x3D;&gt;</span><br><span class="line">    &#123;</span><br><span class="line">    &#x2F;* Do work *&#x2F;</span><br><span class="line">    &#125;)</span><br><span class="line">    .Schedule(inputDeps);</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="IJobChunk"><a href="#IJobChunk" class="headerlink" title="IJobChunk"></a><a href="https://docs.unity3d.com/Packages/com.unity.entities@0.14/manual/chunk_iteration_job.html" target="_blank" rel="noopener">IJobChunk</a></h4><p>遍历所有符合条件的内存块(called a <em>Chunk</em>)，其中包含的是符合条件的实体 . Job Execute() 方法可以用for循环遍历所有的块中的元素，你可以使用 IJobChunk 来执行比 IJobForEach更复杂的操作,同时保持最高效率.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">[BurstCompile]</span><br><span class="line">struct UpdateJob : IJobChunk</span><br><span class="line">&#123;</span><br><span class="line">    public ComponentTypeHandle&lt;InputA&gt; InputATypeHandle;</span><br><span class="line">    public ComponentTypeHandle&lt;InputB&gt; InputBTypeHandle;</span><br><span class="line">    [ReadOnly] public ComponentTypeHandle&lt;Output&gt; OutputTypeHandle;</span><br><span class="line">    public uint LastSystemVersion;</span><br><span class="line"></span><br><span class="line">    public void Execute(ArchetypeChunk chunk, int chunkIndex, int firstEntityIndex)</span><br><span class="line">    &#123;</span><br><span class="line">        var inputAChanged &#x3D; chunk.DidChange(InputATypeHandle, LastSystemVersion);</span><br><span class="line">        var inputBChanged &#x3D; chunk.DidChange(InputBTypeHandle, LastSystemVersion);</span><br><span class="line"></span><br><span class="line">        &#x2F;&#x2F; If neither component changed, skip the current chunk</span><br><span class="line">        if (!(inputAChanged || inputBChanged))</span><br><span class="line">            return;</span><br><span class="line"></span><br><span class="line">        var inputAs &#x3D; chunk.GetNativeArray(InputATypeHandle);</span><br><span class="line">        var inputBs &#x3D; chunk.GetNativeArray(InputBTypeHandle);</span><br><span class="line">        var outputs &#x3D; chunk.GetNativeArray(OutputTypeHandle);</span><br><span class="line"></span><br><span class="line">        for (var i &#x3D; 0; i &lt; outputs.Length; i++)</span><br><span class="line">        &#123;</span><br><span class="line">            outputs[i] &#x3D; new Output &#123; Value &#x3D; inputAs[i].Value + inputBs[i].Value &#125;;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h4 id="Manual-iteration"><a href="#Manual-iteration" class="headerlink" title="Manual iteration"></a><a href="https://docs.unity3d.com/Packages/com.unity.entities@0.1/manual/manual_iteration.html" target="_blank" rel="noopener">Manual iteration</a></h4><p>如果以前的方法不足, 您可以手动遍历实体或块.例如，您可以获得一个包含实体的<code>NativeArray</code>，或者您想要处理的实体的块，使用Job(比如<code>IJobParallelFor</code>)对它们进行遍历。</p>
+<p> <a href="https://docs.unity3d.com/Packages/com.unity.entities@0.1/manual/ecs_entity_query.html" target="_blank" rel="noopener">EntityQuery</a> 类提供了一个构造一个你数据的视图方法，这个视图仅仅包含你算法或者程序中需要的特定的数据. 上面列表中的许多遍历方法都使用EntityQuery，无论是显式的还是内部的。就是可以通过 <a href="https://docs.unity3d.com/Packages/com.unity.entities@0.1/manual/ecs_entity_query.html" target="_blank" rel="noopener">EntityQuery</a> 来只遍历符合条件的实体或组件</p>
+<h2 id="系统-System"><a href="#系统-System" class="headerlink" title="系统 System"></a>系统 System</h2><h3 id="DisableAutoCreation"><a href="#DisableAutoCreation" class="headerlink" title="DisableAutoCreation"></a>DisableAutoCreation</h3><ul>
+<li>如果只是单纯的createsystem,不会执行<code>OnStartRunning</code>,<code>OnStopRunning</code>,<code>OnUpdate</code>..但是会执行<code>OnCreate</code>,<code>OnDestroy</code></li>
+<li><code>AddSystemToUpdateList</code> 且 Entities.ForEach中的query有结果才会执行<code>OnStartRunning</code>,<code>OnStopRunning</code>,<code>OnUpdate</code></li>
+</ul>
+<p>所以可以使用<code>DisableAutoCreation</code>,但不<code>AddSystemToUpdateList</code>添加到循环列表中,把一个system当作工具类使用 </p>
+<h3 id="实体查询"><a href="#实体查询" class="headerlink" title="实体查询"></a>实体查询</h3><p>一个System根据什么来决定处理哪些实体呢？这时候会用到一个叫实体查询(Entity Query)的东西。实体查询首先需要一些组件类型，然后根据你传入的组件类型的组合，在包含这些组件的原型中查询符合要求的实体。查询时可以指定下面三种类型：</p>
+<ul>
+<li><strong>All</strong> 必须包含All中所有的组件类型</li>
+<li><strong>Any</strong> 必须包含Any中至少一个组件类型</li>
+<li><strong>None</strong> 不能包含None中任意一个组件类型</li>
+</ul>
+<p>一次实体查询的结果会返回所有符合查询要求的内存块，你可以使用<code>IJobChunk</code>来迭代遍历所有的组件</p>
+<h3 id="Jobs-作业"><a href="#Jobs-作业" class="headerlink" title="Jobs 作业"></a>Jobs 作业</h3><p>之前说过，ECS配合Job使用才能发挥多线程的威力。ECS提供了<code>SystemBase</code>类，其中包含<code>Entities.ForEach</code>方法，还包含了<code>IJobChunk</code>的<code>Schedule()</code>和<code>ScheduleParallel()</code>方法，可以在子线程中处理数据。<code>Entities.ForEach</code>是最简单的方法，只需要几行代码就能实现。<code>IJobChunk</code>可以用来处理比较复杂的情况。</p>
+<p>ECS会在主线程调度Job，根据System的顺序。当job调度后，ECS会追踪哪些job在读写哪些组件。需要读权限的job需要等待前面写权限的job执行完，反之亦然。Job调度器会使用job依赖来决定哪些job可以并行，哪些必须串行。</p>
+<h3 id="System的组织"><a href="#System的组织" class="headerlink" title="System的组织"></a>System的组织</h3><p>ECS通过<code>World</code>和<code>group</code>来组织system。默认情况下，ECS会创建一个默认的World，包含一些预定义的group组。它会找到工程中所有的System，实例化他们，并添加到预定义的group中。</p>
+<p>你可以指定同一个group中system的Update的执行顺序。Group也是一种system，所以你可以将一个group添加到另外一个group中。如果你没有指定顺序，system的执行顺序会不太确定，并不会按照它们创建的顺序。不过，同一个group中的所有system都会比下一个group中的system先执行。</p>
+<p>System的Update是在主线程中执行的，不过可以使用Job将工作分配到子线程中。</p>
+<h2 id="组件-Component"><a href="#组件-Component" class="headerlink" title="组件 Component"></a>组件 Component</h2><h1 id="相关链接"><a href="#相关链接" class="headerlink" title="相关链接"></a>相关链接</h1><ul>
+<li><a href="https://docs.unity3d.com/Packages/com.unity.entities@0.14/manual/index.html" target="_blank" rel="noopener">Entity Component System 官方文档</a></li>
+<li><a href="https://www.bilibili.com/video/BV1sD4y1Q7an" target="_blank" rel="noopener">DOTS从原理到应用</a></li>
+<li><a href="https://www.bilibili.com/video/BV18J411t7G8" target="_blank" rel="noopener">Unity DOTS技术详解</a></li>
+<li><a href="https://connect.unity.com/u/enthervarope/column" target="_blank" rel="noopener">Unity ECS简单示例</a></li>
+<li><a href="https://blog.csdn.net/andrewfan/category_8967683.html" target="_blank" rel="noopener">Unity中的ECS编程</a></li>
+<li><a href="https://blog.csdn.net/lrh3025/category_9668656.html" target="_blank" rel="noopener">Unity ECS_翻译</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C</a>
+              <a href="/tags/C/" rel="tag"># C#</a>
+              <a href="/tags/Unity/" rel="tag"># Unity</a>
+              <a href="/tags/UNITY/" rel="tag"># UNITY</a>
+              <a href="/tags/mesh/" rel="tag"># mesh</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/unity-2020-09-13-vector/" rel="prev" title="游戏中的向量使用">
+      <i class="fa fa-chevron-left"></i> 游戏中的向量使用
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/unity-2020-10-16-unity-job/" rel="next" title="UNITY JOB SYSTEM详解">
+      UNITY JOB SYSTEM详解 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  
+  <div class="comments">
+  <script src="https://utteranc.es/client.js" repo="zhepama/igiven.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async></script>
+  </div>
+  
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#ECS核心概念"><span class="nav-number">1.</span> <span class="nav-text">ECS核心概念</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#原型-Archetypes"><span class="nav-number">1.1.</span> <span class="nav-text">原型 Archetypes</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实体-Entity"><span class="nav-number">1.2.</span> <span class="nav-text">实体 Entity</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#创建Entity"><span class="nav-number">1.2.1.</span> <span class="nav-text">创建Entity</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#添加-删除-component"><span class="nav-number">1.2.2.</span> <span class="nav-text">添加&#x2F;删除 component</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#访问实体数据"><span class="nav-number">1.2.3.</span> <span class="nav-text">访问实体数据</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#SystemBase-Entities-ForEach"><span class="nav-number">1.2.3.1.</span> <span class="nav-text">SystemBase.Entities.ForEach</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#IJobChunk"><span class="nav-number">1.2.3.2.</span> <span class="nav-text">IJobChunk</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Manual-iteration"><span class="nav-number">1.2.3.3.</span> <span class="nav-text">Manual iteration</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#系统-System"><span class="nav-number">1.3.</span> <span class="nav-text">系统 System</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#DisableAutoCreation"><span class="nav-number">1.3.1.</span> <span class="nav-text">DisableAutoCreation</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#实体查询"><span class="nav-number">1.3.2.</span> <span class="nav-text">实体查询</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Jobs-作业"><span class="nav-number">1.3.3.</span> <span class="nav-text">Jobs 作业</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#System的组织"><span class="nav-number">1.3.4.</span> <span class="nav-text">System的组织</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#组件-Component"><span class="nav-number">1.4.</span> <span class="nav-text">组件 Component</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#相关链接"><span class="nav-number">2.</span> <span class="nav-text">相关链接</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhepama"
+      src="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+  <p class="site-author-name" itemprop="name">zhepama</p>
+  <div class="site-description" itemprop="description">一个不专业的程序员,写着专业的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">139</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhepama" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhepama" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zhepama@gmail.com" title="E-Mail → mailto:zhepama@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.godgodgame.com/" title="http:&#x2F;&#x2F;www.godgodgame.com" rel="noopener" target="_blank">GODGODGAME</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://www.igiven.com/" title="https:&#x2F;&#x2F;www.igiven.com">IGIVEN</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://zhepama.github.io/C-Sharp-Playground/zh/" title="https:&#x2F;&#x2F;zhepama.github.io&#x2F;C-Sharp-Playground&#x2F;zh&#x2F;" rel="noopener" target="_blank">数据结构与算法</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhepama</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
