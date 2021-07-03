@@ -27,11 +27,15 @@
 <meta property="og:site_name" content="IGiven">
 <meta property="og:description" content="生成类 LevelGeneratorBase  最基本的生成方法类包括Generate和GenerateCoroutine DungeonGeneratorBase 一般都会继承于该类  Generate流程">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2021-06-12-edgar-code-read/image-20210630183742467.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2021-06-12-edgar-code-read/image-20210630183825008.png">
+<meta property="og:image" content="http://www.igiven.com/assets/images/2021-06-12-edgar-code-read/image-20210630183914172.png">
 <meta property="article:published_time" content="2021-06-12T00:00:00.000Z">
-<meta property="article:modified_time" content="2021-06-26T09:41:31.471Z">
+<meta property="article:modified_time" content="2021-07-03T10:43:16.778Z">
 <meta property="article:author" content="zhepama">
 <meta property="article:tag" content="C">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://www.igiven.com/assets/images/2021-06-12-edgar-code-read/image-20210630183742467.png">
 
 <link rel="canonical" href="http://www.igiven.com/unity-2021-06-12-edgar-code-read/">
 
@@ -237,7 +241,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-06-26 17:41:31" itemprop="dateModified" datetime="2021-06-26T17:41:31+08:00">2021-06-26</time>
+                <time title="修改时间：2021-07-03 18:43:16" itemprop="dateModified" datetime="2021-07-03T18:43:16+08:00">2021-07-03</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -284,6 +288,11 @@
 </li>
 </ul>
 <h3 id="Door-sockets"><a href="#Door-sockets" class="headerlink" title="Door sockets"></a>Door sockets</h3><p>门锁..就是走廊和房间选中同一个锁,就能匹配的上</p>
+<h2 id="对于连接处"><a href="#对于连接处" class="headerlink" title="对于连接处"></a>对于连接处</h2><p>他会按照顺序copy到sharedtilemaps.所以,位于连接处的tile,如果后面的会覆盖前面的</p>
+<p><img src="../../assets/images/2021-06-12-edgar-code-read/image-20210630183742467.png" alt="image-20210630183742467"></p>
+<p><img src="../../assets/images/2021-06-12-edgar-code-read/image-20210630183825008.png" alt="image-20210630183825008"></p>
+<p>最终的合成则是下图</p>
+<p><img src="../../assets/images/2021-06-12-edgar-code-read/image-20210630183914172.png" alt="image-20210630183914172"></p>
 
     </div>
 
@@ -374,7 +383,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#生成类"><span class="nav-number">1.</span> <span class="nav-text">生成类</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Generate流程"><span class="nav-number">1.1.</span> <span class="nav-text">Generate流程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#pipelineTask"><span class="nav-number">1.2.</span> <span class="nav-text">pipelineTask</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Door-sockets"><span class="nav-number">2.</span> <span class="nav-text">Door sockets</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#生成类"><span class="nav-number">1.</span> <span class="nav-text">生成类</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Generate流程"><span class="nav-number">1.1.</span> <span class="nav-text">Generate流程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#pipelineTask"><span class="nav-number">1.2.</span> <span class="nav-text">pipelineTask</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Door-sockets"><span class="nav-number">2.</span> <span class="nav-text">Door sockets</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#对于连接处"><span class="nav-number"></span> <span class="nav-text">对于连接处</span></a></div>
       </div>
       <!--/noindex-->
 
