@@ -34,3 +34,23 @@ title : "Edgar源代码解读"
 ### Door sockets
 
 门锁..就是走廊和房间选中同一个锁,就能匹配的上
+
+
+
+
+
+## 对于连接处
+
+他会按照顺序copy到sharedtilemaps.所以,位于连接处的tile,如果后面的会覆盖前面的
+
+![image-20210630183742467](../../assets/images/2021-06-12-edgar-code-read/image-20210630183742467.png)
+
+
+
+![image-20210630183825008](../../assets/images/2021-06-12-edgar-code-read/image-20210630183825008.png)
+
+
+
+最终的合成则是下图
+
+![image-20210630183914172](../../assets/images/2021-06-12-edgar-code-read/image-20210630183914172.png)
