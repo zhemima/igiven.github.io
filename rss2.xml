@@ -15,8 +15,34 @@
     <atom:link href="/rss2.xml" rel="self" type="application/rss+xml"/>
     
     <description>一个不专业的程序员,写着专业的博客</description>
-    <pubDate>Sat, 03 Jul 2021 10:43:16 GMT</pubDate>
+    <pubDate>Tue, 06 Jul 2021 13:51:44 GMT</pubDate>
     <generator>http://hexo.io/</generator>
+    
+    <item>
+      <title>rpgbuild的一些备注</title>
+      <link>http://www.igiven.com/unity-2021-06-15-rpgbuilder/</link>
+      <guid>http://www.igiven.com/unity-2021-06-15-rpgbuilder/</guid>
+      <pubDate>Tue, 15 Jun 2021 00:00:00 GMT</pubDate>
+      <description>
+      
+        
+        
+          
+          
+            &lt;ul&gt;
+&lt;li&gt;&lt;p&gt;skills   相当于 采矿技能,种植技能 ,制作技能&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;level templates 只是升级属性..比如角色等级,skill等级.weapon等级&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;weapontemplates 
+          
+        
+      
+      </description>
+      
+      
+      <comments>http://www.igiven.com/unity-2021-06-15-rpgbuilder/#disqus_thread</comments>
+    </item>
     
     <item>
       <title>UNITY的渲染顺序</title>
@@ -372,33 +398,6 @@
       
       
       <comments>http://www.igiven.com/unity-2020-11-18-netcode-sourcecode/#disqus_thread</comments>
-    </item>
-    
-    <item>
-      <title>unity world time system</title>
-      <link>http://www.igiven.com/unity-2020-11-17-unity-ecs-worldtime/</link>
-      <guid>http://www.igiven.com/unity-2020-11-17-unity-ecs-worldtime/</guid>
-      <pubDate>Tue, 17 Nov 2020 00:00:00 GMT</pubDate>
-      <description>
-      
-        &lt;figure class=&quot;highlight plain&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;4&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;5&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;6&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;7&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;8&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;9&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;10&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;11&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;12&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;13&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;14&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;15&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;16&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;17&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;18&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;[Preserve]&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;  [UpdateInGroup(typeof(InitializationSystemGroup))]&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;  public class UpdateWorldTimeSystem : ComponentSystem&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;  &amp;#123;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;      private bool hasTickedOnce &amp;#x3D; false;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;      protected override void OnUpdate()&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;      &amp;#123;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;          var currentElapsedTime &amp;#x3D; Time.ElapsedTime;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;          var deltaTime &amp;#x3D; math.min(UnityEngine.Time.deltaTime, World.MaximumDeltaTime);&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;          World.SetTime(new TimeData(&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;              elapsedTime: hasTickedOnce ? (currentElapsedTime + deltaTime) : currentElapsedTime,&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;              deltaTime: deltaTime&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;          ));&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;          hasTickedOnce &amp;#x3D; true;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;      &amp;#125;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;  &amp;#125;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
-
-
-
-
-
-&lt;figure class=&quot;highlight plain&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;4&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;5&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;6&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;7&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;8&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;9&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;internal struct WorldTime : IComponentData&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;#123;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    public TimeData Time;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;#125;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;internal struct WorldTimeQueue : IBufferElementData&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;#123;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    public TimeData Time;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;#125;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
-
-
-
-
-
-&lt;p&gt;World.cs&lt;/p&gt;
-      
-      </description>
-      
-      
-      <comments>http://www.igiven.com/unity-2020-11-17-unity-ecs-worldtime/#disqus_thread</comments>
     </item>
     
   </channel>

@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://www.igiven.com/"/>
-  <updated>2021-07-03T10:43:16.778Z</updated>
+  <updated>2021-07-06T13:51:44.231Z</updated>
   <id>http://www.igiven.com/</id>
   
   <author>
@@ -17,11 +17,43 @@
   <generator uri="https://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>rpgbuild的一些备注</title>
+    <link href="http://www.igiven.com/unity-2021-06-15-rpgbuilder/"/>
+    <id>http://www.igiven.com/unity-2021-06-15-rpgbuilder/</id>
+    <published>2021-06-15T00:00:00.000Z</published>
+    <updated>2021-07-06T13:51:44.231Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        
+        
+          &lt;ul&gt;
+&lt;li&gt;&lt;p&gt;skills   相当于 采矿技能,种植技能 ,制作技能&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;level templates 只是升级属性..比如角色等级,skill等级.weapon等级&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;weapontemplates 
+        
+      
+    
+    </summary>
+    
+    
+      <category term="unity" scheme="http://www.igiven.com/categories/unity/"/>
+    
+    
+      <category term="C" scheme="http://www.igiven.com/tags/C/"/>
+    
+  </entry>
+  
+  <entry>
     <title>UNITY的渲染顺序</title>
     <link href="http://www.igiven.com/unity-2021-06-14-unity-render-order/"/>
     <id>http://www.igiven.com/unity-2021-06-14-unity-render-order/</id>
     <published>2021-06-14T00:00:00.000Z</published>
-    <updated>2021-07-03T10:43:16.778Z</updated>
+    <updated>2021-07-06T13:51:44.231Z</updated>
     
     <summary type="html">
     
@@ -52,7 +84,7 @@
     <link href="http://www.igiven.com/unity-2021-06-13-How-to-Make-One-Way-Platform/"/>
     <id>http://www.igiven.com/unity-2021-06-13-How-to-Make-One-Way-Platform/</id>
     <published>2021-06-13T00:00:00.000Z</published>
-    <updated>2021-07-03T10:43:16.778Z</updated>
+    <updated>2021-07-06T13:51:44.231Z</updated>
     
     <summary type="html">
     
@@ -86,7 +118,7 @@
     <link href="http://www.igiven.com/unity-2021-06-12-edgar-code-read/"/>
     <id>http://www.igiven.com/unity-2021-06-12-edgar-code-read/</id>
     <published>2021-06-12T00:00:00.000Z</published>
-    <updated>2021-07-03T10:43:16.778Z</updated>
+    <updated>2021-07-06T13:51:44.231Z</updated>
     
     <summary type="html">
     
@@ -111,7 +143,7 @@
     <link href="http://www.igiven.com/unity-2021-05-20-ecs-commandbuff-question/"/>
     <id>http://www.igiven.com/unity-2021-05-20-ecs-commandbuff-question/</id>
     <published>2021-05-20T00:00:00.000Z</published>
-    <updated>2021-07-03T10:43:16.778Z</updated>
+    <updated>2021-07-06T13:51:44.231Z</updated>
     
     <summary type="html">
     
@@ -135,7 +167,7 @@
     <link href="http://www.igiven.com/tool-2021-05-06-dns/"/>
     <id>http://www.igiven.com/tool-2021-05-06-dns/</id>
     <published>2021-05-06T00:00:00.000Z</published>
-    <updated>2021-07-03T10:43:16.770Z</updated>
+    <updated>2021-07-06T13:51:44.227Z</updated>
     
     <summary type="html">
     
@@ -159,7 +191,7 @@
     <link href="http://www.igiven.com/dotnet-2021-05-01-Converting-between-Structs-and-Byte-Arrays/"/>
     <id>http://www.igiven.com/dotnet-2021-05-01-Converting-between-Structs-and-Byte-Arrays/</id>
     <published>2021-05-01T00:00:00.000Z</published>
-    <updated>2021-07-03T10:43:16.770Z</updated>
+    <updated>2021-07-06T13:51:44.227Z</updated>
     
     <summary type="html">
     
@@ -190,7 +222,7 @@
     <link href="http://www.igiven.com/unity-2021-04-11-render-texture/"/>
     <id>http://www.igiven.com/unity-2021-04-11-render-texture/</id>
     <published>2021-04-11T00:00:00.000Z</published>
-    <updated>2021-07-03T10:43:16.778Z</updated>
+    <updated>2021-07-06T13:51:44.231Z</updated>
     
     <summary type="html">
     
@@ -220,7 +252,7 @@
     <link href="http://www.igiven.com/unity-2021-01-25-tilemap/"/>
     <id>http://www.igiven.com/unity-2021-01-25-tilemap/</id>
     <published>2021-01-25T00:00:00.000Z</published>
-    <updated>2021-07-03T10:43:16.778Z</updated>
+    <updated>2021-07-06T13:51:44.231Z</updated>
     
     <summary type="html">
     
@@ -243,7 +275,7 @@
     <link href="http://www.igiven.com/unity-2021-01-24-screentoworld/"/>
     <id>http://www.igiven.com/unity-2021-01-24-screentoworld/</id>
     <published>2021-01-24T00:00:00.000Z</published>
-    <updated>2021-07-03T10:43:16.778Z</updated>
+    <updated>2021-07-06T13:51:44.231Z</updated>
     
     <summary type="html">
     
@@ -271,7 +303,7 @@
     <link href="http://www.igiven.com/unity-2021-01-23-Spelunky-map/"/>
     <id>http://www.igiven.com/unity-2021-01-23-Spelunky-map/</id>
     <published>2021-01-23T00:00:00.000Z</published>
-    <updated>2021-07-03T10:43:16.778Z</updated>
+    <updated>2021-07-06T13:51:44.231Z</updated>
     
     <summary type="html">
     
@@ -297,7 +329,7 @@
     <link href="http://www.igiven.com/unity-2021-01-23-roguelike-map/"/>
     <id>http://www.igiven.com/unity-2021-01-23-roguelike-map/</id>
     <published>2021-01-23T00:00:00.000Z</published>
-    <updated>2021-07-03T10:43:16.778Z</updated>
+    <updated>2021-07-06T13:51:44.231Z</updated>
     
     <summary type="html">
     
@@ -329,7 +361,7 @@
     <link href="http://www.igiven.com/unity-2021-01-22-civ-map/"/>
     <id>http://www.igiven.com/unity-2021-01-22-civ-map/</id>
     <published>2021-01-22T00:00:00.000Z</published>
-    <updated>2021-07-03T10:43:16.778Z</updated>
+    <updated>2021-07-06T13:51:44.231Z</updated>
     
     <summary type="html">
     
@@ -365,7 +397,7 @@
     <link href="http://www.igiven.com/unity-2021-01-21-wave-collapse-function/"/>
     <id>http://www.igiven.com/unity-2021-01-21-wave-collapse-function/</id>
     <published>2021-01-21T00:00:00.000Z</published>
-    <updated>2021-07-03T10:43:16.778Z</updated>
+    <updated>2021-07-06T13:51:44.231Z</updated>
     
     <summary type="html">
     
@@ -395,7 +427,7 @@
     <link href="http://www.igiven.com/unity-2021-01-20-Perlin-map/"/>
     <id>http://www.igiven.com/unity-2021-01-20-Perlin-map/</id>
     <published>2021-01-20T00:00:00.000Z</published>
-    <updated>2021-07-03T10:43:16.778Z</updated>
+    <updated>2021-07-06T13:51:44.231Z</updated>
     
     <summary type="html">
     
@@ -432,7 +464,7 @@
     <link href="http://www.igiven.com/unity-2020-12-20-Collection-has-not-been-disposed/"/>
     <id>http://www.igiven.com/unity-2020-12-20-Collection-has-not-been-disposed/</id>
     <published>2020-12-20T00:00:00.000Z</published>
-    <updated>2021-07-03T10:43:16.778Z</updated>
+    <updated>2021-07-06T13:51:44.231Z</updated>
     
     <summary type="html">
     
@@ -462,7 +494,7 @@
     <link href="http://www.igiven.com/dotnet-2020-12-11-chrome-login-fail/"/>
     <id>http://www.igiven.com/dotnet-2020-12-11-chrome-login-fail/</id>
     <published>2020-12-11T00:00:00.000Z</published>
-    <updated>2021-07-03T10:43:16.770Z</updated>
+    <updated>2021-07-06T13:51:44.227Z</updated>
     
     <summary type="html">
     
@@ -488,7 +520,7 @@
     <link href="http://www.igiven.com/unity-2020-11-29-pitch-yaw-roll/"/>
     <id>http://www.igiven.com/unity-2020-11-29-pitch-yaw-roll/</id>
     <published>2020-11-29T00:00:00.000Z</published>
-    <updated>2021-07-03T10:43:16.778Z</updated>
+    <updated>2021-07-06T13:51:44.231Z</updated>
     
     <summary type="html">
     
@@ -511,7 +543,7 @@
     <link href="http://www.igiven.com/dotnet-2020-11-24-flags/"/>
     <id>http://www.igiven.com/dotnet-2020-11-24-flags/</id>
     <published>2020-11-24T00:00:00.000Z</published>
-    <updated>2021-07-03T10:43:16.770Z</updated>
+    <updated>2021-07-06T13:51:44.223Z</updated>
     
     <summary type="html">
     
@@ -544,7 +576,7 @@
     <link href="http://www.igiven.com/unity-2020-11-18-netcode-sourcecode/"/>
     <id>http://www.igiven.com/unity-2020-11-18-netcode-sourcecode/</id>
     <published>2020-11-18T00:00:00.000Z</published>
-    <updated>2021-07-03T10:43:16.778Z</updated>
+    <updated>2021-07-06T13:51:44.231Z</updated>
     
     <summary type="html">
     
@@ -593,43 +625,6 @@
       <category term="Unity" scheme="http://www.igiven.com/tags/Unity/"/>
     
       <category term="同步" scheme="http://www.igiven.com/tags/%E5%90%8C%E6%AD%A5/"/>
-    
-      <category term="UNITY" scheme="http://www.igiven.com/tags/UNITY/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>unity world time system</title>
-    <link href="http://www.igiven.com/unity-2020-11-17-unity-ecs-worldtime/"/>
-    <id>http://www.igiven.com/unity-2020-11-17-unity-ecs-worldtime/</id>
-    <published>2020-11-17T00:00:00.000Z</published>
-    <updated>2021-07-03T10:43:16.778Z</updated>
-    
-    <summary type="html">
-    
-      &lt;figure class=&quot;highlight plain&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;4&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;5&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;6&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;7&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;8&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;9&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;10&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;11&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;12&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;13&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;14&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;15&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;16&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;17&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;18&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;[Preserve]&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;  [UpdateInGroup(typeof(InitializationSystemGroup))]&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;  public class UpdateWorldTimeSystem : ComponentSystem&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;  &amp;#123;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;      private bool hasTickedOnce &amp;#x3D; false;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;      protected override void OnUpdate()&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;      &amp;#123;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;          var currentElapsedTime &amp;#x3D; Time.ElapsedTime;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;          var deltaTime &amp;#x3D; math.min(UnityEngine.Time.deltaTime, World.MaximumDeltaTime);&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;          World.SetTime(new TimeData(&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;              elapsedTime: hasTickedOnce ? (currentElapsedTime + deltaTime) : currentElapsedTime,&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;              deltaTime: deltaTime&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;          ));&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;          hasTickedOnce &amp;#x3D; true;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;      &amp;#125;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;  &amp;#125;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
-
-
-
-
-
-&lt;figure class=&quot;highlight plain&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;4&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;5&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;6&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;7&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;8&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;9&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;internal struct WorldTime : IComponentData&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;#123;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    public TimeData Time;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;#125;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;internal struct WorldTimeQueue : IBufferElementData&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;#123;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    public TimeData Time;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;#125;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
-
-
-
-
-
-&lt;p&gt;World.cs&lt;/p&gt;
-    
-    </summary>
-    
-    
-      <category term="unity" scheme="http://www.igiven.com/categories/unity/"/>
-    
-    
-      <category term="C" scheme="http://www.igiven.com/tags/C/"/>
-    
-      <category term="Unity" scheme="http://www.igiven.com/tags/Unity/"/>
     
       <category term="UNITY" scheme="http://www.igiven.com/tags/UNITY/"/>
     

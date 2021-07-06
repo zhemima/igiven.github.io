@@ -9813,6 +9813,129 @@
       </tags>
   </entry>
   <entry>
+    <title>使用柏林噪声算法生成地图</title>
+    <url>/unity-2021-01-20-Perlin-map/</url>
+    <content><![CDATA[<p>柏林噪声是一个非常强大算法，经常用于程序生成随机内容，在游戏和其他像电影等多媒体领域广泛应用。算法发明者Ken Perlin也因此算法获得<a href="http://mrl.nyu.edu/~perlin/doc/oscar.html" target="_blank" rel="noopener">奥斯卡科技成果奖</a>（靠算法拿奥斯卡也是没谁了666）。本文将剖析他于2002年发表的<a href="http://mrl.nyu.edu/~perlin/noise/" target="_blank" rel="noopener">改进版柏林噪声算法</a>。在游戏开发领域，柏林噪声可以用于生成波形，起伏不平的材质或者纹理。例如，它能用于程序生成地形（例如使用柏林噪声来生成我的世界（Minecraft）里的地形），火焰燃烧特效，水和云等等。柏林噪声绝大部分应用在2维，3维层面上，但某种意义上也能拓展到4维。柏林噪声在1维层面上可用于卷轴地形、模拟手绘线条等。<br>如果将柏林噪声拓展到4维层面，以第4维，即w轴代表时间，就能利用柏林噪声做动画。例如，2D柏林噪声可以通过插值生成地形，而3D柏林噪声则可以模拟海平面上起伏的波浪。下面是柏林噪声在不同维度的图像以及在游戏中的应用场景。</p>
+<p><a href="https://images2015.cnblogs.com/blog/608996/201707/608996-20170721155322355-1352334868.png" target="_blank" rel="noopener"><img src="../../assets/images/2021-01-20-Perlin-map/608996-20170721155322355-1352334868.png" alt="img"></a></p>
+<p>正如图所示，柏林噪声算法可以用来模拟许多自然中的噪声现象。接下来让我们从数理上分析算法的实现原理。</p>
+<hr>
+<h1 id="基本原理"><a href="#基本原理" class="headerlink" title="基本原理#"></a>基本原理#</h1><blockquote>
+<p>注意：事先声明，本节内容大多源于<a href="http://webstaff.itn.liu.se/~stegu/TNM022-2005/perlinnoiselinks/perlin-noise-math-faq.html" target="_blank" rel="noopener">this wonderful article by Matt Zucker</a>，不过该篇文章内容也是建立在1980年所发明的柏林噪声算法基础上的。本文我将使用2002年发明的改进版柏林噪声算法。因此，我的算法版本跟Zucker的版本会有些不同。</p>
+</blockquote>
+<p>让我们从最基本的柏林噪声函数看起：<br><code>public double perlin(double x, double y, double z);</code></p>
+<p>函数接收<code>x,y,z</code>三个坐标分量作为输入，并返回0.0~1.0的double值作为输出。那我们应该怎么处理输入值？首先，我们取3个输入值<code>x,y,z</code>的小数点部分，就可以表示为单元空间里的一个点了。为了方便讲解，我们将问题降维到2维空间来讨论（原理是一样的），下图是该点在2维空间上的表示：</p>
+<p><a href="https://upload-images.jianshu.io/upload_images/1797904-bfbbc85ed4afee99.png?imageMogr2/auto-orient/strip" target="_blank" rel="noopener"><img src="../../assets/images/2021-01-20-Perlin-map/1797904-bfbbc85ed4afee99.png" alt="img"></a><br><em>图1：小蓝点代表输入值在单元正方形里的空间坐标，其他4个点则是单元正方形的各顶点</em></p>
+<p>接着，我们给4个顶点（在3维空间则是8个顶点）各自生成一个伪随机的梯度向量。梯度向量代表该顶点相对单元正方形内某点的影响是正向还是反向的（向量指向方向为正向，相反方向为反向）。而伪随机是指，对于任意组相同的输入，必定得到相同的输出。因此，虽然每个顶点生成的梯度向量看似随机，实际上并不是。这也保证了在梯度向量在生成函数不变的情况下，每个坐标的梯度向量都是确定不变的。</p>
+<blockquote>
+<p>举个例子来理解伪随机，比如我们从圆周率π（3.14159…）的小数部分中随机抽取某一位数字，结果看似随机，但如果抽取小数点后1位，结果必定为1；抽取小数点后2位，结果必定为4。</p>
+</blockquote>
+<p><a href="https://upload-images.jianshu.io/upload_images/1797904-ad4b0120e857b5d3.png?imageMogr2/auto-orient/strip" target="_blank" rel="noopener"><img src="../../assets/images/2021-01-20-Perlin-map/1797904-ad4b0120e857b5d3.png" alt="img"></a><br><em>图2：各顶点上的梯度向量随机选取结果</em></p>
+<p>请注意，上图所示的梯度向量并不是完全准确的。在本文所介绍的改进版柏林噪声中，这些梯度向量并不是完全随机的，而是由12条单位正方体（3维）的中心点到各条边中点的向量组成：<br><code>(1,1,0),(-1,1,0),(1,-1,0),(-1,-1,0), (1,0,1),(-1,0,1),(1,0,-1),(-1,0,-1), (0,1,1),(0,-1,1),(0,1,-1),(0,-1,-1)</code></p>
+<p>采用这些特殊梯度向量的原因在<a href="http://mrl.nyu.edu/~perlin/paper445.pdf" target="_blank" rel="noopener">Ken Perlin’s SIGGRAPH 2002 paper: Improving Noise</a>这篇文章里有具体讲解。</p>
+<blockquote>
+<p>注意：许多介绍柏林噪声算法的文章都是根据最初版柏林噪声算法来讲解的，预定义的梯度表不是本文所说的这12个向量。如图2所示的梯度向量就是最初版算法所随机出来的梯度向量，不过这两种算法的原理都是一样的。</p>
+</blockquote>
+<p>接着，我们需要求出另外4个向量（在3维空间则是8个），它们分别从各顶点指向输入点（蓝色点）。下面有个2维空间下的例子：</p>
+<p><a href="https://upload-images.jianshu.io/upload_images/1797904-6dde06b2b941253d.png?imageMogr2/auto-orient/strip" target="_blank" rel="noopener"><img src="../../assets/images/2021-01-20-Perlin-map/1797904-6dde06b2b941253d.png" alt="img"></a><br><em>图3:各个距离向量</em></p>
+<p>接着，对每个顶点的梯度向量和距离向量做<a href="https://en.wikipedia.org/wiki/Dot_product" target="_blank" rel="noopener">点积</a>运算，我们就可以得出每个顶点的影响值：<br><code>grad.x * dist.x + grad.y * dist.y + grad.z * dist.z</code></p>
+<p>这正是算法所需要的值，点积运算为两向量长度之积，再乘以两向量夹角余弦：</p>
+<p>复制代码</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">dot(vec1,vec2) &#x3D; cos(angle(vec1,vec2)) * vec1.length * vec2.length</span><br></pre></td></tr></table></figure>
+
+<p>换句话说，如果两向量指向同一方向，点积结果为：</p>
+<p>复制代码</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">1 * vec1.length * vec2.length</span><br></pre></td></tr></table></figure>
+
+<p>如果两向量指向相反方向，则点积结果为：</p>
+<p>复制代码</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">-1 * vec1.length * vec2.length</span><br></pre></td></tr></table></figure>
+
+<p>如果两向量互相垂直，则点积结果为0。</p>
+<p>复制代码</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">0 * vec1.length * vec2.length</span><br></pre></td></tr></table></figure>
+
+<p>点积也可以理解为向量a在向量b上的投影，当距离向量在梯度向量上的投影为同方向，点积结果为正数；当距离向量在梯度向量上的投影为反方向，点积结果为负数。因此，通过两向量点积，我们就知道该顶点的影响值是正还是负的。不难看出，顶点的梯度向量直接决定了这一点。下面通过一副彩色图，直观地看下各顶点的影响值：</p>
+<p><a href="https://upload-images.jianshu.io/upload_images/1797904-0c7ca0db2126715a.png?imageMogr2/auto-orient/strip|imageView2/2/w/1240" target="_blank" rel="noopener"><img src="../../assets/images/2021-01-20-Perlin-map/1797904-0c7ca0db2126715a.png" alt="img"></a><br><em>图4：2D柏林噪声的影响值</em></p>
+<p>下一步，我们需要对4个顶点的影响值做插值，求得加权平均值（在3维空间则是8个）。算法非常简单（2维空间下的解法）：</p>
+<p>复制代码</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F; Below are 4 influence values in the arrangement:</span><br><span class="line">&#x2F;&#x2F; [g1] | [g2]</span><br><span class="line">&#x2F;&#x2F; -----------</span><br><span class="line">&#x2F;&#x2F; [g3] | [g4]</span><br><span class="line">int g1, g2, g3, g4;</span><br><span class="line">int u, v;   &#x2F;&#x2F; These coordinates are the location of the input coordinate in its unit square.  </span><br><span class="line">            &#x2F;&#x2F; For example a value of (0.5,0.5) is in the exact center of its unit square.</span><br><span class="line"></span><br><span class="line">int x1 &#x3D; lerp(g1,g2,u);</span><br><span class="line">int x2 &#x3D; lerp(g3,h4,u);</span><br><span class="line"></span><br><span class="line">int average &#x3D; lerp(x1,x2,v);</span><br></pre></td></tr></table></figure>
+
+<p>至此，整个柏林噪声算法还剩下最后一块拼图了：如果直接使用上述代码，由于是采用lerp线性插值计算得出的值，虽然运行效率高，但噪声效果不好，看起来会不自然。我们需要采用一种更为平滑，非线性的插值函数：<strong>fade函数</strong>，通常也被称为<strong>ease curve</strong>(也作为缓动函数在游戏中广泛使用)：</p>
+<p><a href="https://upload-images.jianshu.io/upload_images/1797904-27f5e6997742a89a.png?imageMogr2/auto-orient/strip" target="_blank" rel="noopener"><img src="../../assets/images/2021-01-20-Perlin-map/1797904-27f5e6997742a89a.png" alt="img"></a><br><em>图5：ease curve</em></p>
+<p>ease curve的值会用来计算前面代码里的u和v，这样插值变化不再是单调的线性变化，而是这样一个过程：初始变化慢，中间变化快，结尾变化又慢下来（也就是在当数值趋近于整数时，变化变慢）。这个用于改善柏林噪声算法的fade函数可以表示为以下数学形式：</p>
+<p><a href="https://upload-images.jianshu.io/upload_images/1797904-05b271d52d2bee24.gif?imageMogr2/auto-orient/strip" target="_blank" rel="noopener"><img src="../../assets/images/2021-01-20-Perlin-map/1797904-05b271d52d2bee24.gif" alt="img"></a></p>
+<p>基本上，这就是整个柏林噪声算法的原理了！搞清了算法的各个实现关键步骤后，现在让我们着手把代码实现出来。</p>
+<hr>
+<h1 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现#"></a>代码实现#</h1><p>在本节开始前我需要重申一遍，代码实现是C#版本。相比<a href="http://mrl.nyu.edu/~perlin/noise/" target="_blank" rel="noopener">Ken Perlin的Java版本实现</a>做了小小的改动，主要是增加了代码的整洁性和可读性，支持噪声重复（瓦片重复）特性。代码完全开源，可免费使用（考虑到这毕竟不是我原创发明的算法 - Ken Perlin才是！）</p>
+<h2 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作##"></a>准备工作##</h2><p>第一步，我们需要先声明一个排列表（permutation table），或者直接缩写为<code>p[]</code>数组就行了。数组长度为256，分别随机、无重复地存放了0-255这些数值。为了避免缓存溢出，我们再重复填充一次数组的值，所以数组最终长度为512：</p>
+<p>复制代码</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">private static readonly int[] permutation &#x3D; &#123; 151,160,137,91,90,15,                 &#x2F;&#x2F; Hash lookup table as defined by Ken Perlin.  This is a randomly</span><br><span class="line">    131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,    &#x2F;&#x2F; arranged array of all numbers from 0-255 inclusive.</span><br><span class="line">    190, 6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,</span><br><span class="line">    88,237,149,56,87,174,20,125,136,171,168, 68,175,74,165,71,134,139,48,27,166,</span><br><span class="line">    77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,</span><br><span class="line">    102,143,54, 65,25,63,161, 1,216,80,73,209,76,132,187,208, 89,18,169,200,196,</span><br><span class="line">    135,130,116,188,159,86,164,100,109,198,173,186, 3,64,52,217,226,250,124,123,</span><br><span class="line">    5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,</span><br><span class="line">    223,183,170,213,119,248,152, 2,44,154,163, 70,221,153,101,155,167, 43,172,9,</span><br><span class="line">    129,22,39,253, 19,98,108,110,79,113,224,232,178,185, 112,104,218,246,97,228,</span><br><span class="line">    251,34,242,193,238,210,144,12,191,179,162,241, 81,51,145,235,249,14,239,107,</span><br><span class="line">    49,192,214, 31,181,199,106,157,184, 84,204,176,115,121,50,45,127, 4,150,254,</span><br><span class="line">    138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">private static readonly int[] p;                                                    &#x2F;&#x2F; Doubled permutation to avoid overflow</span><br><span class="line"></span><br><span class="line">static Perlin() &#123;</span><br><span class="line">    p &#x3D; new int[512];</span><br><span class="line">    for(int x&#x3D;0;x&lt;512;x++) &#123;</span><br><span class="line">        p[x] &#x3D; permutation[x%256];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>p[]</code>数组会在算法后续的哈希计算中使用到，用于确定一组输入最终挑选哪个梯度向量（从前面所列出的12个梯度向量中挑选）。后续代码会详细展示<code>p[]</code>数组的用法。</p>
+<p>接着，我们开始编写柏林噪声函数：</p>
+<p>复制代码</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public double perlin(double x, double y, double z) &#123;</span><br><span class="line">    if(repeat &gt; 0) &#123;                                    &#x2F;&#x2F; If we have any repeat on, change the coordinates to their &quot;local&quot; repetitions</span><br><span class="line">        x &#x3D; x%repeat;</span><br><span class="line">        y &#x3D; y%repeat;</span><br><span class="line">        z &#x3D; z%repeat;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    int xi &#x3D; (int)x &amp; 255;                              &#x2F;&#x2F; Calculate the &quot;unit cube&quot; that the point asked will be located in</span><br><span class="line">    int yi &#x3D; (int)y &amp; 255;                              &#x2F;&#x2F; The left bound is ( |_x_|,|_y_|,|_z_| ) and the right bound is that</span><br><span class="line">    int zi &#x3D; (int)z &amp; 255;                              &#x2F;&#x2F; plus 1.  Next we calculate the location (from 0.0 to 1.0) in that cube.</span><br><span class="line">    double xf &#x3D; x-(int)x;</span><br><span class="line">    double yf &#x3D; y-(int)y;</span><br><span class="line">    double zf &#x3D; z-(int)z;</span><br><span class="line">    &#x2F;&#x2F; ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面的代码很直观。首先，对输入坐标使用求余运算符%，求出[0,repeat)范围内的余数。紧接着声明<code>xi, yi, zi</code>三个变量。它们代表了输入坐标落在了哪个单元正方形里。我们还要限制坐标在[0,255]这个范围内，避免访问数组<code>p[]</code>时，出现数组越界错误。这也产生了一个副作用：柏林噪声每隔256个整数就会再次重复。但这不是太大的问题，因为算法不仅能处理整数，还能处理小数。最后，我们通过<code>xf, yf, zf</code>三个变量（也就是<code>x,y,z</code>的小数部分值），确定了输入坐标在单元正方形里的空间位置（就是前面所示的小蓝点）。</p>
+<h2 id="Fade函数"><a href="#Fade函数" class="headerlink" title="Fade函数##"></a>Fade函数##</h2><p>现在我们需要用代码表示前面所提到的fade函数（图5）。正如上文所提，函数的数学表示：<br><a href="https://upload-images.jianshu.io/upload_images/1797904-05b271d52d2bee24.gif?imageMogr2/auto-orient/strip" target="_blank" rel="noopener"><img src="../../assets/images/2021-01-20-Perlin-map/1797904-05b271d52d2bee24.gif" alt="img"></a></p>
+<p>代码实现如下：</p>
+<p>复制代码</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public static double fade(double t) &#123;</span><br><span class="line">                                                        &#x2F;&#x2F; Fade function as defined by Ken Perlin.  This eases coordinate values</span><br><span class="line">                                                        &#x2F;&#x2F; so that they will ease towards integral values.  This ends up smoothing</span><br><span class="line">                                                        &#x2F;&#x2F; the final output.</span><br><span class="line">    return t * t * t * (t * (t * 6 - 15) + 10);         &#x2F;&#x2F; 6t^5 - 15t^4 + 10t^3</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">public double perlin(double x, double y, double z) &#123;</span><br><span class="line">    &#x2F;&#x2F; ...</span><br><span class="line"></span><br><span class="line">    double u &#x3D; fade(xf);</span><br><span class="line">    double v &#x3D; fade(yf);</span><br><span class="line">    double w &#x3D; fade(zf);</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>代码所计算得出的<code>u / v / w</code>变量将在后面的插值计算中使用到。</p>
+<h2 id="哈希函数"><a href="#哈希函数" class="headerlink" title="哈希函数##"></a>哈希函数##</h2><p>柏林噪声哈希函数用于给每组输入计算返回一个唯一、确定值。哈希函数在维基百科的定义如下：</p>
+<blockquote>
+<p>哈希函数是一种从任何一种数据中创建小的数字“指纹”的方法，输入数据有任何细微的不同，都会令输出结果完全不一样</p>
+</blockquote>
+<p>下面代码就是柏林噪声算法所使用的哈希函数。它使用了早前我们声明的<code>p[]</code>数组：</p>
+<p>复制代码</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public double perlin(double x, double y, double z) &#123;</span><br><span class="line">    &#x2F;&#x2F; ...</span><br><span class="line"></span><br><span class="line">    int aaa, aba, aab, abb, baa, bba, bab, bbb;</span><br><span class="line">    aaa &#x3D; p[p[p[    xi ]+    yi ]+    zi ];</span><br><span class="line">    aba &#x3D; p[p[p[    xi ]+inc(yi)]+    zi ];</span><br><span class="line">    aab &#x3D; p[p[p[    xi ]+    yi ]+inc(zi)];</span><br><span class="line">    abb &#x3D; p[p[p[    xi ]+inc(yi)]+inc(zi)];</span><br><span class="line">    baa &#x3D; p[p[p[inc(xi)]+    yi ]+    zi ];</span><br><span class="line">    bba &#x3D; p[p[p[inc(xi)]+inc(yi)]+    zi ];</span><br><span class="line">    bab &#x3D; p[p[p[inc(xi)]+    yi ]+inc(zi)];</span><br><span class="line">    bbb &#x3D; p[p[p[inc(xi)]+inc(yi)]+inc(zi)];</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">public int inc(int num) &#123;</span><br><span class="line">    num++;</span><br><span class="line">    if (repeat &gt; 0) num %&#x3D; repeat;</span><br><span class="line">    </span><br><span class="line">    return num;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>代码的哈希函数，对包围着输入坐标（小蓝点）的周围8个单元正方形的索引坐标进行了哈希计算。<code>inc()</code>函数用于将输入值增加1，同时保证范围在[0,repeat)内。如果不需要噪声重复，<code>inc()</code>函数可以简化成单纯将输入值增加1。由于哈希结果值是从<code>p[]</code>数组中得到的，所以哈希函数的返回值范围限定在[0,255]内。</p>
+<h2 id="梯度函数"><a href="#梯度函数" class="headerlink" title="梯度函数##"></a>梯度函数##</h2><p>我时常认为Ken Perlin的最初版算法里的<code>grad()</code>函数写法过于复杂，令人费解。我们只要明白<code>grad()</code>函数的作用在于计算随机选取的梯度向量以及顶点位置向量的点积。Ken Perlin巧妙地使用了位翻转(bit-flipping)技巧来实现：</p>
+<p>复制代码</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public static double grad(int hash, double x, double y, double z) &#123;</span><br><span class="line">    int h &#x3D; hash &amp; 15;                                    &#x2F;&#x2F; Take the hashed value and take the first 4 bits of it (15 &#x3D;&#x3D; 0b1111)</span><br><span class="line">    double u &#x3D; h &lt; 8 &#x2F;* 0b1000 *&#x2F; ? x : y;                &#x2F;&#x2F; If the most significant bit (MSB) of the hash is 0 then set u &#x3D; x.  Otherwise y.</span><br><span class="line">    </span><br><span class="line">    double v;                                             &#x2F;&#x2F; In Ken Perlin&#39;s original implementation this was another conditional operator (?:).  I</span><br><span class="line">                                                          &#x2F;&#x2F; expanded it for readability.</span><br><span class="line">    </span><br><span class="line">    if(h &lt; 4 &#x2F;* 0b0100 *&#x2F;)                                &#x2F;&#x2F; If the first and second significant bits are 0 set v &#x3D; y</span><br><span class="line">        v &#x3D; y;</span><br><span class="line">    else if(h &#x3D;&#x3D; 12 &#x2F;* 0b1100 *&#x2F; || h &#x3D;&#x3D; 14 &#x2F;* 0b1110*&#x2F;)  &#x2F;&#x2F; If the first and second significant bits are 1 set v &#x3D; x</span><br><span class="line">        v &#x3D; x;</span><br><span class="line">    else                                                  &#x2F;&#x2F; If the first and second significant bits are not equal (0&#x2F;1, 1&#x2F;0) set v &#x3D; z</span><br><span class="line">        v &#x3D; z;</span><br><span class="line">    </span><br><span class="line">    return ((h&amp;1) &#x3D;&#x3D; 0 ? u : -u)+((h&amp;2) &#x3D;&#x3D; 0 ? v : -v); &#x2F;&#x2F; Use the last 2 bits to decide if u and v are positive or negative.  Then return their addition.</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>下面代码则是以另一种令人容易理解的方式完成了这个任务（而且在很多语言版本的运行效率都优于前面一种）：</p>
+<p>复制代码</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F; Source: http:&#x2F;&#x2F;riven8192.blogspot.com&#x2F;2010&#x2F;08&#x2F;calculate-perlinnoise-twice-as-fast.html</span><br><span class="line">public static double grad(int hash, double x, double y, double z)</span><br><span class="line">&#123;</span><br><span class="line">    switch(hash &amp; 0xF)</span><br><span class="line">    &#123;</span><br><span class="line">        case 0x0: return  x + y;</span><br><span class="line">        case 0x1: return -x + y;</span><br><span class="line">        case 0x2: return  x - y;</span><br><span class="line">        case 0x3: return -x - y;</span><br><span class="line">        case 0x4: return  x + z;</span><br><span class="line">        case 0x5: return -x + z;</span><br><span class="line">        case 0x6: return  x - z;</span><br><span class="line">        case 0x7: return -x - z;</span><br><span class="line">        case 0x8: return  y + z;</span><br><span class="line">        case 0x9: return -y + z;</span><br><span class="line">        case 0xA: return  y - z;</span><br><span class="line">        case 0xB: return -y - z;</span><br><span class="line">        case 0xC: return  y + x;</span><br><span class="line">        case 0xD: return -y + z;</span><br><span class="line">        case 0xE: return  y - x;</span><br><span class="line">        case 0xF: return -y - z;</span><br><span class="line">        default: return 0; &#x2F;&#x2F; never happens</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>以上的源码可以<a href="http://riven8192.blogspot.com/2010/08/calculate-perlinnoise-twice-as-fast.html" target="_blank" rel="noopener">点击这里</a>查看。无论如何，上面的两种实现并没有实质差别。他们都是从以下12个向量里随机挑选一个作为梯度向量：<br><code>(1,1,0),(-1,1,0),(1,-1,0),(-1,-1,0), (1,0,1),(-1,0,1),(1,0,-1),(-1,0,-1), (0,1,1),(0,-1,1),(0,1,-1),(0,-1,-1)</code></p>
+<p>随机挑选结果其实取决于前一步所计算得出的哈希值（<code>grad()</code>函数的第一个参数）。后面3个参数则代表由输入点指向顶点的距离向量（最终拿来与梯度向量进行点积）。</p>
+<h2 id="插值整合"><a href="#插值整合" class="headerlink" title="插值整合##"></a>插值整合##</h2><p>经过前面的几步计算，我们得出了8个顶点的影响值，并将它们进行平滑插值，得出了最终结果：</p>
+<p>复制代码</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public double perlin(double x, double y, double z) &#123;</span><br><span class="line">    &#x2F;&#x2F; ...</span><br><span class="line"></span><br><span class="line">    double x1, x2, y1, y2;</span><br><span class="line">    x1 &#x3D; lerp(    grad (aaa, xf  , yf  , zf),           &#x2F;&#x2F; The gradient function calculates the dot product between a pseudorandom</span><br><span class="line">                grad (baa, xf-1, yf  , zf),             &#x2F;&#x2F; gradient vector and the vector from the input coordinate to the 8</span><br><span class="line">                u);                                     &#x2F;&#x2F; surrounding points in its unit cube.</span><br><span class="line">    x2 &#x3D; lerp(    grad (aba, xf  , yf-1, zf),           &#x2F;&#x2F; This is all then lerped together as a sort of weighted average based on the faded (u,v,w)</span><br><span class="line">                grad (bba, xf-1, yf-1, zf),             &#x2F;&#x2F; values we made earlier.</span><br><span class="line">                  u);</span><br><span class="line">    y1 &#x3D; lerp(x1, x2, v);</span><br><span class="line"></span><br><span class="line">    x1 &#x3D; lerp(    grad (aab, xf  , yf  , zf-1),</span><br><span class="line">                grad (bab, xf-1, yf  , zf-1),</span><br><span class="line">                u);</span><br><span class="line">    x2 &#x3D; lerp(    grad (abb, xf  , yf-1, zf-1),</span><br><span class="line">                  grad (bbb, xf-1, yf-1, zf-1),</span><br><span class="line">                  u);</span><br><span class="line">    y2 &#x3D; lerp (x1, x2, v);</span><br><span class="line">    </span><br><span class="line">    return (lerp (y1, y2, w)+1)&#x2F;2;                      &#x2F;&#x2F; For convenience we bind the result to 0 - 1 (theoretical min&#x2F;max before is [-1, 1])</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; Linear Interpolate</span><br><span class="line">public static double lerp(double a, double b, double x) &#123;</span><br><span class="line">    return a + x * (b - a);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="利用倍频实现更自然的噪声"><a href="#利用倍频实现更自然的噪声" class="headerlink" title="利用倍频实现更自然的噪声#"></a>利用倍频实现更自然的噪声#</h1><p>最后让我们再思考下，除了前面所讲的计算，还有其他办法可以令噪声结果更加自然吗？虽然柏林噪声算法一定程度上模拟了自然噪声，但仍没有完全表现出自然噪声的不规律性。举个现实例子，现实地形会有大段连绵、高耸的山地，也会有丘陵和蚀坑，更小点的有大块岩石，甚至更小的鹅卵石块，这都属于地形的一部分。那如何让柏林噪声算法模拟出这样的自然噪声特性，解决方法也很简单：我们可以使用不同的频率（frequencies）和振幅（amplitudes）参数进行多几次柏林噪声计算，然后将结果叠加在一起。频率是指采样数据的间隔，振幅是指返回值的幅度范围。</p>
+<p><a href="https://upload-images.jianshu.io/upload_images/1797904-6f96e55ed8d87b04.png?imageMogr2/auto-orient/strip|imageView2/2/w/1240" target="_blank" rel="noopener"><img src="../../assets/images/2021-01-20-Perlin-map/1797904-6f96e55ed8d87b04.png" alt="img"></a><br><em>图6：不同频率和振幅参数下的柏林噪声结果</em></p>
+<p>将所有结果叠加在一起，我们就能得到以下结果：</p>
+<p><a href="https://upload-images.jianshu.io/upload_images/1797904-c69b2bf9e253defb.png?imageMogr2/auto-orient/strip" target="_blank" rel="noopener"><img src="../../assets/images/2021-01-20-Perlin-map/1797904-c69b2bf9e253defb.png" alt="img"></a><br><em>图7：图6所有噪声的叠加结果</em></p>
+<p>很明显，这样的噪声结果更加令人信服。上面的6组噪声被称之为噪声的不同<strong>倍频(Octave)</strong>。随着倍频增大，噪声对于最终叠加噪声的影响程度变小。当然，倍频组数的增加，会线性地增加代码执行时间，在游戏运行时使用噪声算法，再好不要使用超过几组倍频（比如，当你想在60fps下模拟火焰特效时，最好不要这么干）。然而，做数据预处理时，就很适合使用多组倍频叠加来模拟更自然的噪声（比如用于提前生成游戏地形等）。</p>
+<p>那我们应该分别挑选多大的频率和振幅来进行噪声计算呢？这个可以通过<strong>persistence</strong>参数确定。<a href="http://freespace.virgin.net/hugo.elias/models/m_perlin.htm" target="_blank" rel="noopener">Hugo Elias</a>对persistence的定义使用如下：</p>
+<p><a href="https://upload-images.jianshu.io/upload_images/1797904-b7093e0ea840d56c.png?imageMogr2/auto-orient/strip|imageView2/2/w/1240" target="_blank" rel="noopener"><img src="../../assets/images/2021-01-20-Perlin-map/1797904-b7093e0ea840d56c.png" alt="img"></a></p>
+<p><a href="https://upload-images.jianshu.io/upload_images/1797904-006ffe9e12825253.png?imageMogr2/auto-orient/strip|imageView2/2/w/1240" target="_blank" rel="noopener"><img src="../../assets/images/2021-01-20-Perlin-map/1797904-006ffe9e12825253.png" alt="img"></a></p>
+<p>以上公式<code>i</code>的值取决于倍频数量，代码实现也很简单：</p>
+<p>复制代码</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public double OctavePerlin(double x, double y, double z, int octaves, double persistence) &#123;</span><br><span class="line">    double total &#x3D; 0;</span><br><span class="line">    double frequency &#x3D; 1;</span><br><span class="line">    double amplitude &#x3D; 1;</span><br><span class="line">    double maxValue &#x3D; 0;  &#x2F;&#x2F; Used for normalizing result to 0.0 - 1.0</span><br><span class="line">    for(int i&#x3D;0;i&lt;octaves;i++) &#123;</span><br><span class="line">        total +&#x3D; perlin(x * frequency, y * frequency, z * frequency) * amplitude;</span><br><span class="line">        </span><br><span class="line">        maxValue +&#x3D; amplitude;</span><br><span class="line">        </span><br><span class="line">        amplitude *&#x3D; persistence;</span><br><span class="line">        frequency *&#x3D; 2;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    return total&#x2F;maxValue;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="UNITY"><a href="#UNITY" class="headerlink" title="UNITY"></a>UNITY</h1>]]></content>
+      <categories>
+        <category>unity</category>
+      </categories>
+      <tags>
+        <tag>C</tag>
+        <tag>C#</tag>
+        <tag>游戏</tag>
+        <tag>Unity</tag>
+        <tag>UNITY</tag>
+        <tag>地图</tag>
+        <tag>Java</tag>
+        <tag>游戏开发</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>波函数坍塌算法生成地图</title>
     <url>/unity-2021-01-21-wave-collapse-function/</url>
     <content><![CDATA[<h2 id="什么是“波函数坍塌”？"><a href="#什么是“波函数坍塌”？" class="headerlink" title="什么是“波函数坍塌”？"></a>什么是“波函数坍塌”？</h2><p>这个名字看起来是来自量子力学，意思应该是只有在真正观察时，粒子的状态才能被确定，要不然是不确定的，其实并不确定这个解释对不对，物理就够难了，更何况是量子力学。不过呢，很多事物都只是被赋予了高大上的名字，但是实际上根本没有看起来那么复杂。</p>
@@ -10247,129 +10370,6 @@
       </tags>
   </entry>
   <entry>
-    <title>使用柏林噪声算法生成地图</title>
-    <url>/unity-2021-01-20-Perlin-map/</url>
-    <content><![CDATA[<p>柏林噪声是一个非常强大算法，经常用于程序生成随机内容，在游戏和其他像电影等多媒体领域广泛应用。算法发明者Ken Perlin也因此算法获得<a href="http://mrl.nyu.edu/~perlin/doc/oscar.html" target="_blank" rel="noopener">奥斯卡科技成果奖</a>（靠算法拿奥斯卡也是没谁了666）。本文将剖析他于2002年发表的<a href="http://mrl.nyu.edu/~perlin/noise/" target="_blank" rel="noopener">改进版柏林噪声算法</a>。在游戏开发领域，柏林噪声可以用于生成波形，起伏不平的材质或者纹理。例如，它能用于程序生成地形（例如使用柏林噪声来生成我的世界（Minecraft）里的地形），火焰燃烧特效，水和云等等。柏林噪声绝大部分应用在2维，3维层面上，但某种意义上也能拓展到4维。柏林噪声在1维层面上可用于卷轴地形、模拟手绘线条等。<br>如果将柏林噪声拓展到4维层面，以第4维，即w轴代表时间，就能利用柏林噪声做动画。例如，2D柏林噪声可以通过插值生成地形，而3D柏林噪声则可以模拟海平面上起伏的波浪。下面是柏林噪声在不同维度的图像以及在游戏中的应用场景。</p>
-<p><a href="https://images2015.cnblogs.com/blog/608996/201707/608996-20170721155322355-1352334868.png" target="_blank" rel="noopener"><img src="../../assets/images/2021-01-20-Perlin-map/608996-20170721155322355-1352334868.png" alt="img"></a></p>
-<p>正如图所示，柏林噪声算法可以用来模拟许多自然中的噪声现象。接下来让我们从数理上分析算法的实现原理。</p>
-<hr>
-<h1 id="基本原理"><a href="#基本原理" class="headerlink" title="基本原理#"></a>基本原理#</h1><blockquote>
-<p>注意：事先声明，本节内容大多源于<a href="http://webstaff.itn.liu.se/~stegu/TNM022-2005/perlinnoiselinks/perlin-noise-math-faq.html" target="_blank" rel="noopener">this wonderful article by Matt Zucker</a>，不过该篇文章内容也是建立在1980年所发明的柏林噪声算法基础上的。本文我将使用2002年发明的改进版柏林噪声算法。因此，我的算法版本跟Zucker的版本会有些不同。</p>
-</blockquote>
-<p>让我们从最基本的柏林噪声函数看起：<br><code>public double perlin(double x, double y, double z);</code></p>
-<p>函数接收<code>x,y,z</code>三个坐标分量作为输入，并返回0.0~1.0的double值作为输出。那我们应该怎么处理输入值？首先，我们取3个输入值<code>x,y,z</code>的小数点部分，就可以表示为单元空间里的一个点了。为了方便讲解，我们将问题降维到2维空间来讨论（原理是一样的），下图是该点在2维空间上的表示：</p>
-<p><a href="https://upload-images.jianshu.io/upload_images/1797904-bfbbc85ed4afee99.png?imageMogr2/auto-orient/strip" target="_blank" rel="noopener"><img src="../../assets/images/2021-01-20-Perlin-map/1797904-bfbbc85ed4afee99.png" alt="img"></a><br><em>图1：小蓝点代表输入值在单元正方形里的空间坐标，其他4个点则是单元正方形的各顶点</em></p>
-<p>接着，我们给4个顶点（在3维空间则是8个顶点）各自生成一个伪随机的梯度向量。梯度向量代表该顶点相对单元正方形内某点的影响是正向还是反向的（向量指向方向为正向，相反方向为反向）。而伪随机是指，对于任意组相同的输入，必定得到相同的输出。因此，虽然每个顶点生成的梯度向量看似随机，实际上并不是。这也保证了在梯度向量在生成函数不变的情况下，每个坐标的梯度向量都是确定不变的。</p>
-<blockquote>
-<p>举个例子来理解伪随机，比如我们从圆周率π（3.14159…）的小数部分中随机抽取某一位数字，结果看似随机，但如果抽取小数点后1位，结果必定为1；抽取小数点后2位，结果必定为4。</p>
-</blockquote>
-<p><a href="https://upload-images.jianshu.io/upload_images/1797904-ad4b0120e857b5d3.png?imageMogr2/auto-orient/strip" target="_blank" rel="noopener"><img src="../../assets/images/2021-01-20-Perlin-map/1797904-ad4b0120e857b5d3.png" alt="img"></a><br><em>图2：各顶点上的梯度向量随机选取结果</em></p>
-<p>请注意，上图所示的梯度向量并不是完全准确的。在本文所介绍的改进版柏林噪声中，这些梯度向量并不是完全随机的，而是由12条单位正方体（3维）的中心点到各条边中点的向量组成：<br><code>(1,1,0),(-1,1,0),(1,-1,0),(-1,-1,0), (1,0,1),(-1,0,1),(1,0,-1),(-1,0,-1), (0,1,1),(0,-1,1),(0,1,-1),(0,-1,-1)</code></p>
-<p>采用这些特殊梯度向量的原因在<a href="http://mrl.nyu.edu/~perlin/paper445.pdf" target="_blank" rel="noopener">Ken Perlin’s SIGGRAPH 2002 paper: Improving Noise</a>这篇文章里有具体讲解。</p>
-<blockquote>
-<p>注意：许多介绍柏林噪声算法的文章都是根据最初版柏林噪声算法来讲解的，预定义的梯度表不是本文所说的这12个向量。如图2所示的梯度向量就是最初版算法所随机出来的梯度向量，不过这两种算法的原理都是一样的。</p>
-</blockquote>
-<p>接着，我们需要求出另外4个向量（在3维空间则是8个），它们分别从各顶点指向输入点（蓝色点）。下面有个2维空间下的例子：</p>
-<p><a href="https://upload-images.jianshu.io/upload_images/1797904-6dde06b2b941253d.png?imageMogr2/auto-orient/strip" target="_blank" rel="noopener"><img src="../../assets/images/2021-01-20-Perlin-map/1797904-6dde06b2b941253d.png" alt="img"></a><br><em>图3:各个距离向量</em></p>
-<p>接着，对每个顶点的梯度向量和距离向量做<a href="https://en.wikipedia.org/wiki/Dot_product" target="_blank" rel="noopener">点积</a>运算，我们就可以得出每个顶点的影响值：<br><code>grad.x * dist.x + grad.y * dist.y + grad.z * dist.z</code></p>
-<p>这正是算法所需要的值，点积运算为两向量长度之积，再乘以两向量夹角余弦：</p>
-<p>复制代码</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">dot(vec1,vec2) &#x3D; cos(angle(vec1,vec2)) * vec1.length * vec2.length</span><br></pre></td></tr></table></figure>
-
-<p>换句话说，如果两向量指向同一方向，点积结果为：</p>
-<p>复制代码</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">1 * vec1.length * vec2.length</span><br></pre></td></tr></table></figure>
-
-<p>如果两向量指向相反方向，则点积结果为：</p>
-<p>复制代码</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">-1 * vec1.length * vec2.length</span><br></pre></td></tr></table></figure>
-
-<p>如果两向量互相垂直，则点积结果为0。</p>
-<p>复制代码</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">0 * vec1.length * vec2.length</span><br></pre></td></tr></table></figure>
-
-<p>点积也可以理解为向量a在向量b上的投影，当距离向量在梯度向量上的投影为同方向，点积结果为正数；当距离向量在梯度向量上的投影为反方向，点积结果为负数。因此，通过两向量点积，我们就知道该顶点的影响值是正还是负的。不难看出，顶点的梯度向量直接决定了这一点。下面通过一副彩色图，直观地看下各顶点的影响值：</p>
-<p><a href="https://upload-images.jianshu.io/upload_images/1797904-0c7ca0db2126715a.png?imageMogr2/auto-orient/strip|imageView2/2/w/1240" target="_blank" rel="noopener"><img src="../../assets/images/2021-01-20-Perlin-map/1797904-0c7ca0db2126715a.png" alt="img"></a><br><em>图4：2D柏林噪声的影响值</em></p>
-<p>下一步，我们需要对4个顶点的影响值做插值，求得加权平均值（在3维空间则是8个）。算法非常简单（2维空间下的解法）：</p>
-<p>复制代码</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F; Below are 4 influence values in the arrangement:</span><br><span class="line">&#x2F;&#x2F; [g1] | [g2]</span><br><span class="line">&#x2F;&#x2F; -----------</span><br><span class="line">&#x2F;&#x2F; [g3] | [g4]</span><br><span class="line">int g1, g2, g3, g4;</span><br><span class="line">int u, v;   &#x2F;&#x2F; These coordinates are the location of the input coordinate in its unit square.  </span><br><span class="line">            &#x2F;&#x2F; For example a value of (0.5,0.5) is in the exact center of its unit square.</span><br><span class="line"></span><br><span class="line">int x1 &#x3D; lerp(g1,g2,u);</span><br><span class="line">int x2 &#x3D; lerp(g3,h4,u);</span><br><span class="line"></span><br><span class="line">int average &#x3D; lerp(x1,x2,v);</span><br></pre></td></tr></table></figure>
-
-<p>至此，整个柏林噪声算法还剩下最后一块拼图了：如果直接使用上述代码，由于是采用lerp线性插值计算得出的值，虽然运行效率高，但噪声效果不好，看起来会不自然。我们需要采用一种更为平滑，非线性的插值函数：<strong>fade函数</strong>，通常也被称为<strong>ease curve</strong>(也作为缓动函数在游戏中广泛使用)：</p>
-<p><a href="https://upload-images.jianshu.io/upload_images/1797904-27f5e6997742a89a.png?imageMogr2/auto-orient/strip" target="_blank" rel="noopener"><img src="../../assets/images/2021-01-20-Perlin-map/1797904-27f5e6997742a89a.png" alt="img"></a><br><em>图5：ease curve</em></p>
-<p>ease curve的值会用来计算前面代码里的u和v，这样插值变化不再是单调的线性变化，而是这样一个过程：初始变化慢，中间变化快，结尾变化又慢下来（也就是在当数值趋近于整数时，变化变慢）。这个用于改善柏林噪声算法的fade函数可以表示为以下数学形式：</p>
-<p><a href="https://upload-images.jianshu.io/upload_images/1797904-05b271d52d2bee24.gif?imageMogr2/auto-orient/strip" target="_blank" rel="noopener"><img src="../../assets/images/2021-01-20-Perlin-map/1797904-05b271d52d2bee24.gif" alt="img"></a></p>
-<p>基本上，这就是整个柏林噪声算法的原理了！搞清了算法的各个实现关键步骤后，现在让我们着手把代码实现出来。</p>
-<hr>
-<h1 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现#"></a>代码实现#</h1><p>在本节开始前我需要重申一遍，代码实现是C#版本。相比<a href="http://mrl.nyu.edu/~perlin/noise/" target="_blank" rel="noopener">Ken Perlin的Java版本实现</a>做了小小的改动，主要是增加了代码的整洁性和可读性，支持噪声重复（瓦片重复）特性。代码完全开源，可免费使用（考虑到这毕竟不是我原创发明的算法 - Ken Perlin才是！）</p>
-<h2 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作##"></a>准备工作##</h2><p>第一步，我们需要先声明一个排列表（permutation table），或者直接缩写为<code>p[]</code>数组就行了。数组长度为256，分别随机、无重复地存放了0-255这些数值。为了避免缓存溢出，我们再重复填充一次数组的值，所以数组最终长度为512：</p>
-<p>复制代码</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">private static readonly int[] permutation &#x3D; &#123; 151,160,137,91,90,15,                 &#x2F;&#x2F; Hash lookup table as defined by Ken Perlin.  This is a randomly</span><br><span class="line">    131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,    &#x2F;&#x2F; arranged array of all numbers from 0-255 inclusive.</span><br><span class="line">    190, 6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,</span><br><span class="line">    88,237,149,56,87,174,20,125,136,171,168, 68,175,74,165,71,134,139,48,27,166,</span><br><span class="line">    77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,</span><br><span class="line">    102,143,54, 65,25,63,161, 1,216,80,73,209,76,132,187,208, 89,18,169,200,196,</span><br><span class="line">    135,130,116,188,159,86,164,100,109,198,173,186, 3,64,52,217,226,250,124,123,</span><br><span class="line">    5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,</span><br><span class="line">    223,183,170,213,119,248,152, 2,44,154,163, 70,221,153,101,155,167, 43,172,9,</span><br><span class="line">    129,22,39,253, 19,98,108,110,79,113,224,232,178,185, 112,104,218,246,97,228,</span><br><span class="line">    251,34,242,193,238,210,144,12,191,179,162,241, 81,51,145,235,249,14,239,107,</span><br><span class="line">    49,192,214, 31,181,199,106,157,184, 84,204,176,115,121,50,45,127, 4,150,254,</span><br><span class="line">    138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">private static readonly int[] p;                                                    &#x2F;&#x2F; Doubled permutation to avoid overflow</span><br><span class="line"></span><br><span class="line">static Perlin() &#123;</span><br><span class="line">    p &#x3D; new int[512];</span><br><span class="line">    for(int x&#x3D;0;x&lt;512;x++) &#123;</span><br><span class="line">        p[x] &#x3D; permutation[x%256];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><code>p[]</code>数组会在算法后续的哈希计算中使用到，用于确定一组输入最终挑选哪个梯度向量（从前面所列出的12个梯度向量中挑选）。后续代码会详细展示<code>p[]</code>数组的用法。</p>
-<p>接着，我们开始编写柏林噪声函数：</p>
-<p>复制代码</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public double perlin(double x, double y, double z) &#123;</span><br><span class="line">    if(repeat &gt; 0) &#123;                                    &#x2F;&#x2F; If we have any repeat on, change the coordinates to their &quot;local&quot; repetitions</span><br><span class="line">        x &#x3D; x%repeat;</span><br><span class="line">        y &#x3D; y%repeat;</span><br><span class="line">        z &#x3D; z%repeat;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    int xi &#x3D; (int)x &amp; 255;                              &#x2F;&#x2F; Calculate the &quot;unit cube&quot; that the point asked will be located in</span><br><span class="line">    int yi &#x3D; (int)y &amp; 255;                              &#x2F;&#x2F; The left bound is ( |_x_|,|_y_|,|_z_| ) and the right bound is that</span><br><span class="line">    int zi &#x3D; (int)z &amp; 255;                              &#x2F;&#x2F; plus 1.  Next we calculate the location (from 0.0 to 1.0) in that cube.</span><br><span class="line">    double xf &#x3D; x-(int)x;</span><br><span class="line">    double yf &#x3D; y-(int)y;</span><br><span class="line">    double zf &#x3D; z-(int)z;</span><br><span class="line">    &#x2F;&#x2F; ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>上面的代码很直观。首先，对输入坐标使用求余运算符%，求出[0,repeat)范围内的余数。紧接着声明<code>xi, yi, zi</code>三个变量。它们代表了输入坐标落在了哪个单元正方形里。我们还要限制坐标在[0,255]这个范围内，避免访问数组<code>p[]</code>时，出现数组越界错误。这也产生了一个副作用：柏林噪声每隔256个整数就会再次重复。但这不是太大的问题，因为算法不仅能处理整数，还能处理小数。最后，我们通过<code>xf, yf, zf</code>三个变量（也就是<code>x,y,z</code>的小数部分值），确定了输入坐标在单元正方形里的空间位置（就是前面所示的小蓝点）。</p>
-<h2 id="Fade函数"><a href="#Fade函数" class="headerlink" title="Fade函数##"></a>Fade函数##</h2><p>现在我们需要用代码表示前面所提到的fade函数（图5）。正如上文所提，函数的数学表示：<br><a href="https://upload-images.jianshu.io/upload_images/1797904-05b271d52d2bee24.gif?imageMogr2/auto-orient/strip" target="_blank" rel="noopener"><img src="../../assets/images/2021-01-20-Perlin-map/1797904-05b271d52d2bee24.gif" alt="img"></a></p>
-<p>代码实现如下：</p>
-<p>复制代码</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public static double fade(double t) &#123;</span><br><span class="line">                                                        &#x2F;&#x2F; Fade function as defined by Ken Perlin.  This eases coordinate values</span><br><span class="line">                                                        &#x2F;&#x2F; so that they will ease towards integral values.  This ends up smoothing</span><br><span class="line">                                                        &#x2F;&#x2F; the final output.</span><br><span class="line">    return t * t * t * (t * (t * 6 - 15) + 10);         &#x2F;&#x2F; 6t^5 - 15t^4 + 10t^3</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">public double perlin(double x, double y, double z) &#123;</span><br><span class="line">    &#x2F;&#x2F; ...</span><br><span class="line"></span><br><span class="line">    double u &#x3D; fade(xf);</span><br><span class="line">    double v &#x3D; fade(yf);</span><br><span class="line">    double w &#x3D; fade(zf);</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>代码所计算得出的<code>u / v / w</code>变量将在后面的插值计算中使用到。</p>
-<h2 id="哈希函数"><a href="#哈希函数" class="headerlink" title="哈希函数##"></a>哈希函数##</h2><p>柏林噪声哈希函数用于给每组输入计算返回一个唯一、确定值。哈希函数在维基百科的定义如下：</p>
-<blockquote>
-<p>哈希函数是一种从任何一种数据中创建小的数字“指纹”的方法，输入数据有任何细微的不同，都会令输出结果完全不一样</p>
-</blockquote>
-<p>下面代码就是柏林噪声算法所使用的哈希函数。它使用了早前我们声明的<code>p[]</code>数组：</p>
-<p>复制代码</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public double perlin(double x, double y, double z) &#123;</span><br><span class="line">    &#x2F;&#x2F; ...</span><br><span class="line"></span><br><span class="line">    int aaa, aba, aab, abb, baa, bba, bab, bbb;</span><br><span class="line">    aaa &#x3D; p[p[p[    xi ]+    yi ]+    zi ];</span><br><span class="line">    aba &#x3D; p[p[p[    xi ]+inc(yi)]+    zi ];</span><br><span class="line">    aab &#x3D; p[p[p[    xi ]+    yi ]+inc(zi)];</span><br><span class="line">    abb &#x3D; p[p[p[    xi ]+inc(yi)]+inc(zi)];</span><br><span class="line">    baa &#x3D; p[p[p[inc(xi)]+    yi ]+    zi ];</span><br><span class="line">    bba &#x3D; p[p[p[inc(xi)]+inc(yi)]+    zi ];</span><br><span class="line">    bab &#x3D; p[p[p[inc(xi)]+    yi ]+inc(zi)];</span><br><span class="line">    bbb &#x3D; p[p[p[inc(xi)]+inc(yi)]+inc(zi)];</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">public int inc(int num) &#123;</span><br><span class="line">    num++;</span><br><span class="line">    if (repeat &gt; 0) num %&#x3D; repeat;</span><br><span class="line">    </span><br><span class="line">    return num;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>代码的哈希函数，对包围着输入坐标（小蓝点）的周围8个单元正方形的索引坐标进行了哈希计算。<code>inc()</code>函数用于将输入值增加1，同时保证范围在[0,repeat)内。如果不需要噪声重复，<code>inc()</code>函数可以简化成单纯将输入值增加1。由于哈希结果值是从<code>p[]</code>数组中得到的，所以哈希函数的返回值范围限定在[0,255]内。</p>
-<h2 id="梯度函数"><a href="#梯度函数" class="headerlink" title="梯度函数##"></a>梯度函数##</h2><p>我时常认为Ken Perlin的最初版算法里的<code>grad()</code>函数写法过于复杂，令人费解。我们只要明白<code>grad()</code>函数的作用在于计算随机选取的梯度向量以及顶点位置向量的点积。Ken Perlin巧妙地使用了位翻转(bit-flipping)技巧来实现：</p>
-<p>复制代码</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public static double grad(int hash, double x, double y, double z) &#123;</span><br><span class="line">    int h &#x3D; hash &amp; 15;                                    &#x2F;&#x2F; Take the hashed value and take the first 4 bits of it (15 &#x3D;&#x3D; 0b1111)</span><br><span class="line">    double u &#x3D; h &lt; 8 &#x2F;* 0b1000 *&#x2F; ? x : y;                &#x2F;&#x2F; If the most significant bit (MSB) of the hash is 0 then set u &#x3D; x.  Otherwise y.</span><br><span class="line">    </span><br><span class="line">    double v;                                             &#x2F;&#x2F; In Ken Perlin&#39;s original implementation this was another conditional operator (?:).  I</span><br><span class="line">                                                          &#x2F;&#x2F; expanded it for readability.</span><br><span class="line">    </span><br><span class="line">    if(h &lt; 4 &#x2F;* 0b0100 *&#x2F;)                                &#x2F;&#x2F; If the first and second significant bits are 0 set v &#x3D; y</span><br><span class="line">        v &#x3D; y;</span><br><span class="line">    else if(h &#x3D;&#x3D; 12 &#x2F;* 0b1100 *&#x2F; || h &#x3D;&#x3D; 14 &#x2F;* 0b1110*&#x2F;)  &#x2F;&#x2F; If the first and second significant bits are 1 set v &#x3D; x</span><br><span class="line">        v &#x3D; x;</span><br><span class="line">    else                                                  &#x2F;&#x2F; If the first and second significant bits are not equal (0&#x2F;1, 1&#x2F;0) set v &#x3D; z</span><br><span class="line">        v &#x3D; z;</span><br><span class="line">    </span><br><span class="line">    return ((h&amp;1) &#x3D;&#x3D; 0 ? u : -u)+((h&amp;2) &#x3D;&#x3D; 0 ? v : -v); &#x2F;&#x2F; Use the last 2 bits to decide if u and v are positive or negative.  Then return their addition.</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>下面代码则是以另一种令人容易理解的方式完成了这个任务（而且在很多语言版本的运行效率都优于前面一种）：</p>
-<p>复制代码</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F; Source: http:&#x2F;&#x2F;riven8192.blogspot.com&#x2F;2010&#x2F;08&#x2F;calculate-perlinnoise-twice-as-fast.html</span><br><span class="line">public static double grad(int hash, double x, double y, double z)</span><br><span class="line">&#123;</span><br><span class="line">    switch(hash &amp; 0xF)</span><br><span class="line">    &#123;</span><br><span class="line">        case 0x0: return  x + y;</span><br><span class="line">        case 0x1: return -x + y;</span><br><span class="line">        case 0x2: return  x - y;</span><br><span class="line">        case 0x3: return -x - y;</span><br><span class="line">        case 0x4: return  x + z;</span><br><span class="line">        case 0x5: return -x + z;</span><br><span class="line">        case 0x6: return  x - z;</span><br><span class="line">        case 0x7: return -x - z;</span><br><span class="line">        case 0x8: return  y + z;</span><br><span class="line">        case 0x9: return -y + z;</span><br><span class="line">        case 0xA: return  y - z;</span><br><span class="line">        case 0xB: return -y - z;</span><br><span class="line">        case 0xC: return  y + x;</span><br><span class="line">        case 0xD: return -y + z;</span><br><span class="line">        case 0xE: return  y - x;</span><br><span class="line">        case 0xF: return -y - z;</span><br><span class="line">        default: return 0; &#x2F;&#x2F; never happens</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>以上的源码可以<a href="http://riven8192.blogspot.com/2010/08/calculate-perlinnoise-twice-as-fast.html" target="_blank" rel="noopener">点击这里</a>查看。无论如何，上面的两种实现并没有实质差别。他们都是从以下12个向量里随机挑选一个作为梯度向量：<br><code>(1,1,0),(-1,1,0),(1,-1,0),(-1,-1,0), (1,0,1),(-1,0,1),(1,0,-1),(-1,0,-1), (0,1,1),(0,-1,1),(0,1,-1),(0,-1,-1)</code></p>
-<p>随机挑选结果其实取决于前一步所计算得出的哈希值（<code>grad()</code>函数的第一个参数）。后面3个参数则代表由输入点指向顶点的距离向量（最终拿来与梯度向量进行点积）。</p>
-<h2 id="插值整合"><a href="#插值整合" class="headerlink" title="插值整合##"></a>插值整合##</h2><p>经过前面的几步计算，我们得出了8个顶点的影响值，并将它们进行平滑插值，得出了最终结果：</p>
-<p>复制代码</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public double perlin(double x, double y, double z) &#123;</span><br><span class="line">    &#x2F;&#x2F; ...</span><br><span class="line"></span><br><span class="line">    double x1, x2, y1, y2;</span><br><span class="line">    x1 &#x3D; lerp(    grad (aaa, xf  , yf  , zf),           &#x2F;&#x2F; The gradient function calculates the dot product between a pseudorandom</span><br><span class="line">                grad (baa, xf-1, yf  , zf),             &#x2F;&#x2F; gradient vector and the vector from the input coordinate to the 8</span><br><span class="line">                u);                                     &#x2F;&#x2F; surrounding points in its unit cube.</span><br><span class="line">    x2 &#x3D; lerp(    grad (aba, xf  , yf-1, zf),           &#x2F;&#x2F; This is all then lerped together as a sort of weighted average based on the faded (u,v,w)</span><br><span class="line">                grad (bba, xf-1, yf-1, zf),             &#x2F;&#x2F; values we made earlier.</span><br><span class="line">                  u);</span><br><span class="line">    y1 &#x3D; lerp(x1, x2, v);</span><br><span class="line"></span><br><span class="line">    x1 &#x3D; lerp(    grad (aab, xf  , yf  , zf-1),</span><br><span class="line">                grad (bab, xf-1, yf  , zf-1),</span><br><span class="line">                u);</span><br><span class="line">    x2 &#x3D; lerp(    grad (abb, xf  , yf-1, zf-1),</span><br><span class="line">                  grad (bbb, xf-1, yf-1, zf-1),</span><br><span class="line">                  u);</span><br><span class="line">    y2 &#x3D; lerp (x1, x2, v);</span><br><span class="line">    </span><br><span class="line">    return (lerp (y1, y2, w)+1)&#x2F;2;                      &#x2F;&#x2F; For convenience we bind the result to 0 - 1 (theoretical min&#x2F;max before is [-1, 1])</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; Linear Interpolate</span><br><span class="line">public static double lerp(double a, double b, double x) &#123;</span><br><span class="line">    return a + x * (b - a);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<hr>
-<h1 id="利用倍频实现更自然的噪声"><a href="#利用倍频实现更自然的噪声" class="headerlink" title="利用倍频实现更自然的噪声#"></a>利用倍频实现更自然的噪声#</h1><p>最后让我们再思考下，除了前面所讲的计算，还有其他办法可以令噪声结果更加自然吗？虽然柏林噪声算法一定程度上模拟了自然噪声，但仍没有完全表现出自然噪声的不规律性。举个现实例子，现实地形会有大段连绵、高耸的山地，也会有丘陵和蚀坑，更小点的有大块岩石，甚至更小的鹅卵石块，这都属于地形的一部分。那如何让柏林噪声算法模拟出这样的自然噪声特性，解决方法也很简单：我们可以使用不同的频率（frequencies）和振幅（amplitudes）参数进行多几次柏林噪声计算，然后将结果叠加在一起。频率是指采样数据的间隔，振幅是指返回值的幅度范围。</p>
-<p><a href="https://upload-images.jianshu.io/upload_images/1797904-6f96e55ed8d87b04.png?imageMogr2/auto-orient/strip|imageView2/2/w/1240" target="_blank" rel="noopener"><img src="../../assets/images/2021-01-20-Perlin-map/1797904-6f96e55ed8d87b04.png" alt="img"></a><br><em>图6：不同频率和振幅参数下的柏林噪声结果</em></p>
-<p>将所有结果叠加在一起，我们就能得到以下结果：</p>
-<p><a href="https://upload-images.jianshu.io/upload_images/1797904-c69b2bf9e253defb.png?imageMogr2/auto-orient/strip" target="_blank" rel="noopener"><img src="../../assets/images/2021-01-20-Perlin-map/1797904-c69b2bf9e253defb.png" alt="img"></a><br><em>图7：图6所有噪声的叠加结果</em></p>
-<p>很明显，这样的噪声结果更加令人信服。上面的6组噪声被称之为噪声的不同<strong>倍频(Octave)</strong>。随着倍频增大，噪声对于最终叠加噪声的影响程度变小。当然，倍频组数的增加，会线性地增加代码执行时间，在游戏运行时使用噪声算法，再好不要使用超过几组倍频（比如，当你想在60fps下模拟火焰特效时，最好不要这么干）。然而，做数据预处理时，就很适合使用多组倍频叠加来模拟更自然的噪声（比如用于提前生成游戏地形等）。</p>
-<p>那我们应该分别挑选多大的频率和振幅来进行噪声计算呢？这个可以通过<strong>persistence</strong>参数确定。<a href="http://freespace.virgin.net/hugo.elias/models/m_perlin.htm" target="_blank" rel="noopener">Hugo Elias</a>对persistence的定义使用如下：</p>
-<p><a href="https://upload-images.jianshu.io/upload_images/1797904-b7093e0ea840d56c.png?imageMogr2/auto-orient/strip|imageView2/2/w/1240" target="_blank" rel="noopener"><img src="../../assets/images/2021-01-20-Perlin-map/1797904-b7093e0ea840d56c.png" alt="img"></a></p>
-<p><a href="https://upload-images.jianshu.io/upload_images/1797904-006ffe9e12825253.png?imageMogr2/auto-orient/strip|imageView2/2/w/1240" target="_blank" rel="noopener"><img src="../../assets/images/2021-01-20-Perlin-map/1797904-006ffe9e12825253.png" alt="img"></a></p>
-<p>以上公式<code>i</code>的值取决于倍频数量，代码实现也很简单：</p>
-<p>复制代码</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public double OctavePerlin(double x, double y, double z, int octaves, double persistence) &#123;</span><br><span class="line">    double total &#x3D; 0;</span><br><span class="line">    double frequency &#x3D; 1;</span><br><span class="line">    double amplitude &#x3D; 1;</span><br><span class="line">    double maxValue &#x3D; 0;  &#x2F;&#x2F; Used for normalizing result to 0.0 - 1.0</span><br><span class="line">    for(int i&#x3D;0;i&lt;octaves;i++) &#123;</span><br><span class="line">        total +&#x3D; perlin(x * frequency, y * frequency, z * frequency) * amplitude;</span><br><span class="line">        </span><br><span class="line">        maxValue +&#x3D; amplitude;</span><br><span class="line">        </span><br><span class="line">        amplitude *&#x3D; persistence;</span><br><span class="line">        frequency *&#x3D; 2;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    return total&#x2F;maxValue;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<hr>
-<h1 id="UNITY"><a href="#UNITY" class="headerlink" title="UNITY"></a>UNITY</h1>]]></content>
-      <categories>
-        <category>unity</category>
-      </categories>
-      <tags>
-        <tag>C</tag>
-        <tag>C#</tag>
-        <tag>游戏</tag>
-        <tag>Unity</tag>
-        <tag>UNITY</tag>
-        <tag>地图</tag>
-        <tag>Java</tag>
-        <tag>游戏开发</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Edgar源代码解读</title>
     <url>/unity-2021-06-12-edgar-code-read/</url>
     <content><![CDATA[<h3 id="生成类"><a href="#生成类" class="headerlink" title="生成类"></a>生成类</h3><ul>
@@ -10526,6 +10526,29 @@
         <tag>Unity</tag>
         <tag>UNITY</tag>
         <tag>mesh</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>rpgbuild的一些备注</title>
+    <url>/unity-2021-06-15-rpgbuilder/</url>
+    <content><![CDATA[<ul>
+<li><p>skills   相当于 采矿技能,种植技能 ,制作技能</p>
+</li>
+<li><p>level templates 只是升级属性..比如角色等级,skill等级.weapon等级</p>
+</li>
+<li><p>weapontemplates  相当于拳法精通..斧头精通..枪法精通.棍法精通这些..而且有相关的技能和属性</p>
+</li>
+<li><p>Races  种族,定义了可选职业,以及 weapontemplates  ,以及初始stat等</p>
+</li>
+<li><p>classes  职业定义了stat以及技能树,和魔法书</p>
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>unity</category>
+      </categories>
+      <tags>
+        <tag>C</tag>
       </tags>
   </entry>
   <entry>
