@@ -128,7 +128,7 @@
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">140</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">141</span></a>
 
   </li>
         <li class="menu-item menu-item-categories">
@@ -210,6 +210,90 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/unity-2021-07-20-FormerlySerializedAs/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+      <meta itemprop="name" content="zhepama">
+      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="IGiven">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/unity-2021-07-20-FormerlySerializedAs/" class="post-title-link" itemprop="url">防止变量引用丢失 FormerlySerializedAs</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-07-20 08:00:00" itemprop="dateCreated datePublished" datetime="2021-07-20T08:00:00+08:00">2021-07-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-07-08 17:55:53" itemprop="dateModified" datetime="2021-07-08T17:55:53+08:00">2021-07-08</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/unity/" itemprop="url" rel="index"><span itemprop="name">unity</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p><img src="../../assets/images/2021-07-20-FormerlySerializedAs/20200110140001821.png" alt="img"></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">public class shishi : MonoBehaviour</span><br><span class="line">&#123;</span><br><span class="line">    public CameraSizeHandler CameraSize01;</span><br><span class="line"> </span><br><span class="line">    [System.Serializable]</span><br><span class="line">    public class CameraSizeHandler</span><br><span class="line">    &#123;</span><br><span class="line">        public Color BackgroundColor &#x3D; Color.gray;</span><br><span class="line">        public Rect ViewPortRect &#x3D; new Rect(0.0f, 0.0f, 1.0f, 1.0f); </span><br><span class="line">        public RectOffset ViewPortOffset; </span><br><span class="line">        public Vector2 CanvasMargin &#x3D; new Vector2(22.0f, 22.0f);</span><br><span class="line">        public float MaxSpeed &#x3D; 1000.0f;</span><br><span class="line">        bool enabled &#x3D; false;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>现在有一个需求，想改一改CameraSize01这个字段的名字，比如想修改为CameraSize02，并且需要将之前在监视器面板中为CameraSize01设置的各项值保留下来，如果直接修改，则会丢失属性中的值</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/unity-2021-07-20-FormerlySerializedAs/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://www.igiven.com/unity-2021-06-15-rpgbuilder/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -241,7 +325,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-07-06 21:51:44" itemprop="dateModified" datetime="2021-07-06T21:51:44+08:00">2021-07-06</time>
+                <time title="修改时间：2021-07-08 17:55:53" itemprop="dateModified" datetime="2021-07-08T17:55:53+08:00">2021-07-08</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -326,7 +410,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-07-06 21:51:44" itemprop="dateModified" datetime="2021-07-06T21:51:44+08:00">2021-07-06</time>
+                <time title="修改时间：2021-07-08 17:55:53" itemprop="dateModified" datetime="2021-07-08T17:55:53+08:00">2021-07-08</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -409,7 +493,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-07-06 21:51:44" itemprop="dateModified" datetime="2021-07-06T21:51:44+08:00">2021-07-06</time>
+                <time title="修改时间：2021-07-08 17:55:53" itemprop="dateModified" datetime="2021-07-08T17:55:53+08:00">2021-07-08</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -495,7 +579,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-07-06 21:51:44" itemprop="dateModified" datetime="2021-07-06T21:51:44+08:00">2021-07-06</time>
+                <time title="修改时间：2021-07-08 17:55:53" itemprop="dateModified" datetime="2021-07-08T17:55:53+08:00">2021-07-08</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -580,7 +664,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-07-06 21:51:44" itemprop="dateModified" datetime="2021-07-06T21:51:44+08:00">2021-07-06</time>
+                <time title="修改时间：2021-07-08 17:55:53" itemprop="dateModified" datetime="2021-07-08T17:55:53+08:00">2021-07-08</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -664,7 +748,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-07-06 21:51:44" itemprop="dateModified" datetime="2021-07-06T21:51:44+08:00">2021-07-06</time>
+                <time title="修改时间：2021-07-08 17:55:53" itemprop="dateModified" datetime="2021-07-08T17:55:53+08:00">2021-07-08</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -746,7 +830,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-07-06 21:51:44" itemprop="dateModified" datetime="2021-07-06T21:51:44+08:00">2021-07-06</time>
+                <time title="修改时间：2021-07-08 17:55:53" itemprop="dateModified" datetime="2021-07-08T17:55:53+08:00">2021-07-08</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -829,7 +913,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-07-06 21:51:44" itemprop="dateModified" datetime="2021-07-06T21:51:44+08:00">2021-07-06</time>
+                <time title="修改时间：2021-07-08 17:55:53" itemprop="dateModified" datetime="2021-07-08T17:55:53+08:00">2021-07-08</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -911,7 +995,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-07-06 21:51:44" itemprop="dateModified" datetime="2021-07-06T21:51:44+08:00">2021-07-06</time>
+                <time title="修改时间：2021-07-08 17:55:53" itemprop="dateModified" datetime="2021-07-08T17:55:53+08:00">2021-07-08</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -957,92 +1041,10 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/unity-2021-01-24-screentoworld/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
-      <meta itemprop="name" content="zhepama">
-      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="IGiven">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/unity-2021-01-24-screentoworld/" class="post-title-link" itemprop="url">解决Unity鼠标坐标点转成世界坐标系坐标点</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-01-24 08:00:00" itemprop="dateCreated datePublished" datetime="2021-01-24T08:00:00+08:00">2021-01-24</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-07-06 21:51:44" itemprop="dateModified" datetime="2021-07-06T21:51:44+08:00">2021-07-06</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/unity/" itemprop="url" rel="index"><span itemprop="name">unity</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="使用射线"><a href="#使用射线" class="headerlink" title="使用射线"></a>使用射线</h2><p>这是一种发射线，获取当前点击的物体（具有碰撞器）的坐标点（也就是碰撞器范围的坐标点）</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">if (Input.GetMouseButtonDown(0))</span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">    RaycastHit hitt &#x3D; new RaycastHit();</span><br><span class="line"></span><br><span class="line">    Ray ray &#x3D;Camera.main.ScreenPointToRay(Input.mousePosition);</span><br><span class="line"></span><br><span class="line">    Physics.Raycast(ray, out hitt);</span><br><span class="line"></span><br><span class="line">    Debug.Log(hitt.point);</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F;Debug.Log(Camera.main.ScreenToWorldPoint(Input.mousePosition));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/unity-2021-01-24-screentoworld/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><span class="space">&hellip;</span><a class="page-number" href="/page/14/">14</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><span class="space">&hellip;</span><a class="page-number" href="/page/15/">15</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
   </nav>
 
 
@@ -1110,7 +1112,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">140</span>
+          <span class="site-state-item-count">141</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>

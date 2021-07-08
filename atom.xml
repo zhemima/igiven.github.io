@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://www.igiven.com/"/>
-  <updated>2021-07-06T13:51:44.231Z</updated>
+  <updated>2021-07-08T09:55:53.916Z</updated>
   <id>http://www.igiven.com/</id>
   
   <author>
@@ -17,11 +17,35 @@
   <generator uri="https://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>防止变量引用丢失 FormerlySerializedAs</title>
+    <link href="http://www.igiven.com/unity-2021-07-20-FormerlySerializedAs/"/>
+    <id>http://www.igiven.com/unity-2021-07-20-FormerlySerializedAs/</id>
+    <published>2021-07-20T00:00:00.000Z</published>
+    <updated>2021-07-08T09:55:53.916Z</updated>
+    
+    <summary type="html">
+    
+      &lt;p&gt;&lt;img src=&quot;../../assets/images/2021-07-20-FormerlySerializedAs/20200110140001821.png&quot; alt=&quot;img&quot;&gt;&lt;/p&gt;
+&lt;figure class=&quot;highlight plain&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;3&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;4&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;5&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;6&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;7&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;8&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;9&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;10&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;11&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;12&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;13&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;14&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;15&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;public class shishi : MonoBehaviour&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;#123;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    public CameraSizeHandler CameraSize01;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt; &lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    [System.Serializable]&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    public class CameraSizeHandler&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &amp;#123;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;        public Color BackgroundColor &amp;#x3D; Color.gray;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;        public Rect ViewPortRect &amp;#x3D; new Rect(0.0f, 0.0f, 1.0f, 1.0f); &lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;        public RectOffset ViewPortOffset; &lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;        public Vector2 CanvasMargin &amp;#x3D; new Vector2(22.0f, 22.0f);&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;        public float MaxSpeed &amp;#x3D; 1000.0f;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;        bool enabled &amp;#x3D; false;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &amp;#125;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&amp;#125;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+
+&lt;p&gt;现在有一个需求，想改一改CameraSize01这个字段的名字，比如想修改为CameraSize02，并且需要将之前在监视器面板中为CameraSize01设置的各项值保留下来，如果直接修改，则会丢失属性中的值&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="unity" scheme="http://www.igiven.com/categories/unity/"/>
+    
+    
+      <category term="C" scheme="http://www.igiven.com/tags/C/"/>
+    
+  </entry>
+  
+  <entry>
     <title>rpgbuild的一些备注</title>
     <link href="http://www.igiven.com/unity-2021-06-15-rpgbuilder/"/>
     <id>http://www.igiven.com/unity-2021-06-15-rpgbuilder/</id>
     <published>2021-06-15T00:00:00.000Z</published>
-    <updated>2021-07-06T13:51:44.231Z</updated>
+    <updated>2021-07-08T09:55:53.916Z</updated>
     
     <summary type="html">
     
@@ -53,7 +77,7 @@
     <link href="http://www.igiven.com/unity-2021-06-14-unity-render-order/"/>
     <id>http://www.igiven.com/unity-2021-06-14-unity-render-order/</id>
     <published>2021-06-14T00:00:00.000Z</published>
-    <updated>2021-07-06T13:51:44.231Z</updated>
+    <updated>2021-07-08T09:55:53.916Z</updated>
     
     <summary type="html">
     
@@ -84,7 +108,7 @@
     <link href="http://www.igiven.com/unity-2021-06-13-How-to-Make-One-Way-Platform/"/>
     <id>http://www.igiven.com/unity-2021-06-13-How-to-Make-One-Way-Platform/</id>
     <published>2021-06-13T00:00:00.000Z</published>
-    <updated>2021-07-06T13:51:44.231Z</updated>
+    <updated>2021-07-08T09:55:53.912Z</updated>
     
     <summary type="html">
     
@@ -118,7 +142,7 @@
     <link href="http://www.igiven.com/unity-2021-06-12-edgar-code-read/"/>
     <id>http://www.igiven.com/unity-2021-06-12-edgar-code-read/</id>
     <published>2021-06-12T00:00:00.000Z</published>
-    <updated>2021-07-06T13:51:44.231Z</updated>
+    <updated>2021-07-08T09:55:53.912Z</updated>
     
     <summary type="html">
     
@@ -143,7 +167,7 @@
     <link href="http://www.igiven.com/unity-2021-05-20-ecs-commandbuff-question/"/>
     <id>http://www.igiven.com/unity-2021-05-20-ecs-commandbuff-question/</id>
     <published>2021-05-20T00:00:00.000Z</published>
-    <updated>2021-07-06T13:51:44.231Z</updated>
+    <updated>2021-07-08T09:55:53.912Z</updated>
     
     <summary type="html">
     
@@ -167,7 +191,7 @@
     <link href="http://www.igiven.com/tool-2021-05-06-dns/"/>
     <id>http://www.igiven.com/tool-2021-05-06-dns/</id>
     <published>2021-05-06T00:00:00.000Z</published>
-    <updated>2021-07-06T13:51:44.227Z</updated>
+    <updated>2021-07-08T09:55:53.908Z</updated>
     
     <summary type="html">
     
@@ -191,7 +215,7 @@
     <link href="http://www.igiven.com/dotnet-2021-05-01-Converting-between-Structs-and-Byte-Arrays/"/>
     <id>http://www.igiven.com/dotnet-2021-05-01-Converting-between-Structs-and-Byte-Arrays/</id>
     <published>2021-05-01T00:00:00.000Z</published>
-    <updated>2021-07-06T13:51:44.227Z</updated>
+    <updated>2021-07-08T09:55:53.908Z</updated>
     
     <summary type="html">
     
@@ -222,7 +246,7 @@
     <link href="http://www.igiven.com/unity-2021-04-11-render-texture/"/>
     <id>http://www.igiven.com/unity-2021-04-11-render-texture/</id>
     <published>2021-04-11T00:00:00.000Z</published>
-    <updated>2021-07-06T13:51:44.231Z</updated>
+    <updated>2021-07-08T09:55:53.912Z</updated>
     
     <summary type="html">
     
@@ -252,7 +276,7 @@
     <link href="http://www.igiven.com/unity-2021-01-25-tilemap/"/>
     <id>http://www.igiven.com/unity-2021-01-25-tilemap/</id>
     <published>2021-01-25T00:00:00.000Z</published>
-    <updated>2021-07-06T13:51:44.231Z</updated>
+    <updated>2021-07-08T09:55:53.912Z</updated>
     
     <summary type="html">
     
@@ -275,7 +299,7 @@
     <link href="http://www.igiven.com/unity-2021-01-24-screentoworld/"/>
     <id>http://www.igiven.com/unity-2021-01-24-screentoworld/</id>
     <published>2021-01-24T00:00:00.000Z</published>
-    <updated>2021-07-06T13:51:44.231Z</updated>
+    <updated>2021-07-08T09:55:53.912Z</updated>
     
     <summary type="html">
     
@@ -303,7 +327,7 @@
     <link href="http://www.igiven.com/unity-2021-01-23-Spelunky-map/"/>
     <id>http://www.igiven.com/unity-2021-01-23-Spelunky-map/</id>
     <published>2021-01-23T00:00:00.000Z</published>
-    <updated>2021-07-06T13:51:44.231Z</updated>
+    <updated>2021-07-08T09:55:53.912Z</updated>
     
     <summary type="html">
     
@@ -329,7 +353,7 @@
     <link href="http://www.igiven.com/unity-2021-01-23-roguelike-map/"/>
     <id>http://www.igiven.com/unity-2021-01-23-roguelike-map/</id>
     <published>2021-01-23T00:00:00.000Z</published>
-    <updated>2021-07-06T13:51:44.231Z</updated>
+    <updated>2021-07-08T09:55:53.912Z</updated>
     
     <summary type="html">
     
@@ -361,7 +385,7 @@
     <link href="http://www.igiven.com/unity-2021-01-22-civ-map/"/>
     <id>http://www.igiven.com/unity-2021-01-22-civ-map/</id>
     <published>2021-01-22T00:00:00.000Z</published>
-    <updated>2021-07-06T13:51:44.231Z</updated>
+    <updated>2021-07-08T09:55:53.912Z</updated>
     
     <summary type="html">
     
@@ -397,7 +421,7 @@
     <link href="http://www.igiven.com/unity-2021-01-21-wave-collapse-function/"/>
     <id>http://www.igiven.com/unity-2021-01-21-wave-collapse-function/</id>
     <published>2021-01-21T00:00:00.000Z</published>
-    <updated>2021-07-06T13:51:44.231Z</updated>
+    <updated>2021-07-08T09:55:53.912Z</updated>
     
     <summary type="html">
     
@@ -427,7 +451,7 @@
     <link href="http://www.igiven.com/unity-2021-01-20-Perlin-map/"/>
     <id>http://www.igiven.com/unity-2021-01-20-Perlin-map/</id>
     <published>2021-01-20T00:00:00.000Z</published>
-    <updated>2021-07-06T13:51:44.231Z</updated>
+    <updated>2021-07-08T09:55:53.912Z</updated>
     
     <summary type="html">
     
@@ -464,7 +488,7 @@
     <link href="http://www.igiven.com/unity-2020-12-20-Collection-has-not-been-disposed/"/>
     <id>http://www.igiven.com/unity-2020-12-20-Collection-has-not-been-disposed/</id>
     <published>2020-12-20T00:00:00.000Z</published>
-    <updated>2021-07-06T13:51:44.231Z</updated>
+    <updated>2021-07-08T09:55:53.912Z</updated>
     
     <summary type="html">
     
@@ -494,7 +518,7 @@
     <link href="http://www.igiven.com/dotnet-2020-12-11-chrome-login-fail/"/>
     <id>http://www.igiven.com/dotnet-2020-12-11-chrome-login-fail/</id>
     <published>2020-12-11T00:00:00.000Z</published>
-    <updated>2021-07-06T13:51:44.227Z</updated>
+    <updated>2021-07-08T09:55:53.908Z</updated>
     
     <summary type="html">
     
@@ -520,7 +544,7 @@
     <link href="http://www.igiven.com/unity-2020-11-29-pitch-yaw-roll/"/>
     <id>http://www.igiven.com/unity-2020-11-29-pitch-yaw-roll/</id>
     <published>2020-11-29T00:00:00.000Z</published>
-    <updated>2021-07-06T13:51:44.231Z</updated>
+    <updated>2021-07-08T09:55:53.912Z</updated>
     
     <summary type="html">
     
@@ -543,7 +567,7 @@
     <link href="http://www.igiven.com/dotnet-2020-11-24-flags/"/>
     <id>http://www.igiven.com/dotnet-2020-11-24-flags/</id>
     <published>2020-11-24T00:00:00.000Z</published>
-    <updated>2021-07-06T13:51:44.223Z</updated>
+    <updated>2021-07-08T09:55:53.908Z</updated>
     
     <summary type="html">
     
@@ -568,65 +592,6 @@
       <category term="C" scheme="http://www.igiven.com/tags/C/"/>
     
       <category term="C#" scheme="http://www.igiven.com/tags/C/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>netcode源代码解读</title>
-    <link href="http://www.igiven.com/unity-2020-11-18-netcode-sourcecode/"/>
-    <id>http://www.igiven.com/unity-2020-11-18-netcode-sourcecode/</id>
-    <published>2020-11-18T00:00:00.000Z</published>
-    <updated>2021-07-06T13:51:44.231Z</updated>
-    
-    <summary type="html">
-    
-      &lt;h1 id=&quot;NetworkStreamReceiveSystem&quot;&gt;&lt;a href=&quot;#NetworkStreamReceiveSystem&quot; class=&quot;headerlink&quot; title=&quot;NetworkStreamReceiveSystem&quot;&gt;&lt;/a&gt;NetworkStreamReceiveSystem&lt;/h1&gt;&lt;ol&gt;
-&lt;li&gt;&lt;p&gt;客户端连接服务端  ,服务端创建NetworkIdComponent&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;客户端添加NetworkStreamInGame组件,并通过rpc 发送GoInGameRequest请求&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;服务端接收到请求后,实例化player&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;为player添加GhostOwnerComponent&lt;/li&gt;
-&lt;li&gt;初始化player添加一些其他不需要同步的组件&lt;/li&gt;
-&lt;li&gt;为connection添加NetworkStreamInGame组件&lt;/li&gt;
-&lt;li&gt;为connection设置CommandTargetComponent&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;客户端根据player独有的组件特性,查找已经被ghost同步过来的实体&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;比对NetworkIdComponent和GhostOwnerComponent的id,判断是否是localPlayer&lt;/li&gt;
-&lt;li&gt;对localplayer进行初始化&lt;/li&gt;
-&lt;li&gt;为connection设置CommandTargetComponent为localplayer&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;客户端使用CommandTargetComponent的targetEntity进行command发送&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;客户端和服务端对传送的command同时使用PredictedGhostComponent进行预测????&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;p&gt;预测不是发生在客户端的吗???貌似netcode服务端也做了预测&lt;/p&gt;
-&lt;p&gt;在服务器上，预测循环始终仅运行一次，并且不会更新TimeData结构，因为它已经正确。它仍然设置GhostPredictionSystemGroup.PredictingTick以确保可以在客户端和服务器上运行完全相同的代码。&lt;/p&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;插值 是针对其他玩家的本地显示…预测是针对自己操作的角色,最后从服务器校正&lt;/p&gt;
-    
-    </summary>
-    
-    
-      <category term="unity" scheme="http://www.igiven.com/categories/unity/"/>
-    
-    
-      <category term="Win" scheme="http://www.igiven.com/tags/Win/"/>
-    
-      <category term="C" scheme="http://www.igiven.com/tags/C/"/>
-    
-      <category term="Unity" scheme="http://www.igiven.com/tags/Unity/"/>
-    
-      <category term="同步" scheme="http://www.igiven.com/tags/%E5%90%8C%E6%AD%A5/"/>
-    
-      <category term="UNITY" scheme="http://www.igiven.com/tags/UNITY/"/>
     
   </entry>
   

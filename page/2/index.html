@@ -128,7 +128,7 @@
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">140</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">141</span></a>
 
   </li>
         <li class="menu-item menu-item-categories">
@@ -210,6 +210,88 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/unity-2021-01-24-screentoworld/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
+      <meta itemprop="name" content="zhepama">
+      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="IGiven">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/unity-2021-01-24-screentoworld/" class="post-title-link" itemprop="url">解决Unity鼠标坐标点转成世界坐标系坐标点</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-01-24 08:00:00" itemprop="dateCreated datePublished" datetime="2021-01-24T08:00:00+08:00">2021-01-24</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-07-08 17:55:53" itemprop="dateModified" datetime="2021-07-08T17:55:53+08:00">2021-07-08</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/unity/" itemprop="url" rel="index"><span itemprop="name">unity</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="使用射线"><a href="#使用射线" class="headerlink" title="使用射线"></a>使用射线</h2><p>这是一种发射线，获取当前点击的物体（具有碰撞器）的坐标点（也就是碰撞器范围的坐标点）</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">if (Input.GetMouseButtonDown(0))</span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">    RaycastHit hitt &#x3D; new RaycastHit();</span><br><span class="line"></span><br><span class="line">    Ray ray &#x3D;Camera.main.ScreenPointToRay(Input.mousePosition);</span><br><span class="line"></span><br><span class="line">    Physics.Raycast(ray, out hitt);</span><br><span class="line"></span><br><span class="line">    Debug.Log(hitt.point);</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F;Debug.Log(Camera.main.ScreenToWorldPoint(Input.mousePosition));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/unity-2021-01-24-screentoworld/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://www.igiven.com/unity-2021-01-23-Spelunky-map/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -241,7 +323,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-07-06 21:51:44" itemprop="dateModified" datetime="2021-07-06T21:51:44+08:00">2021-07-06</time>
+                <time title="修改时间：2021-07-08 17:55:53" itemprop="dateModified" datetime="2021-07-08T17:55:53+08:00">2021-07-08</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -323,7 +405,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-07-06 21:51:44" itemprop="dateModified" datetime="2021-07-06T21:51:44+08:00">2021-07-06</time>
+                <time title="修改时间：2021-07-08 17:55:53" itemprop="dateModified" datetime="2021-07-08T17:55:53+08:00">2021-07-08</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -405,7 +487,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-07-06 21:51:44" itemprop="dateModified" datetime="2021-07-06T21:51:44+08:00">2021-07-06</time>
+                <time title="修改时间：2021-07-08 17:55:53" itemprop="dateModified" datetime="2021-07-08T17:55:53+08:00">2021-07-08</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -487,7 +569,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-07-06 21:51:44" itemprop="dateModified" datetime="2021-07-06T21:51:44+08:00">2021-07-06</time>
+                <time title="修改时间：2021-07-08 17:55:53" itemprop="dateModified" datetime="2021-07-08T17:55:53+08:00">2021-07-08</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -569,7 +651,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-07-06 21:51:44" itemprop="dateModified" datetime="2021-07-06T21:51:44+08:00">2021-07-06</time>
+                <time title="修改时间：2021-07-08 17:55:53" itemprop="dateModified" datetime="2021-07-08T17:55:53+08:00">2021-07-08</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -652,7 +734,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-07-06 21:51:44" itemprop="dateModified" datetime="2021-07-06T21:51:44+08:00">2021-07-06</time>
+                <time title="修改时间：2021-07-08 17:55:53" itemprop="dateModified" datetime="2021-07-08T17:55:53+08:00">2021-07-08</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -736,7 +818,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-07-06 21:51:44" itemprop="dateModified" datetime="2021-07-06T21:51:44+08:00">2021-07-06</time>
+                <time title="修改时间：2021-07-08 17:55:53" itemprop="dateModified" datetime="2021-07-08T17:55:53+08:00">2021-07-08</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -818,7 +900,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-07-06 21:51:44" itemprop="dateModified" datetime="2021-07-06T21:51:44+08:00">2021-07-06</time>
+                <time title="修改时间：2021-07-08 17:55:53" itemprop="dateModified" datetime="2021-07-08T17:55:53+08:00">2021-07-08</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -901,7 +983,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-07-06 21:51:44" itemprop="dateModified" datetime="2021-07-06T21:51:44+08:00">2021-07-06</time>
+                <time title="修改时间：2021-07-08 17:55:53" itemprop="dateModified" datetime="2021-07-08T17:55:53+08:00">2021-07-08</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -957,121 +1039,10 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://www.igiven.com/unity-2020-11-18-netcode-sourcecode/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="https://secure.gravatar.com/avatar/0930091f05ac4d1044c02dbd3d619cfe?s=80&d=identicon&r=g">
-      <meta itemprop="name" content="zhepama">
-      <meta itemprop="description" content="一个不专业的程序员,写着专业的博客">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="IGiven">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/unity-2020-11-18-netcode-sourcecode/" class="post-title-link" itemprop="url">netcode源代码解读</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-11-18 08:00:00" itemprop="dateCreated datePublished" datetime="2020-11-18T08:00:00+08:00">2020-11-18</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-07-06 21:51:44" itemprop="dateModified" datetime="2021-07-06T21:51:44+08:00">2021-07-06</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/unity/" itemprop="url" rel="index"><span itemprop="name">unity</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="NetworkStreamReceiveSystem"><a href="#NetworkStreamReceiveSystem" class="headerlink" title="NetworkStreamReceiveSystem"></a>NetworkStreamReceiveSystem</h1><ol>
-<li><p>客户端连接服务端  ,服务端创建NetworkIdComponent</p>
-</li>
-<li><p>客户端添加NetworkStreamInGame组件,并通过rpc 发送GoInGameRequest请求</p>
-</li>
-<li><p>服务端接收到请求后,实例化player</p>
-<ul>
-<li>为player添加GhostOwnerComponent</li>
-<li>初始化player添加一些其他不需要同步的组件</li>
-<li>为connection添加NetworkStreamInGame组件</li>
-<li>为connection设置CommandTargetComponent</li>
-</ul>
-</li>
-<li><p>客户端根据player独有的组件特性,查找已经被ghost同步过来的实体</p>
-<ul>
-<li>比对NetworkIdComponent和GhostOwnerComponent的id,判断是否是localPlayer</li>
-<li>对localplayer进行初始化</li>
-<li>为connection设置CommandTargetComponent为localplayer</li>
-</ul>
-</li>
-<li><p>客户端使用CommandTargetComponent的targetEntity进行command发送</p>
-</li>
-<li><p>客户端和服务端对传送的command同时使用PredictedGhostComponent进行预测????</p>
-<ul>
-<li><p>预测不是发生在客户端的吗???貌似netcode服务端也做了预测</p>
-<p>在服务器上，预测循环始终仅运行一次，并且不会更新TimeData结构，因为它已经正确。它仍然设置GhostPredictionSystemGroup.PredictingTick以确保可以在客户端和服务器上运行完全相同的代码。</p>
-</li>
-</ul>
-</li>
-</ol>
-<p>插值 是针对其他玩家的本地显示…预测是针对自己操作的角色,最后从服务器校正</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/unity-2020-11-18-netcode-sourcecode/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><span class="space">&hellip;</span><a class="page-number" href="/page/14/">14</a><a class="extend next" rel="next" href="/page/3/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
+    <a class="extend prev" rel="prev" href="/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><span class="space">&hellip;</span><a class="page-number" href="/page/15/">15</a><a class="extend next" rel="next" href="/page/3/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
   </nav>
 
 
@@ -1139,7 +1110,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">140</span>
+          <span class="site-state-item-count">141</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>

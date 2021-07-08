@@ -10552,6 +10552,25 @@
       </tags>
   </entry>
   <entry>
+    <title>防止变量引用丢失 FormerlySerializedAs</title>
+    <url>/unity-2021-07-20-FormerlySerializedAs/</url>
+    <content><![CDATA[<p><img src="../../assets/images/2021-07-20-FormerlySerializedAs/20200110140001821.png" alt="img"></p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class shishi : MonoBehaviour</span><br><span class="line">&#123;</span><br><span class="line">    public CameraSizeHandler CameraSize01;</span><br><span class="line"> </span><br><span class="line">    [System.Serializable]</span><br><span class="line">    public class CameraSizeHandler</span><br><span class="line">    &#123;</span><br><span class="line">        public Color BackgroundColor &#x3D; Color.gray;</span><br><span class="line">        public Rect ViewPortRect &#x3D; new Rect(0.0f, 0.0f, 1.0f, 1.0f); </span><br><span class="line">        public RectOffset ViewPortOffset; </span><br><span class="line">        public Vector2 CanvasMargin &#x3D; new Vector2(22.0f, 22.0f);</span><br><span class="line">        public float MaxSpeed &#x3D; 1000.0f;</span><br><span class="line">        bool enabled &#x3D; false;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>现在有一个需求，想改一改CameraSize01这个字段的名字，比如想修改为CameraSize02，并且需要将之前在监视器面板中为CameraSize01设置的各项值保留下来，如果直接修改，则会丢失属性中的值</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">public class shishi : MonoBehaviour</span><br><span class="line">&#123;</span><br><span class="line">    [FormerlySerializedAs(&quot;CameraSize01&quot;)]</span><br><span class="line">    public CameraSizeHandler CameraSize02;</span><br><span class="line"> </span><br><span class="line">    [System.Serializable]</span><br><span class="line">    public class CameraSizeHandler</span><br><span class="line">    &#123;</span><br><span class="line">        public Color BackgroundColor &#x3D; Color.gray;</span><br><span class="line">        public Rect ViewPortRect &#x3D; new Rect(0.0f, 0.0f, 1.0f, 1.0f); </span><br><span class="line">        public RectOffset ViewPortOffset; </span><br><span class="line">        public Vector2 CanvasMargin &#x3D; new Vector2(22.0f, 22.0f);</span><br><span class="line">        public float MaxSpeed &#x3D; 1000.0f;</span><br><span class="line">        bool enabled &#x3D; false;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+
+
+]]></content>
+      <categories>
+        <category>unity</category>
+      </categories>
+      <tags>
+        <tag>C</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>基于 Game Object Conversion 和 SubScene 的 DOTS 开发工作流</title>
     <url>/unity-2020-10-19-game-object-conversion-and-subscene/</url>
     <content><![CDATA[<p><em>(译前言: Unity DOTS提出了一套全新的开发技术栈, 但目前少有精讲如何结合现有工作流进行开发的资料, 外网 <a href="https://link.zhihu.com/?target=https%3A//gametorrahod.com/game-object-conversion-and-subscene/">这篇文章 (Game Object Conversion and SubScene)</a> 详细解构了基于 GameObject 和 Subscene 的工作流程和原理, 要求读者对 DOTS/ECS 有基本的了解, 虽然非常之长, 但值得一读)</em></p>
